@@ -20,7 +20,7 @@ export class UserUseCase {
 	}
 
 	// POST
-	async addUser(user: User): Promise<User> {
+	async addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User> {
 		return await this.userPort.addUser(user);
 	}
 

@@ -8,7 +8,7 @@ export interface IUserPort {
 	getUserByEmail(email: string): Promise<User>
 
 	// POST
-	addUser(user: User): Promise<User>
+	addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User>
 
 	// PUT
 	updateUser(user: User): Promise<User>

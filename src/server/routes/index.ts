@@ -16,8 +16,6 @@ routes.use(express.json());
 // PRODUCTION
 // IMPLEMENT LATER
 
-
-
 routes.use("/api/user", userRoutes)
 
 export default routes;
