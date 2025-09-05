@@ -55,6 +55,36 @@ export const addUser = async (req: Request, res: Response) => {
 	}
 };
 
+export const addUserbyGoogle = async (req: Request, res: Response) => {
+	try {
+		const idToken = req.params.token
+		const newUser = await userUseCase.addUserbyGoogle(idToken);
+		res.status(201).json(newUser);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+export const loginWithEmail = async (req: Request, res: Response) => {
+	try {
+		const body = req.body
+		const newUser = await userUseCase.loginWithEmail(body.email, body.password);
+		res.status(201).json(newUser);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+export const loginWithGoogle = async (req: Request, res: Response) => {
+	try {
+		const idToken = req.params.token
+		const newUser = await userUseCase.loginWithGoogle(idToken);
+		res.status(201).json(newUser);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
 // PUT
 export const updateUser = async (req: Request, res: Response) => {
 	try {

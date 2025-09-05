@@ -23,6 +23,15 @@ export class UserUseCase {
 	async addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User> {
 		return await this.userPort.addUser(user);
 	}
+	async addUserbyGoogle(idToken: string): Promise<User> {
+		return await this.userPort.addUserbyGoogle(idToken);
+	}
+	async loginWithEmail(email: string, password: string): Promise<User> {
+		return await this.userPort.loginWithEmail(email, password);
+	}
+	async loginWithGoogle(idToken: string): Promise<User> {
+		return await this.userPort.loginWithGoogle(idToken);
+	}
 
 	// PUT
 	async updateUser(user: User): Promise<User> {

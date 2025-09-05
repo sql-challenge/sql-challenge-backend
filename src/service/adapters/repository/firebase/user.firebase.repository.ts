@@ -19,11 +19,14 @@ export class UserFirebaseRepository implements IUserPort {
 					docSnap.data().imagePerfil,
 					docSnap.data().createdAt.toDate(),
 					docSnap.data().lastLogin.toDate(),
-					docSnap.data().totalScore,
+					docSnap.data().rankingPosition,
 					docSnap.data().xp,
-					docSnap.data().password
+					docSnap.data().xp,
+					docSnap.data().friends,
+					docSnap.data().challenge_progress
+
 				)
-		);
+		)
 	}
 
 	async getUserByUID(uid: string): Promise<User> {
@@ -39,9 +42,10 @@ export class UserFirebaseRepository implements IUserPort {
 			data.imagePerfil,
 			data.createdAt.toDate(),
 			data.lastLogin.toDate(),
-			data.totalScore,
+			data.rankingPosition,
 			data.xp,
-			data.password
+			data.friends,
+			data.challenge_progress
 		);
 	}
 
@@ -58,9 +62,10 @@ export class UserFirebaseRepository implements IUserPort {
 					docSnap.data().imagePerfil,
 					docSnap.data().createdAt.toDate(),
 					docSnap.data().lastLogin.toDate(),
-					docSnap.data().totalScore,
+					docSnap.data().rankingPosition,
 					docSnap.data().xp,
-					docSnap.data().password
+					docSnap.data().friends,
+					docSnap.data().challenge_progress
 				)
 		);
 	}
@@ -79,9 +84,10 @@ export class UserFirebaseRepository implements IUserPort {
 			data.imagePerfil,
 			data.createdAt.toDate(),
 			data.lastLogin.toDate(),
-			data.totalScore,
+			data.rankingPosition,
 			data.xp,
-			data.password
+			data.friends,
+			data.challenge_progress
 		);
 	}
 
@@ -103,7 +109,7 @@ export class UserFirebaseRepository implements IUserPort {
 			imagePerfil: (user as any).imagePerfil,
 			createdAt: date,
 			lastLogin: date,
-			totalScore: (user as any).totalScore,
+			rankingPosition: (user as any).rankingPosition,
 			xp: (user as any).xp,
 			// password: (user as any).password
 		});
@@ -115,10 +121,57 @@ export class UserFirebaseRepository implements IUserPort {
 			(user as any).imagePerfil,
 			date,
 			date,
-			(user as any).totalScore,
+			(user as any).rankingPosition,
 			(user as any).xp,
-			(user as any).password
+			[{
+				status: "",
+				username: "",
+				nick: "",
+				rankingPosition: 0,
+				xp: 0
+			}],
+			[{
+				nameChallange: "",
+				capFinish: 0,
+				xpObtido: 0
+			}]
 		);
+	}
+
+	async addUserbyGoogle(idToken: string): Promise<User> {
+		// valida o token e pega os dados do usuário
+		const u = await authUser.registerWithGoogle(idToken);
+
+		const date = new Date();
+		const ref = doc(this.userCollection, u.uid);
+
+		await setDoc(ref, {
+			username: u.name || "",
+			nick: u.name || "",
+			email: u.email,
+			imagePerfil: u.picture || "",
+			createdAt: date,
+			lastLogin: date,
+			rankingPosition: -1,
+			xp: 0,
+		});
+
+		return new User(
+			u.uid, u.name || "", u.name || "", u.email, u.picture || "",
+			date, date, 0, 0,
+			[{ status: "", username: "", nick: "", rankingPosition: 0, xp: 0 }],
+			[{ nameChallange: "", capFinish: 0, xpObtido: 0 }]
+		);
+	}
+
+	async loginWithEmail(email: string, password: string): Promise<User> {
+		let uid = await authUser.loginWithEmailAndPassword(email, password)
+		return await this.getUserByUID(uid)
+	}
+	
+	async loginWithGoogle(idToken: string): Promise<User> {
+		let uid = await authUser.loginWithGoogle(idToken)
+		return await this.getUserByUID(uid)
 	}
 
 	async updateUser(user: User): Promise<User> {
@@ -130,7 +183,7 @@ export class UserFirebaseRepository implements IUserPort {
 			imagePerfil: (user as any).imagePerfil,
 			createdAt: (user as any).createdAt,
 			lastLogin: (user as any).lastLogin,
-			totalScore: (user as any).totalScore,
+			rankingPosition: (user as any).rankingPosition,
 			xp: (user as any).xp,
 		});
 		return user;

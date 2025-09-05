@@ -9,6 +9,9 @@ router.get("/name/:name", (req, res) => {controller.getUsersByName(req, res)});
 router.get("/email/:email", (req, res) => {controller.getUserByEmail(req, res)});
 
 router.post("/", (req, res) => {controller.addUser(req, res)});
+router.post("/google/:token", (req, res) => {controller.addUserbyGoogle(req, res)});
+router.post("/auth/", (req, res) => {controller.loginWithEmail(req, res)});
+router.post("/auth/google/:token", (req, res) => {controller.loginWithGoogle(req, res)});
 
 router.put("/", (req, res) => {controller.updateUser(req, res)});
 

@@ -9,6 +9,10 @@ export interface IUserPort {
 
 	// POST
 	addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User>
+	addUserbyGoogle(idToken: string): Promise<User>
+
+	loginWithEmail(email: string, password: string) : Promise<User>
+	loginWithGoogle(idToken: string) : Promise<User>
 
 	// PUT
 	updateUser(user: User): Promise<User>
