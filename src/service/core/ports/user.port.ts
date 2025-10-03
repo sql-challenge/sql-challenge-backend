@@ -14,6 +14,10 @@ export interface IUserPort {
 	loginWithEmail(email: string, password: string) : Promise<User>
 	loginWithGoogle(idToken: string) : Promise<User>
 
+	logout(uid: string) : void
+
+	resetPassword(uid: string, new_psw: string): Promise<void>
+
 	// PUT
 	updateUser(user: User): Promise<User>
 

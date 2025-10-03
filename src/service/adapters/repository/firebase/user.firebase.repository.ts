@@ -174,6 +174,14 @@ export class UserFirebaseRepository implements IUserPort {
 		return await this.getUserByUID(uid)
 	}
 
+	async logout(uid: string): Promise<void> {
+		await authUser.logout(uid)
+	}
+
+	async resetPassword(uid: string, new_psw: string): Promise<void> {
+		await authUser.resetPassword(uid, new_psw)
+	}
+
 	async updateUser(user: User): Promise<User> {
 		const ref = doc(this.userCollection, (user as any).uid);
 		await updateDoc(ref, {

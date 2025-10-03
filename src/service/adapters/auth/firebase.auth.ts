@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getAuth } from "firebase-admin/auth";
 import { auth } from "../../db/firebaseConfig";
 
@@ -27,6 +27,14 @@ export class UserAuthService {
 		const decoded = await getAuth().verifyIdToken(idToken);
 		return decoded.uid
 	}
+
+	async logout(uid: string): Promise<void> {
+		await getAuth().revokeRefreshTokens(uid);
+	}
+
+	async resetPassword(uid: string, newPassword: string): Promise<void> {
+		await getAuth().updateUser(uid, { password: newPassword });
+  }
 }
 
 export const authUser = new UserAuthService()

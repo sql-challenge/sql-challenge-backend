@@ -32,6 +32,12 @@ export class UserUseCase {
 	async loginWithGoogle(idToken: string): Promise<User> {
 		return await this.userPort.loginWithGoogle(idToken);
 	}
+	async logout(uid: string): Promise<void> {
+		return await this.userPort.logout(uid);
+	}
+	async resetPassword(uid: string, new_pasw: string): Promise<void> {
+		return await this.userPort.resetPassword(uid, new_pasw);
+	}
 
 	// PUT
 	async updateUser(user: User): Promise<User> {

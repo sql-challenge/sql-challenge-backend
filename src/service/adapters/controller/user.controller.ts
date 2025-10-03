@@ -85,6 +85,27 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
 	}
 };
 
+export const logout = async (req: Request, res: Response) => {
+	try {
+		const uid = req.params.uid
+		await userUseCase.logout(uid);
+		res.status(201).json();
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+	try {
+		const uid = req.params.uid
+		const newPsw = req.params.newPsw
+		await userUseCase.resetPassword(uid, newPsw);
+		res.status(201).json();
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
 // PUT
 export const updateUser = async (req: Request, res: Response) => {
 	try {

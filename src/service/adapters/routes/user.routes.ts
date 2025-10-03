@@ -12,6 +12,8 @@ router.post("/", (req, res) => {controller.addUser(req, res)});
 router.post("/google/:token", (req, res) => {controller.addUserbyGoogle(req, res)});
 router.post("/auth/", (req, res) => {controller.loginWithEmail(req, res)});
 router.post("/auth/google/:token", (req, res) => {controller.loginWithGoogle(req, res)});
+router.post("/logout/:uid", (req, res) => {controller.logout(req, res)});
+router.post("/resetPassword/:uid/:newPsw", (req, res) => {controller.resetPassword(req, res)});
 
 router.put("/", (req, res) => {controller.updateUser(req, res)});
 
