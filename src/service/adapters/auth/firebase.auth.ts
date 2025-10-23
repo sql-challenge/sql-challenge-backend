@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getAuth } from "firebase-admin/auth";
-import { auth } from "../../db/firebaseConfig";
+import { auth } from "../../db/firebase/firebaseConfig";
 
 export class UserAuthService {
 	async registerWithEmailAndPassword(email: string, password: string): Promise<string> {

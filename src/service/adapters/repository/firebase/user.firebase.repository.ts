@@ -1,6 +1,6 @@
 import { User } from "../../../core/domain/user.entity";
 import { IUserPort } from "../../../core/ports/user.port";
-import { db } from "../../../db/firebaseConfig";
+import { db } from "../../../db/firebase/firebaseConfig";
 import { collection, getDocs, getDoc, doc, query, where, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { authUser } from "../../auth/firebase.auth";
 
