@@ -1,5 +1,6 @@
 import express from "express";
 import userRoutes from '../../service/adapters/routes/user.routes'
+import rankingRoutes from '../../service/adapters/routes/ranking.routes'
 
 import cors from "cors";
 
@@ -17,5 +18,6 @@ routes.use(express.json());
 // IMPLEMENT LATER
 
 routes.use("/api/user", userRoutes)
+routes.use("/api/ranking", rankingRoutes)
 
 export default routes;
