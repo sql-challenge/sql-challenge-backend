@@ -26,8 +26,8 @@ export class UserUseCase {
 	async addUserbyGoogle(idToken: string): Promise<User> {
 		return await this.userPort.addUserbyGoogle(idToken);
 	}
-	async loginWithEmail(email: string, password: string): Promise<User> {
-		return await this.userPort.loginWithEmail(email, password);
+	async loginWithEmail(idToken: string): Promise<User> {
+		return await this.userPort.loginWithEmail(idToken);
 	}
 	async loginWithGoogle(idToken: string): Promise<User> {
 		return await this.userPort.loginWithGoogle(idToken);

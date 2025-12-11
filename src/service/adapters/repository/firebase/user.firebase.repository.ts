@@ -91,7 +91,7 @@ export class UserFirebaseRepository implements IUserPort {
 		);
 	}
 
-	async addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User> {
+	async addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin" | "imagePerfil" | "rankingPosition" | "xp">): Promise<User> {
 		let uid = ""
 		// Auth with email and password
 		uid = await authUser.registerWithEmailAndPassword((user as any).email, (user as any).password)
@@ -99,18 +99,17 @@ export class UserFirebaseRepository implements IUserPort {
 		// Auth with google
 		// const uid = authUser.registerWithGoogle()
 
-		
 		const date = new Date()
 		const ref = doc(this.userCollection, uid);
 		await setDoc(ref, {
 			username: (user as any).username,
 			nick: (user as any).nick,
 			email: (user as any).email,
-			imagePerfil: (user as any).imagePerfil,
+			imagePerfil: "",
 			createdAt: date,
 			lastLogin: date,
-			rankingPosition: (user as any).rankingPosition,
-			xp: (user as any).xp,
+			rankingPosition: 0,
+			xp: 0,
 			// password: (user as any).password
 		});
 		return new User(
@@ -118,11 +117,11 @@ export class UserFirebaseRepository implements IUserPort {
 			(user as any).username,
 			(user as any).nick,
 			(user as any).email,
-			(user as any).imagePerfil,
+			"",
 			date,
 			date,
-			(user as any).rankingPosition,
-			(user as any).xp,
+			0,
+			0,
 			[{
 				status: "",
 				username: "",
@@ -164,8 +163,8 @@ export class UserFirebaseRepository implements IUserPort {
 		);
 	}
 
-	async loginWithEmail(email: string, password: string): Promise<User> {
-		let uid = await authUser.loginWithEmailAndPassword(email, password)
+	async loginWithEmail(idToken: string): Promise<User> {
+		let uid = await authUser.loginWithEmailAndPassword(idToken)
 		return await this.getUserByUID(uid)
 	}
 	

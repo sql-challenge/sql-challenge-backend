@@ -1,19 +1,12 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getAuth } from "firebase-admin/auth";
-import { auth } from "../../db/firebase/firebaseConfig";
 
 export class UserAuthService {
 	async registerWithEmailAndPassword(email: string, password: string): Promise<string> {
-		const userCred = await createUserWithEmailAndPassword(auth, email, password);
-		return userCred.user.uid; // retorna só o UID
+		const user = await getAuth().createUser({ email, password });
+		return user.uid;
 	}
 
-	async loginWithEmailAndPassword(email: string, password: string): Promise<string> {
-		const userCred = await signInWithEmailAndPassword(auth, email, password);
-		return userCred.user.uid; // retorna UID se login for válido
-	}
-
-	async registerWithGoogle(idToken: string): Promise<{ uid: string; email: string; name?: string; picture?: string }> {
+	async registerWithGoogle(idToken: string) {
 		const decoded = await getAuth().verifyIdToken(idToken);
 		return {
 			uid: decoded.uid,
@@ -23,9 +16,14 @@ export class UserAuthService {
 		};
 	}
 
+	async loginWithEmailAndPassword(idToken: string): Promise<string> {
+		const decoded = await getAuth().verifyIdToken(idToken);
+		return decoded.uid;
+	}
+
 	async loginWithGoogle(idToken: string): Promise<string> {
 		const decoded = await getAuth().verifyIdToken(idToken);
-		return decoded.uid
+		return decoded.uid;
 	}
 
 	async logout(uid: string): Promise<void> {
@@ -34,7 +32,7 @@ export class UserAuthService {
 
 	async resetPassword(uid: string, newPassword: string): Promise<void> {
 		await getAuth().updateUser(uid, { password: newPassword });
-  }
+	}
 }
 
-export const authUser = new UserAuthService()
+export const authUser = new UserAuthService();

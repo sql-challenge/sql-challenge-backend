@@ -68,7 +68,7 @@ export const addUserbyGoogle = async (req: Request, res: Response) => {
 export const loginWithEmail = async (req: Request, res: Response) => {
 	try {
 		const body = req.body
-		const newUser = await userUseCase.loginWithEmail(body.email, body.password);
+		const newUser = await userUseCase.loginWithEmail(body.idToken);
 		res.status(201).json(newUser);
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });

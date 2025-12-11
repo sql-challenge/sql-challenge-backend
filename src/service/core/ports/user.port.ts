@@ -11,7 +11,7 @@ export interface IUserPort {
 	addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User>
 	addUserbyGoogle(idToken: string): Promise<User>
 
-	loginWithEmail(email: string, password: string) : Promise<User>
+	loginWithEmail(idToken: string) : Promise<User>
 	loginWithGoogle(idToken: string) : Promise<User>
 
 	logout(uid: string) : void
