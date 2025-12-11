@@ -1,35 +1,35 @@
-import { User } from "../domain/user.entity"
+import { IUserSignUp, IUserView } from "../domain/user.entity"
 import { IUserPort } from "../ports/user.port";
 
 export class UserUseCase {
 	constructor(private userPort: IUserPort) {}
 
 	// GET
-	async getAll(): Promise<User[]> {
+	async getAll(): Promise<IUserView[]> {
 		return await this.userPort.getAll();
 	}
-	async getUserByUID(uid: string): Promise<User> {
+	async getUserByUID(uid: string): Promise<IUserView> {
 		return await this.userPort.getUserByUID(uid);
 	}
-	async getUsersByName(name: string): Promise<User[]> {
+	async getUsersByName(name: string): Promise<IUserView[]> {
 		return await this.userPort.getUsersByName(name);
 	}
-	async getUserByEmail(email: string): Promise<User> {
+	async getUserByEmail(email: string): Promise<IUserView> {
 		// validate email
 		return await this.userPort.getUserByEmail(email);
 	}
 
 	// POST
-	async addUser(user: Omit<User, "uid" | "createdAt" | "lastLogin">): Promise<User> {
+	async addUser(user: IUserSignUp): Promise<IUserView> {
 		return await this.userPort.addUser(user);
 	}
-	async addUserbyGoogle(idToken: string): Promise<User> {
-		return await this.userPort.addUserbyGoogle(idToken);
-	}
-	async loginWithEmail(email: string, password: string): Promise<User> {
+	// async addUserbyGoogle(idToken: string): Promise<IUserView> {
+	// 	return await this.userPort.addUserbyGoogle(idToken);
+	// }
+	async loginWithEmail(email: string, password: string): Promise<IUserView> {
 		return await this.userPort.loginWithEmail(email, password);
 	}
-	async loginWithGoogle(idToken: string): Promise<User> {
+	async loginWithGoogle(idToken: string): Promise<IUserView> {
 		return await this.userPort.loginWithGoogle(idToken);
 	}
 	async logout(uid: string): Promise<void> {
@@ -40,7 +40,7 @@ export class UserUseCase {
 	}
 
 	// PUT
-	async updateUser(user: User): Promise<User> {
+	async updateUser(user: Partial<IUserView>): Promise<boolean> {
 		return await this.userPort.updateUser(user);
 	}
 

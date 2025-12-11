@@ -18,8 +18,8 @@ routes.use(express.json());
 // PRODUCTION
 // IMPLEMENT LATER
 
-routes.use("/api/user", userRoutes)
-routes.use("/api/ranking", rankingRoutes)
-routes.use("/api/capitulos", capituloRoutes);
+routes.use("/api/user", userRoutes);
+// routes.use("/api/ranking", rankingRoutes);
+// routes.use("/api/capitulos", capituloRoutes);
 
 export default routes;
