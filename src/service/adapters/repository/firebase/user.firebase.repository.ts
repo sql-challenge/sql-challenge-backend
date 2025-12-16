@@ -119,9 +119,8 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async addUser(form: IUserSignUp): Promise<IUserView> {
-		let uid = "";
-		// Auth with email and password
-		uid = await authUser.registerWithEmailAndPassword(form.email, form.password);
+		// TODO: handle error in firebase layer, in case of a email used, the uuid is null
+		const uid = await authUser.registerWithEmailAndPassword(form.email, form.password);
 		console.log('Criado usuário com uuid: ' + uid);
 		// Auth with google
 		// const uid = authUser.registerWithGoogle()
@@ -156,6 +155,7 @@ export class UserFirebaseRepository implements IUserPort {
 			// password: user.password
 		});
 		//
+		console.log(`Usuário criado: `, user)
 		return user;
 	}
 
