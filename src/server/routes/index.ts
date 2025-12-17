@@ -10,11 +10,11 @@ const routes = express();
 routes.use(express.json());
 //
 // DEVELOPMENT
-routes.use(cors({
-	origin: "http://localhost:3000", // Permite somente seu frontend
-	methods: ["GET", "POST", "PUT", "DELETE"],
-	allowedHeaders: ["Content-Type", "Authorization"]
-}));
+// routes.use(cors({
+// 	origin: "http://localhost:3000", // Permite somente seu frontend
+// 	methods: ["GET", "POST", "PUT", "DELETE"],
+// 	allowedHeaders: ["Content-Type", "Authorization"]
+// }));
 //
 // PRODUCTION
 routes.use(cors({
