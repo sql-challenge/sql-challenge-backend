@@ -15,6 +15,7 @@ export class UserFirebaseRepository implements IUserPort {
 					challenge_progress: docSnap.data().challenge_progress,
 					createdAt: docSnap.data().createdAt.toDate(),
 					email: docSnap.data().email,
+					nick: docSnap.data().nick,
 					friends: docSnap.data().friends,
 					imagePerfil: docSnap.data().imagePerfil,
 					lastLogin: docSnap.data().lastLogin.toDate(),
@@ -51,6 +52,7 @@ export class UserFirebaseRepository implements IUserPort {
 			challenge_progress: data.challenge_progress,
 			createdAt: data.createdAt.toDate(),
 			email: data.email,
+			nick: data.nick,
 			friends: data.friends,
 			imagePerfil: data.imagePerfil,
 			lastLogin: data.lastLogin.toDate(),
@@ -75,6 +77,7 @@ export class UserFirebaseRepository implements IUserPort {
 					lastLogin: docSnap.data().lastLogin.toDate(),
 					rankingPosition: docSnap.data().rankingPosition,
 					uid: docSnap.id,
+					nick: docSnap.data().nick,
 					username: docSnap.data().username,
 					xp: docSnap.data().xp,
 				}
@@ -100,6 +103,7 @@ export class UserFirebaseRepository implements IUserPort {
 			lastLogin: data.lastLogin.toDate(),
 			rankingPosition: data.rankingPosition,
 			uid: docSnap.id,
+			nick: data.nick,
 			username: data.username,
 			xp: data.xp,
 		}
@@ -121,7 +125,7 @@ export class UserFirebaseRepository implements IUserPort {
 	async addUser(form: IUserSignUp): Promise<IUserView> {
 		// TODO: handle error in firebase layer, in case of a email used, the uuid is null
 		const uid = await authUser.registerWithEmailAndPassword(form.email, form.password);
-		console.log('Criado usuário com uuid: ' + uid);
+		// console.log('Criado usuário com uuid: ' + uid);
 		// Auth with google
 		// const uid = authUser.registerWithGoogle()
 		// [TODO]: verify which entitys use timestamp from api and which from the database (can be divergent)
@@ -139,7 +143,7 @@ export class UserFirebaseRepository implements IUserPort {
 			friends: [],
 			challenge_progress: [],
 			uid: uid,
-			// nick: user.nick,
+			nick: form.nick,
 			// password: user.password
 		}
 		//

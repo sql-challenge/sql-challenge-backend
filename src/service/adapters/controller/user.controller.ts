@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { UserUseCase } from "../../core/useCases/user.useCase";
 import { UserFirebaseRepository } from "../repository/firebase/user.firebase.repository";
+import { ApiResponse } from "../../core/domain/http.entity";
+import { IUserView } from "../../core/domain/user.entity";
 
 const userUseCase = new UserUseCase(new UserFirebaseRepository());
 
@@ -16,7 +18,7 @@ export const getAll = async (req: Request, res: Response) => {
 
 export const getUserByUID = async (req: Request, res: Response) => {
 	try {
-		const uid= req.params.uid;
+		const uid = req.params.uid;
 		const user = await userUseCase.getUserByUID(uid);
 		res.status(200).json(user);
 	} catch (error: any) {
@@ -45,11 +47,14 @@ export const getUserByEmail = async (req: Request, res: Response) => {
 };
 
 // POST
-export const addUser = async (req: Request, res: Response) => {
+export const addUser = async (req: Request, res: Response<ApiResponse<IUserView>>) => {
 	try {
 		const user = req.body;
 		const newUser = await userUseCase.addUser(user);
-		res.status(201).json(newUser);
+		//
+		const body: ApiResponse<IUserView> = { data: newUser }
+		//
+		res.status(201).json(body);
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -69,7 +74,7 @@ export const loginWithEmail = async (req: Request, res: Response) => {
 	try {
 		const body = req.body
 		const newUser = await userUseCase.loginWithEmail(body.email, body.password);
-		res.status(201).json({data: newUser});
+		res.status(201).json({ data: newUser });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -79,7 +84,7 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
 	try {
 		const idToken = req.params.token
 		const newUser = await userUseCase.loginWithGoogle(idToken);
-		res.status(201).json({data: newUser});
+		res.status(201).json({ data: newUser });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -111,7 +116,7 @@ export const updateUser = async (req: Request, res: Response) => {
 	try {
 		const user = req.body;
 		const updatedUser = await userUseCase.updateUser(user);
-		res.status(200).json({data: updatedUser});
+		res.status(200).json({ data: updatedUser });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -120,7 +125,7 @@ export const updateUser = async (req: Request, res: Response) => {
 // DELETE
 export const deleteUser = async (req: Request, res: Response) => {
 	try {
-		const uid=req.params.uid;
+		const uid = req.params.uid;
 		await userUseCase.deleteUser(uid);
 		res.status(204).send();
 	} catch (error: any) {

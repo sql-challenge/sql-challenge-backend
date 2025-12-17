@@ -17,7 +17,7 @@ export interface IUser {
 	uid: string;
 	username: string;
 	xp: number;
-	// nick: string;
+	nick: string;
 	email: string;
 	// password?: string;
 	// imagePerfil: string;
