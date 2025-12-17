@@ -18,8 +18,8 @@ routes.use(cors({
 //
 // PRODUCTION
 routes.use(cors({
-	// force https in production
-	origin: `https://${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`, // Permite somente seu frontend
+	// TODO: force https in production, thinking
+	origin: `${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`, // Permite somente seu frontend
 	methods: ["GET", "POST", "PUT", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 }));
