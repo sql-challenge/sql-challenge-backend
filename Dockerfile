@@ -6,7 +6,7 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package. json package-lock.json* ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies
 RUN npm ci
@@ -33,12 +33,10 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
 # Copy built application
-COPY --from=builder --chown=nodejs: nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 
 USER nodejs
-
-EXPOSE 8000
 
 CMD ["npm", "start"]
