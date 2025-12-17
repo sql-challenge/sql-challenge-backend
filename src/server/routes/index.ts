@@ -6,16 +6,23 @@ import capituloRoutes from '../../service/adapters/routes/capitulo.routes'
 import cors from "cors";
 
 const routes = express();
-
+//
+routes.use(express.json());
+//
 // DEVELOPMENT
 routes.use(cors({
 	origin: "http://localhost:3000", // Permite somente seu frontend
 	methods: ["GET", "POST", "PUT", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 }));
-
-routes.use(express.json());
+//
 // PRODUCTION
+routes.use(cors({
+	// force https in production
+	origin: `https://${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`, // Permite somente seu frontend
+	methods: ["GET", "POST", "PUT", "DELETE"],
+	allowedHeaders: ["Content-Type", "Authorization"]
+}));
 // IMPLEMENT LATER
 
 routes.use("/api/user", userRoutes);
