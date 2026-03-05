@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ObjetivoUseCase } from "../../core/useCases/objetivo.useCase";
-import { ObjetivoPostgresRepository } from "../repository/postgres/objetivo.postgres.repository";
+import { ObjetivoPostgresRepository } from "../repository/postgres/gestao/objetivo.postgres.repository";
 
 const useCase = new ObjetivoUseCase(new ObjetivoPostgresRepository());
 

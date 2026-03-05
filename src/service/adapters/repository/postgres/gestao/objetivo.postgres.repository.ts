@@ -1,6 +1,6 @@
-import { Objetivo } from "../../../core/domain/objetivo.entity";
-import { IObjetivoPort } from "../../../core/ports/objetivo.port";
-import { pool } from "../../../db/postgresql/postgresqlConfig";
+import { Objetivo } from "../../../../core/domain/objetivo.entity";
+import { IObjetivoPort } from "../../../../core/ports/objetivo.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class ObjetivoPostgresRepository implements IObjetivoPort {
 

@@ -1,6 +1,6 @@
-import { Log } from "../../../core/domain/log.entity";
-import { ILogPort } from "../../../core/ports/log.port";
-import { pool } from "../../../db/postgresql/postgresqlConfig";
+import { Log } from "../../../../core/domain/log.entity";
+import { ILogPort } from "../../../../core/ports/log.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class LogPostgresRepository implements ILogPort {
 

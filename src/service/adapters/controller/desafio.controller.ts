@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { DesafioUseCase } from "../../core/useCases/desafio.useCase";
-import { DesafioPostgresRepository } from "../repository/postgres/desafio.postgres.repository";
+import { DesafioPostgresRepository } from "../repository/postgres/gestao/desafio.postgres.repository";
 
 const useCase = new DesafioUseCase(new DesafioPostgresRepository());
 

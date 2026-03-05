@@ -1,6 +1,6 @@
-import { Desafio } from "../../../core/domain/desafio.entity";
-import { IDesafioPort } from "../../../core/ports/desafio.port";
-import { pool } from "../../../db/postgresql/postgresqlConfig";
+import { Desafio } from "../../../../core/domain/desafio.entity";
+import { IDesafioPort } from "../../../../core/ports/desafio.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class DesafioPostgresRepository implements IDesafioPort {
     

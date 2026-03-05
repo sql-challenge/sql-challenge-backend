@@ -1,6 +1,6 @@
-import { Dica } from "../../../core/domain/dica.entity";
-import { IDicaPort } from "../../../core/ports/dica.port";
-import { pool } from "../../../db/postgresql/postgresqlConfig";
+import { Dica } from "../../../../core/domain/dica.entity";
+import { IDicaPort } from "../../../../core/ports/dica.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class DicaPostgresRepository implements IDicaPort {
 

@@ -2,7 +2,7 @@
 
 import { Request, Response } from "express";
 import { CapituloUseCase } from "../../core/useCases/capitulo.useCase";
-import { CapituloPostgresRepository } from "../repository/postgres/capitulo.postgres.repository";
+import { CapituloPostgresRepository } from "../repository/postgres/gestao/capitulo.postgres.repository";
 
 const useCase = new CapituloUseCase(new CapituloPostgresRepository());
 

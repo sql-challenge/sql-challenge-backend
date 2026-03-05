@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { VisaoUseCase } from "../../core/useCases/visao.useCase";
-import { VisaoPostgresRepository } from "../repository/postgres/visao.postgres.repository";
+import { VisaoPostgresRepository } from "../repository/postgres/gestao/visao.postgres.repository";
 
 const visaoUseCase = new VisaoUseCase(new VisaoPostgresRepository());
 
