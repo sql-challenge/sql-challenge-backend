@@ -8,7 +8,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 		const result = await pool.query(`SELECT * FROM consulta`);
 
 		return result.rows.map(
-			(r) => new Consulta(r.id, r.query)
+			(r) => new Consulta(r.id, r.id_capitulo, r.colunas, r.resultado)
 		);
 	}
 
@@ -21,6 +21,6 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 		if (result.rows.length === 0) return null;
 
 		const r = result.rows[0];
-		return new Consulta(r.id, r.query);
+		return new Consulta(r.id, r.id_capitulo, r.colunas, r.resultado);
 	}
 }

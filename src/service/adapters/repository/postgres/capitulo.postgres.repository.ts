@@ -9,16 +9,13 @@ export class CapituloPostgresRepository implements ICapituloPort {
     async getAll(): Promise<Capitulo[]> {
         const result = await pool.query("SELECT * FROM capitulo ORDER BY id ASC");
 
-        return result.rows.map((row: { id: number; id_topico: number; id_nivel: number; id_visao: number; descricao: string; numero: number; titulo: string; nivelmaximo: number; }) => 
+        return result.rows.map((row: { id: number; id_desafio: number; intro_historia: string; contexto_historia: string; numero: number; }) => 
             new Capitulo(
                 row.id,
-                row.id_topico,
-                row.id_nivel,
-                row.id_visao,
-                row.descricao,
-                row.numero,
-                row.titulo,
-                row.nivelmaximo
+                row.id_desafio,
+                row.intro_historia,
+                row.contexto_historia,
+                row.numero
             )
         );
     }
@@ -36,13 +33,10 @@ export class CapituloPostgresRepository implements ICapituloPort {
 
         return new Capitulo(
             row.id,
-            row.id_topico,
-            row.id_nivel,
-            row.id_visao,
-            row.descricao,
-            row.numero,
-            row.titulo,
-            row.nivelmaximo
+            row.id_desafio,
+            row.intro_historia,
+            row.contexto_historia,
+            row.numero
         );
     }
 }

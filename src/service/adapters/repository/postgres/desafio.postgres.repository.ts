@@ -10,9 +10,13 @@ export class DesafioPostgresRepository implements IDesafioPort {
         return result.rows.map((row: any) => 
             new Desafio(
                 row.id,
-                row.id_capitulo,
+                row.titulo,
                 row.descricao,
-                row.numero
+                row.xp_recompensa,
+                row.tempo_estimado,
+                row.taxa_conclusao,
+                row.criado_em,
+                row.atualizado_em
             )
         );
     }
@@ -30,9 +34,13 @@ export class DesafioPostgresRepository implements IDesafioPort {
 
         return new Desafio(
             row.id,
-            row.id_capitulo,
+            row.titulo,
             row.descricao,
-            row.numero
+            row.xp_recompensa,
+            row.tempo_estimado,
+            row.taxa_conclusao,
+            row.criado_em,
+            row.atualizado_em
         );
     }
 }

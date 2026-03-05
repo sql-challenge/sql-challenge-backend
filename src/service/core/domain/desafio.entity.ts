@@ -1,18 +1,12 @@
 export class Desafio {
-    private id: number;
-    private id_capitulo: number;
-    private descricao: string;
-    private numero: number;
-
     constructor(
-        id: number,
-        id_capitulo: number,
-        descricao: string,
-        numero: number
-    ) {
-        this.id = id;
-        this.id_capitulo = id_capitulo;
-        this.descricao = descricao;
-        this.numero = numero;
-    }
+        public id: number,
+        public titulo: string,
+        public descricao: string,
+        public xpRecompensa: number,
+        public tempoEstimado: string,
+        public taxaConclusao: number,
+        public criadoEm: string,
+        public atualizadoEm: string
+    ) {}
 }

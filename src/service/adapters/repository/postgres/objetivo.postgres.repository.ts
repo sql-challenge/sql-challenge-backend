@@ -10,8 +10,9 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
         return result.rows.map((row: any) =>
             new Objetivo(
                 row.id,
-                row.id_desafio,
-                row.descricao
+                row.id_capitulo,
+                row.descricao,
+                row.ordem
             )
         );
     }
@@ -29,8 +30,9 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
 
         return new Objetivo(
             row.id,
-            row.id_desafio,
-            row.descricao
+            row.id_capitulo,
+            row.descricao,
+            row.ordem
         );
     }
 }

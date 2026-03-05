@@ -1,6 +1,8 @@
 export class Consulta {
   constructor(
     public id: number,
-    public query: string,
+    public idCapitulo: number,
+    public colunas: string[],
+    public resultado: Record<string, unknown>[]
   ) {}
 }
