@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { DicaUseCase } from "../../core/useCases/dica.useCase";
-import { DicaPostgresRepository } from "../repository/postgres/dica.postgres.repository";
+import { DicaPostgresRepository } from "../repository/postgres/gestao/dica.postgres.repository";
 
 const useCase = new DicaUseCase(new DicaPostgresRepository());
 

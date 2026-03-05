@@ -1,6 +1,6 @@
-import { IVisaoPort } from "../../../core/ports/visao.port";
-import { Visao } from "../../../core/domain/visao.entity";
-import {pool} from "../../../db/postgresql/postgresqlConfig";
+import { IVisaoPort } from "../../../../core/ports/visao.port";
+import { Visao } from "../../../../core/domain/visao.entity";
+import {pool} from "../../../../db/postgresql/postgresqlConfig";
 
 export class VisaoPostgresRepository implements IVisaoPort {
 	private table = "visao";

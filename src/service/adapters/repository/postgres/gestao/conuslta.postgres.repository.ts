@@ -1,6 +1,6 @@
-import { pool } from "../../../db/postgresql/postgresqlConfig";
-import { Consulta } from "../../../core/domain/consulta.entity";
-import { IConsultaPort } from "../../../core/ports/consulta.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
+import { Consulta } from "../../../../core/domain/consulta.entity";
+import { IConsultaPort } from "../../../../core/ports/consulta.port";
 
 export class ConsultaPostgresRepository implements IConsultaPort {
 

@@ -1,8 +1,8 @@
 // src/adapters/repository/postgres/capitulo.postgres.repository.ts
 
-import { Capitulo } from "../../../core/domain/capitulo.entity";
-import { ICapituloPort } from "../../../core/ports/capitulo.port";
-import { pool } from "../../../db/postgresql/postgresqlConfig";
+import { Capitulo } from "../../../../core/domain/capitulo.entity";
+import { ICapituloPort } from "../../../../core/ports/capitulo.port";
+import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class CapituloPostgresRepository implements ICapituloPort {
     
