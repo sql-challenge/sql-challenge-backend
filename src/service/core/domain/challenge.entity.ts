@@ -1,4 +1,4 @@
-// export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert";
+export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert";
 
 export type MysteryStatus = "finished" | "available"; // can change!
 
@@ -6,14 +6,14 @@ export interface Mystery {
   id: string;
   title: string;
   description: string;
-  // difficulty: DifficultyLevel;
-  // category: string;
+  difficulty: DifficultyLevel;
+  category: string;
   xpReward: number;
   estimatedTime: string; // will change! (time in seconds)
-  // status: MysteryStatus; // can change!
+  status: MysteryStatus; // can change!
   completionRate: number; // will change! (process on backend)
-  // icon: string;
-  // tags: string[];
+  icon: string;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -21,18 +21,18 @@ export interface Mystery {
 export interface MysteryDetail extends Mystery {
   storyIntro: string;
   storyContext: string;
-  // objectives: string[];
+  objectives: string[];
   hints: Hint[]; // will change!
   database: DatabaseSchema;
   expectedOutput: QueryResult;
-  // testCases: TestCase[];
+  testCases: TestCase[];
 }
 
 export interface Hint {
   id: string;
   order: number;
   content: string;
-  // xpPenalty: number;
+  xpPenalty: number;
 }
 
 export interface DatabaseSchema { // adapt on management of database schemas
@@ -72,17 +72,17 @@ export interface QueryResult {
   rows: Record<string, unknown>[];
 }
 
-// export interface TestCase {
-//   id: string;
-//   description: string;
-//   expectedResult: QueryResult;
-//   weight: number; // percentage of total score
-// }
+export interface TestCase {
+  id: string;
+  description: string;
+  expectedResult: QueryResult;
+  weight: number; // percentage of total score
+}
 
 export interface UserMysteryProgress {
   mysteryId: string;
   userId: string;
-  // status: MysteryStatus;
+  status: MysteryStatus;
   attempts: number;
   hintsUsed: number;
   currentQuery: string;

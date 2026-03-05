@@ -10,10 +10,12 @@ export class LogPostgresRepository implements ILogPort {
         return result.rows.map((row: any) =>
             new Log(
                 row.id,
-                row.id_desafio,
-                row.id_usuario,
-                row.acao,
-                row.data
+                row.table_name,
+                row.operation,
+                row.old_data,
+                row.new_data,
+                row.changed_by,
+                row.changed_at
             )
         );
     }
@@ -31,10 +33,12 @@ export class LogPostgresRepository implements ILogPort {
 
         return new Log(
             row.id,
-            row.id_desafio,
-            row.id_usuario,
-            row.acao,
-            row.data
+            row.table_name,
+            row.operation,
+            row.old_data,
+            row.new_data,
+            row.changed_by,
+            row.changed_at
         );
     }
 }
