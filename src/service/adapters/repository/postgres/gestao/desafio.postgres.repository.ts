@@ -44,17 +44,17 @@ export class DesafioPostgresRepository implements IDesafioPort {
             row.atualizado_em
         );
     }
-    async getWithCapitulo(id: number, categoryId: number): Promise<Desafio & Capitulo> {
+    async getWithCapitulo(id: number, capituloId: number): Promise<Desafio & Capitulo> {
         const result = await pool.query(
             `SELECT d.*, c.id AS capitulo_id, c.intro_historia, c.xp_recompensa, c.contexto_historia, c.numero
              FROM desafio d
              JOIN capitulo c ON d.id = c.id_desafio
-             WHERE d.id = $1 AND c.id_categoria = $2`,
-            [id, categoryId]
+             WHERE d.id = $1 AND c.id = $2`,
+            [id, capituloId]
         );
 
         if (result.rows.length === 0)
-            throw new Error("Desafio com categoria não encontrado.");
+            throw new Error("Desafio com capítulo não encontrado.");
 
         const row = result.rows[0];
 

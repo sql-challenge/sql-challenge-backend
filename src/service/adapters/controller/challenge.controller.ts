@@ -14,6 +14,9 @@ import { ConsultaPostgresRepository } from "../repository/postgres/gestao/conusl
 import { Desafio } from "../../core/domain/desafio.entity";
 import { ApiResponse } from "../../core/domain/http.entity";
 import { Capitulo } from "../../core/domain/capitulo.entity";
+import { Objetivo } from "../../core/domain/objetivo.entity";
+import { Dica } from "../../core/domain/dica.entity";
+import { Consulta } from "../../core/domain/consulta.entity";
 
 const desafioUseCase = new DesafioUseCase(new DesafioPostgresRepository());
 const capituloUseCase = new CapituloUseCase(new CapituloPostgresRepository());
@@ -98,9 +101,8 @@ class ChallengeController {
      * Retorna um desafio junto ao respectivo capítulo, objetivos, dicas e solução esperada para um capítulo específico.
      * [TODO]: definir melhor o shape de resposta, se é um "MysteryDetail" completo ou um shape customizado para essa rota.
      */
-    async getWithCapitulo(req: Request, res: Response<ApiResponse<Desafio & Capitulo>>) {
+    async getWithCapitulo(req: Request, res: Response<ApiResponse<{desafio:Desafio & Capitulo; objetivos: Objetivo[]; dicas: Dica[]; consultaSolucao: Consulta[]; }>>) {
         try {
-            console.log("Request body:", req.body); // Log para debug, remover depois
             // const categoryId = Number(req.params.categoryId);
             const desafioId:string | null = req.body.desafioId || null;
             const capituloId = 1; // Placeholder, ajustar quando tiver a rota definida
@@ -117,7 +119,12 @@ class ChallengeController {
             }
 
             // Similar ao getById, mas filtrando por capítulo. O shape retornado pode ser o mesmo "MysteryDetail" ou um customizado.
-            res.status(200).json({ data: desafio }); // Placeholder
+            res.status(200).json({ data: {
+                desafio,
+                objetivos: await objetivoUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
+                dicas: await dicaUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
+                consultaSolucao: await consultaUseCase.getByCapituloId(capituloId) // TODO: ajustar para pegar por desafioId e capituloId, e talvez retornar lista    
+            } }); // Placeholder
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }

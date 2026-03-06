@@ -1,5 +1,8 @@
 import { Capitulo } from "../domain/capitulo.entity";
+import { Consulta } from "../domain/consulta.entity";
 import { Desafio } from "../domain/desafio.entity";
+import { Dica } from "../domain/dica.entity";
+import { Objetivo } from "../domain/objetivo.entity";
 import { IDesafioPort } from "../ports/desafio.port";
 
 export class DesafioUseCase {
