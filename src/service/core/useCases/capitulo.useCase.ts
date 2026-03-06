@@ -13,4 +13,8 @@ export class CapituloUseCase {
     async getById(id: number): Promise<Capitulo> {
         return await this.capPort.getById(id);
     }
+
+     async getByDesafioId(desafioId: number): Promise<Capitulo[]> {
+        return this.capPort.getByDesafioId(desafioId);
+    }
 }

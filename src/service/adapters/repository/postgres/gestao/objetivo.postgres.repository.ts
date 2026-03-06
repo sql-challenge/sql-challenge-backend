@@ -35,4 +35,20 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
             row.ordem
         );
     }
+
+    async getByCapituloId(capituloId: number): Promise<Objetivo[]> {
+        const result = await pool.query(
+            "SELECT * FROM objetivo WHERE id_capitulo = $1 ORDER BY ordem ASC",
+            [capituloId]
+        );
+
+        return result.rows.map((row: any) =>
+            new Objetivo(
+                row.id,
+                row.id_capitulo,
+                row.descricao,
+                row.ordem
+            )
+        );
+    }
 }

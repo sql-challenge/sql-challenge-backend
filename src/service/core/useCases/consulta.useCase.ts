@@ -12,4 +12,8 @@ export class ConsultaUseCase {
   async getById(id: number): Promise<Consulta | null> {
     return await this.consultaPort.getById(id);
   }
+
+  async getByCapituloId(idCapitulo: number): Promise<Consulta[]> {
+    return await this.consultaPort.getByCapituloId(idCapitulo);
+  } 
 }

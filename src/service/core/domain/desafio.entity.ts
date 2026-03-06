@@ -3,7 +3,7 @@ export class Desafio {
         public id: number,
         public titulo: string,
         public descricao: string,
-        public xpRecompensa: number,
+        // public xpRecompensa: number,
         public tempoEstimado: string,
         public taxaConclusao: number,
         public criadoEm: string,

@@ -11,4 +11,8 @@ export class ObjetivoUseCase {
     async getById(id: number): Promise<Objetivo> {
         return await this.objPort.getById(id);
     }
+
+    async getByCapituloId(capituloId: number): Promise<Objetivo[]> {
+        return this.objPort.getByCapituloId(capituloId);
+    }
 }

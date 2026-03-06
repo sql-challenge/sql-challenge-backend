@@ -1,3 +1,4 @@
+import { Capitulo } from "../../../../core/domain/capitulo.entity";
 import { Desafio } from "../../../../core/domain/desafio.entity";
 import { IDesafioPort } from "../../../../core/ports/desafio.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
@@ -12,7 +13,7 @@ export class DesafioPostgresRepository implements IDesafioPort {
                 row.id,
                 row.titulo,
                 row.descricao,
-                row.xp_recompensa,
+                // row.xp_recompensa,
                 row.tempo_estimado,
                 row.taxa_conclusao,
                 row.criado_em,
@@ -36,11 +37,40 @@ export class DesafioPostgresRepository implements IDesafioPort {
             row.id,
             row.titulo,
             row.descricao,
-            row.xp_recompensa,
+            // row.xp_recompensa,
             row.tempo_estimado,
             row.taxa_conclusao,
             row.criado_em,
             row.atualizado_em
         );
+    }
+    async getWithCapitulo(id: number, categoryId: number): Promise<Desafio & Capitulo> {
+        const result = await pool.query(
+            `SELECT d.*, c.id AS capitulo_id, c.intro_historia, c.xp_recompensa, c.contexto_historia, c.numero
+             FROM desafio d
+             JOIN capitulo c ON d.id = c.id_desafio
+             WHERE d.id = $1 AND c.id_categoria = $2`,
+            [id, categoryId]
+        );
+
+        if (result.rows.length === 0)
+            throw new Error("Desafio com categoria não encontrado.");
+
+        const row = result.rows[0];
+
+        return {
+            id: row.id,
+            titulo: row.titulo,
+            descricao: row.descricao,
+            tempoEstimado: row.tempo_estimado,
+            taxaConclusao: row.taxa_conclusao,
+            criadoEm: row.criado_em,
+            atualizadoEm: row.atualizado_em,
+            idDesafio: row.id,
+            introHistoria: row.intro_historia,
+            xp_recompensa: row.xp_recompensa,
+            contextoHistoria: row.contexto_historia,
+            numero: row.numero
+        };
     }
 }
