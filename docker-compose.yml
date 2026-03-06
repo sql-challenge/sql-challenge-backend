@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  # ─── PostgreSQL (gestão database) ───────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: sql-challenge-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-challenge_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-challenge_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-db_gestao_challenge}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro # Optional: for initial schema/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-challenge_user} -d ${POSTGRES_DB:-db_gestao_challenge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── Backend API ────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sql-challenge-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-challenge_user}:${POSTGRES_PASSWORD:-challenge_pass}@db:5432/${POSTGRES_DB:-db_gestao_challenge}?sslmode=disable
+      # Firebase env vars (pass through from .env)
+      apiKey: ${apiKey:-}
+      authDomain: ${authDomain:-}
+      projectId: ${projectId:-}
+      storageBucket: ${storageBucket:-}
+      messagingSenderId: ${messagingSenderId:-}
+      appId: ${appId:-}
+      measurementId: ${measurementId:-}
+      # Frontend CORS
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    driver: local
