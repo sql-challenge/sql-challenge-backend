@@ -30,7 +30,7 @@ routes.use(cors({
 routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);
 // routes.use("/api/ranking", rankingRoutes);
-// routes.use("/api/capitulos", capituloRoutes);
+routes.use("/api/capitulo", capituloRoutes);
 // routes.use("/api/desafios", desafioRoutes);
 // routes.use("/api/objetivos", objetivoRoutes);
 // routes.use("/api/consultas", consultaRoutes);

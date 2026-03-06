@@ -85,12 +85,12 @@ class ChallengeController {
             // }));
             // O shape retornado é o verdadeiro "MysteryDetail"
             res.status(200).json({
-                    data: desafio,
-                    // ...cap,
-                    // objetivos,
-                    // dicas,
-                    // expectedOutput: consulta?.[0] || null // se table retorna lista, pega primeiro
-                });
+                data: desafio,
+                // ...cap,
+                // objetivos,
+                // dicas,
+                // expectedOutput: consulta?.[0] || null // se table retorna lista, pega primeiro
+            });
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
@@ -101,10 +101,10 @@ class ChallengeController {
      * Retorna um desafio junto ao respectivo capítulo, objetivos, dicas e solução esperada para um capítulo específico.
      * [TODO]: definir melhor o shape de resposta, se é um "MysteryDetail" completo ou um shape customizado para essa rota.
      */
-    async getWithCapitulo(req: Request, res: Response<ApiResponse<{desafio:Desafio & Capitulo; objetivos: Objetivo[]; dicas: Dica[]; consultaSolucao: Consulta[]; }>>) {
+    async getWithCapitulo(req: Request, res: Response<ApiResponse<{ desafio: Desafio & Capitulo; objetivos: Objetivo[]; dicas: Dica[]; consultaSolucao: Consulta[]; }>>) {
         try {
             // const categoryId = Number(req.params.categoryId);
-            const desafioId:string | null = req.body.desafioId || null;
+            const desafioId: string | null = req.body.desafioId || null;
             const capituloId = 1; // Placeholder, ajustar quando tiver a rota definida
 
             if (!desafioId) {
@@ -119,12 +119,14 @@ class ChallengeController {
             }
 
             // Similar ao getById, mas filtrando por capítulo. O shape retornado pode ser o mesmo "MysteryDetail" ou um customizado.
-            res.status(200).json({ data: {
-                desafio,
-                objetivos: await objetivoUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
-                dicas: await dicaUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
-                consultaSolucao: await consultaUseCase.getByCapituloId(capituloId) // TODO: ajustar para pegar por desafioId e capituloId, e talvez retornar lista    
-            } }); // Placeholder
+            res.status(200).json({
+                data: {
+                    desafio,
+                    objetivos: await objetivoUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
+                    dicas: await dicaUseCase.getByCapituloId(capituloId), // TODO: ajustar para pegar por desafioId e capituloId
+                    consultaSolucao: await consultaUseCase.getByCapituloId(capituloId) // TODO: ajustar para pegar por desafioId e capituloId, e talvez retornar lista    
+                }
+            }); // Placeholder
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
