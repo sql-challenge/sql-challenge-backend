@@ -4,9 +4,6 @@ import { Request, Response } from "express";
 import { CapituloUseCase } from "../../core/useCases/capitulo.useCase";
 import { CapituloPostgresRepository } from "../repository/postgres/gestao/capitulo.postgres.repository";
 import { ApiResponse } from "../../core/domain/http.entity";
-import { Consulta } from "../../core/domain/consulta.entity";
-import { Dica } from "../../core/domain/dica.entity";
-import { Objetivo } from "../../core/domain/objetivo.entity";
 import { Capitulo, CapituloView } from "../../core/domain/capitulo.entity";
 import { ObjetivoUseCase } from "../../core/useCases/objetivo.useCase";
 import { ObjetivoPostgresRepository } from "../repository/postgres/gestao/objetivo.postgres.repository";
@@ -55,7 +52,7 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
         const [objetivos, dicas, consultaSolucao] = await Promise.all([
             objetivoUseCase.getByCapituloId(capitulo.id),
             dicaUseCase.getByCapituloId(capitulo.id),
-            consultaUseCase.getByCapituloId(capitulo.id)
+            consultaUseCase.getByCapituloId(capitulo.id),
         ]);
         // 
         if (consultaSolucao.length === 0) {
@@ -67,7 +64,8 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             capitulo,
             objetivos,
             dicas,
-            consultaSolucao: consultaSolucao[0]
+            consultaSolucao: consultaSolucao[0],
+            schema: {} // TODO: adaptar gestão de schemas de banco, talvez incluir um endpoint específico para isso
         } });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
