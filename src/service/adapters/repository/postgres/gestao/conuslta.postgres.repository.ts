@@ -8,7 +8,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 		const result = await pool.query(`SELECT * FROM consulta`);
 
 		return result.rows.map(
-			(r) => new Consulta(r.id, r.id_capitulo, r.colunas, r.resultado)
+			(r) => new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado)
 		);
 	}
 
@@ -21,7 +21,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 		if (result.rows.length === 0) return null;
 
 		const r = result.rows[0];
-		return new Consulta(r.id, r.id_capitulo, r.colunas, r.resultado);
+		return new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado);
 	}
 	async getByCapituloId(idCapitulo: number): Promise<Consulta[]> {
 		const result = await pool.query(
@@ -30,7 +30,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 		);
 
 		return result.rows.map(
-			(r) => new Consulta(r.id, r.id_capitulo, r.colunas, r.resultado)
+			(r) => new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado)
 		);
 	}
 }
