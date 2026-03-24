@@ -31,9 +31,9 @@ routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);
 // routes.use("/api/ranking", rankingRoutes);
 routes.use("/api/capitulo", capituloRoutes);
-// routes.use("/api/desafios", desafioRoutes);
-// routes.use("/api/objetivos", objetivoRoutes);
-// routes.use("/api/consultas", consultaRoutes);
-// routes.use("/api/dicas", dicaRoutes);
+routes.use("/api/desafios", desafioRoutes);
+routes.use("/api/objetivos", objetivoRoutes);
+routes.use("/api/consultas", consultaRoutes);
+routes.use("/api/dicas", dicaRoutes);
 
 export default routes;
