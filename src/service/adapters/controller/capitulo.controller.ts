@@ -65,7 +65,7 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             objetivos,
             dicas,
             consultaSolucao: consultaSolucao[0],
-            schema: {} // TODO: adaptar gestão de schemas de banco, talvez incluir um endpoint específico para isso
+            schema: {} as any // TODO: adaptar gestão de schemas de banco, talvez incluir um endpoint específico para isso
         } });
     } catch (error: any) {
         res.status(500).json({ error: error.message });

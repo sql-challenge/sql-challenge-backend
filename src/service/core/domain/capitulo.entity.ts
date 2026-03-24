@@ -18,13 +18,15 @@ export class Desafio {
     ) {}
 }
 
-export interface Capitulo {
-  id: number;
-  idDesafio: number;
-  introHistoria: string;
-  xp_recompensa: number;
-  contextoHistoria: string;
-  numero: number;
+export class Capitulo {
+  constructor(
+    public id: number,
+    public idDesafio: number,
+    public introHistoria: string,
+    public xp_recompensa: number,
+    public contextoHistoria: string,
+    public numero: number
+  ) {}
 }
 
 // export interface Objetivo {
