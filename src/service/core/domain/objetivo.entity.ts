@@ -3,6 +3,7 @@ export class Objetivo {
         public id: number,
         public idCapitulo: number,
         public descricao: string,
-        public ordem: number
+        public ordem: number,
+        public nivel: number
     ) {}
 }
