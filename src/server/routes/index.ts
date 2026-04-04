@@ -6,6 +6,7 @@ import desafioRoutes from '../../service/adapters/routes/desafio.routes'
 import objetivoRoutes from '../../service/adapters/routes/objetivo.routes'
 import consultaRoutes from '../../service/adapters/routes/consulta.routes'
 import dicaRoutes from '../../service/adapters/routes/dica.routes'
+import visaoRoutes from '../../service/adapters/routes/visao.routes'
 import cors from "cors";
 import challengeRoutes from "../../service/adapters/routes/challenge.routes";
 
@@ -35,5 +36,6 @@ routes.use("/api/desafios", desafioRoutes);
 routes.use("/api/objetivos", objetivoRoutes);
 routes.use("/api/consultas", consultaRoutes);
 routes.use("/api/dicas", dicaRoutes);
+routes.use("/api/visoes", visaoRoutes);
 
 export default routes;
