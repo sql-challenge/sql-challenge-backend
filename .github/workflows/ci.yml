@@ -65,3 +65,26 @@ jobs:
           name: coverage
           path: coverage/
           retention-days: 7
+
+      - name: Notificar falha por email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ CI falhou — ${{ github.repository }} (${{ github.ref_name }})"
+          to: pedro.f.facundes1@gmail.com,jabrirocha@hotmail.com,roromacedo1207@gmail.com
+          from: SQL Challenge CI <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            O pipeline de CI falhou.
+
+            Repositório : ${{ github.repository }}
+            Branch      : ${{ github.ref_name }}
+            Commit      : ${{ github.sha }}
+            Autor       : ${{ github.actor }}
+
+            Veja os detalhes em:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
