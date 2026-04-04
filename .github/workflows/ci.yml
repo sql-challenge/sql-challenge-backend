@@ -76,7 +76,7 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "❌ CI falhou — ${{ github.repository }} (${{ github.ref_name }})"
-          to: pedro.f.facundes1@gmail.com,jabrirocha@hotmail.com,roromacedo1207@gmail.com
+          to: ${{ github.event.pusher.email }}
           from: SQL Challenge CI <${{ secrets.MAIL_USERNAME }}>
           body: |
             O pipeline de CI falhou.
