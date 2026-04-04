@@ -12,7 +12,8 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
                 row.id,
                 row.id_capitulo,
                 row.descricao,
-                row.ordem
+                row.ordem,
+                row.nivel
             )
         );
     }
@@ -32,7 +33,8 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
             row.id,
             row.id_capitulo,
             row.descricao,
-            row.ordem
+            row.ordem,
+            row.nivel
         );
     }
 
@@ -47,7 +49,8 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
                 row.id,
                 row.id_capitulo,
                 row.descricao,
-                row.ordem
+                row.ordem,
+                row.nivel
             )
         );
     }
