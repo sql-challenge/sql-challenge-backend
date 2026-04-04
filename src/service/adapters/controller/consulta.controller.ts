@@ -2,7 +2,7 @@
 
 import { Request, Response } from "express";
 import { ConsultaUseCase } from "../../core/useCases/consulta.useCase";
-import { ConsultaPostgresRepository } from "../repository/postgres/gestao/conuslta.postgres.repository";
+import { ConsultaPostgresRepository } from "../repository/postgres/gestao/consulta.postgres.repository";
 
 // Instância do usecase + repository
 const useCase = new ConsultaUseCase(new ConsultaPostgresRepository());

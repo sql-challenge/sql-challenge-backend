@@ -9,7 +9,7 @@ import { ObjetivoUseCase } from "../../core/useCases/objetivo.useCase";
 import { ObjetivoPostgresRepository } from "../repository/postgres/gestao/objetivo.postgres.repository";
 import { DicaUseCase } from "../../core/useCases/dica.useCase";
 import { DicaPostgresRepository } from "../repository/postgres/gestao/dica.postgres.repository";
-import { ConsultaPostgresRepository } from "../repository/postgres/gestao/conuslta.postgres.repository";
+import { ConsultaPostgresRepository } from "../repository/postgres/gestao/consulta.postgres.repository";
 import { ConsultaUseCase } from "../../core/useCases/consulta.useCase";
 
 const capituloUseCase = new CapituloUseCase(new CapituloPostgresRepository());

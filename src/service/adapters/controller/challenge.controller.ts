@@ -10,7 +10,7 @@ import { ObjetivoPostgresRepository } from "../repository/postgres/gestao/objeti
 import { DicaUseCase } from "../../core/useCases/dica.useCase";
 import { DicaPostgresRepository } from "../repository/postgres/gestao/dica.postgres.repository";
 import { ConsultaUseCase } from "../../core/useCases/consulta.useCase";
-import { ConsultaPostgresRepository } from "../repository/postgres/gestao/conuslta.postgres.repository";
+import { ConsultaPostgresRepository } from "../repository/postgres/gestao/consulta.postgres.repository";
 import { Desafio } from "../../core/domain/desafio.entity";
 import { ApiResponse } from "../../core/domain/http.entity";
 import { Capitulo } from "../../core/domain/capitulo.entity";
