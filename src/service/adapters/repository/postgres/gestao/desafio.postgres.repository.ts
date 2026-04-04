@@ -68,7 +68,7 @@ export class DesafioPostgresRepository implements IDesafioPort {
             atualizadoEm: row.atualizado_em,
             idDesafio: row.id,
             introHistoria: row.intro_historia,
-            xp_recompensa: row.xp_recompensa,
+            xpRecompensa: row.xp_recompensa,
             contextoHistoria: row.contexto_historia,
             numero: row.numero
         };
