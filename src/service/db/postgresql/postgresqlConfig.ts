@@ -11,9 +11,7 @@ if (!connectionString) {
 
 export const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false, // necessário para Neon
-  },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 
 // opcional: teste de conexão
