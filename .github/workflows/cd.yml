@@ -55,11 +55,11 @@ jobs:
             EOF
 
             echo "Building and starting containers..."
-            docker compose up --build -d
+            docker-compose up --build -d
 
             echo "Cleaning up unused images..."
             docker image prune -f
 
             echo "Health check..."
             sleep 5
-            docker compose ps
+            docker-compose ps
