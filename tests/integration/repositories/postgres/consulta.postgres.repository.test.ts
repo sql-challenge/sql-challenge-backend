@@ -30,16 +30,13 @@ describe("[Integration] ConsultaPostgresRepository", () => {
         it("deve retornar a consulta 1 do capítulo 1", async () => {
             const result = await repo.getById(1);
 
-            expect(result).not.toBeNull();
-            expect(result!.id).toBe(1);
-            expect(result!.idCapitulo).toBe(1);
-            expect(result!.query).toContain("Feudo");
+            expect(result.id).toBe(1);
+            expect(result.idCapitulo).toBe(1);
+            expect(result.query).toContain("Feudo");
         });
 
-        it("deve retornar null para ID inexistente", async () => {
-            const result = await repo.getById(999);
-
-            expect(result).toBeNull();
+        it("deve lançar erro para ID inexistente", async () => {
+            await expect(repo.getById(999)).rejects.toThrow("Consulta não encontrada.");
         });
     });
 
