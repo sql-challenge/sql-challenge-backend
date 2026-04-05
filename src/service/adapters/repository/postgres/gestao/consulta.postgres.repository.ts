@@ -12,13 +12,13 @@ export class ConsultaPostgresRepository implements IConsultaPort {
         );
     }
 
-    async getById(id: number): Promise<Consulta | null> {
+    async getById(id: number): Promise<Consulta> {
         const result = await pool.query(
             `SELECT * FROM consulta WHERE id = $1`,
             [id]
         );
 
-        if (result.rows.length === 0) return null;
+        if (result.rows.length === 0) throw new Error("Consulta não encontrada.");
 
         const r = result.rows[0];
         return new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, r.resultado);

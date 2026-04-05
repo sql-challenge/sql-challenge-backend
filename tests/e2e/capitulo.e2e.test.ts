@@ -3,7 +3,6 @@
  */
 
 import request from "supertest";
-import app from "../../src/server/app";
 
 jest.mock("../../src/service/db/postgresql/postgresqlConfig", () => ({
     pool: {
@@ -12,6 +11,34 @@ jest.mock("../../src/service/db/postgresql/postgresqlConfig", () => ({
     },
 }));
 
+jest.mock("firebase/app", () => ({
+    initializeApp: jest.fn().mockReturnValue({}),
+    getApps: jest.fn().mockReturnValue([]),
+}));
+
+jest.mock("firebase/auth", () => ({
+    getAuth: jest.fn().mockReturnValue({}),
+    signInWithEmailAndPassword: jest.fn(),
+    createUserWithEmailAndPassword: jest.fn(),
+    signOut: jest.fn(),
+    signInWithCredential: jest.fn(),
+    GoogleAuthProvider: { credential: jest.fn() },
+}));
+
+jest.mock("firebase/firestore", () => ({
+    getFirestore: jest.fn().mockReturnValue({}),
+    collection: jest.fn(),
+    doc: jest.fn(),
+    getDoc: jest.fn(),
+    getDocs: jest.fn(),
+    setDoc: jest.fn(),
+    updateDoc: jest.fn(),
+    deleteDoc: jest.fn(),
+    query: jest.fn(),
+    where: jest.fn(),
+}));
+
+import app from "../../src/server/app";
 import { pool } from "../../src/service/db/postgresql/postgresqlConfig";
 
 const capituloRow = {
