@@ -73,9 +73,7 @@ jobs:
             EOF
 
             echo "Building and starting containers..."
-            # Usando 'docker compose' (sem hífen) se a VPS for moderna, 
-            # ou mantendo o que você já testou que funciona
-            docker-compose up -d --build
+            docker compose up -d --build
 
             echo "Cleaning up unused images..."
             docker image prune -f
