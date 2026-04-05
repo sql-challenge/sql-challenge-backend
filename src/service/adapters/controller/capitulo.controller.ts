@@ -64,13 +64,28 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             return;
         }
         //
-        const visoes = await Promise.all(
-            visaoList.map(async (v) => ({
-                id: v.id,
-                idCapitulo: v.idCapitulo,
-                comando: v.comando,
-                dados: await visaoUseCase.executeViewById(v.id),
-            }))
+        const visaoTabelas = await Promise.all(
+            visaoList.map(async (v, tabelaIdx) => {
+                const dados = await visaoUseCase.executeViewById(v.id);
+                const nome = v.comando.split(".").pop() ?? v.comando;
+                const colunas = dados.length > 0
+                    ? Object.keys(dados[0]).map((key, colIdx) => ({
+                        id: tabelaIdx * 100 + colIdx + 1,
+                        id_tabela: v.id,
+                        nome: key,
+                        tipo: "text",
+                        nulavel: true,
+                        chave_primaria: false,
+                        descricao: null,
+                    }))
+                    : [];
+                const exemplos = dados.map((row, rowIdx) => ({
+                    id: rowIdx + 1,
+                    id_tabela: v.id,
+                    dados: row,
+                }));
+                return { id: tabelaIdx + 1, id_visao: v.id, nome, descricao: null, colunas, exemplos };
+            })
         );
         //
         res.status(200).json({ data: {
@@ -78,7 +93,7 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             objetivos,
             dicas,
             consultaSolucao: consultaSolucao[0],
-            visoes,
+            schema: { visaoTabelas, visaoRelacionamentos: [] },
         } });
     } catch (error: any) {
         res.status(500).json({ error: error.message });

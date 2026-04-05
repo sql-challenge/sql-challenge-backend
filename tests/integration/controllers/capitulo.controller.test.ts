@@ -119,7 +119,9 @@ describe("[Integration] CapituloController", () => {
             expect(jsonArg.data).toHaveProperty("objetivos");
             expect(jsonArg.data).toHaveProperty("dicas");
             expect(jsonArg.data).toHaveProperty("consultaSolucao");
-            expect(jsonArg.data).toHaveProperty("visoes");
+            expect(jsonArg.data).toHaveProperty("schema");
+            expect(jsonArg.data.schema).toHaveProperty("visaoTabelas");
+            expect(jsonArg.data.schema).toHaveProperty("visaoRelacionamentos");
         });
 
         it("deve responder 400 para ID não numérico", async () => {

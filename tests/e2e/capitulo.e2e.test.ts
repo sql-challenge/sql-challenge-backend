@@ -109,6 +109,8 @@ describe("[E2E] GET /api/capitulo", () => {
         expect(res.body.data).toHaveProperty("objetivos");
         expect(res.body.data).toHaveProperty("dicas");
         expect(res.body.data).toHaveProperty("consultaSolucao");
-        expect(res.body.data).toHaveProperty("visoes");
+        expect(res.body.data).toHaveProperty("schema");
+        expect(res.body.data.schema).toHaveProperty("visaoTabelas");
+        expect(res.body.data.schema).toHaveProperty("visaoRelacionamentos");
     });
 });
