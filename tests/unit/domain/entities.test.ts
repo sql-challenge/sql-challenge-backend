@@ -25,7 +25,7 @@ describe("Entidades de Domínio", () => {
 
             expect(c.id).toBe(1);
             expect(c.idDesafio).toBe(1);
-            expect(c.xp_recompensa).toBe(100);
+            expect(c.xpRecompensa).toBe(100);
             expect(c.numero).toBe(1);
         });
     });
