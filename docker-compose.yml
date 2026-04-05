@@ -30,21 +30,13 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
+    env_file:
+      - .env
     environment:
       NODE_ENV: production
       PORT: ${PORT:-3000}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-challenge_user}:${POSTGRES_PASSWORD:-challenge_pass}@db:5432/${POSTGRES_DB:-db_gestao_challenge}?sslmode=disable
-      # Firebase env vars (pass through from .env)
-      apiKey: ${apiKey:-}
-      authDomain: ${authDomain:-}
-      projectId: ${projectId:-}
-      storageBucket: ${storageBucket:-}
-      messagingSenderId: ${messagingSenderId:-}
-      appId: ${appId:-}
-      measurementId: ${measurementId:-}
-      # Frontend CORS
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+      # DATABASE_URL será lida diretamente de .env para evitar interpolação
+      # Firebase env vars e outros também virão do arquivo .env
     depends_on:
       db:
         condition: service_healthy
