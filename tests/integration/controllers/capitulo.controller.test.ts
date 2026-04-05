@@ -10,12 +10,12 @@ import { makeCapitulo, makeObjetivo, makeDica, makeConsulta } from "../../helper
 jest.mock("../../../src/service/adapters/repository/postgres/gestao/capitulo.postgres.repository");
 jest.mock("../../../src/service/adapters/repository/postgres/gestao/objetivo.postgres.repository");
 jest.mock("../../../src/service/adapters/repository/postgres/gestao/dica.postgres.repository");
-jest.mock("../../../src/service/adapters/repository/postgres/gestao/conuslta.postgres.repository");
+jest.mock("../../../src/service/adapters/repository/postgres/gestao/consulta.postgres.repository");
 
 import { CapituloPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/capitulo.postgres.repository";
 import { ObjetivoPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/objetivo.postgres.repository";
 import { DicaPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/dica.postgres.repository";
-import { ConsultaPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/conuslta.postgres.repository";
+import { ConsultaPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/consulta.postgres.repository";
 
 import * as capituloController from "../../../src/service/adapters/controller/capitulo.controller";
 

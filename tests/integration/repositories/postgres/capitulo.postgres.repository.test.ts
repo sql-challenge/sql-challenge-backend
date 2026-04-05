@@ -20,9 +20,9 @@ describe("[Integration] CapituloPostgresRepository", () => {
             expect(result.length).toBe(5);
         });
 
-        it("deve retornar capítulos com xp_recompensa crescente", async () => {
+        it("deve retornar capítulos com xpRecompensa crescente", async () => {
             const result = await repo.getAll();
-            const xps = result.map(c => c.xp_recompensa);
+            const xps = result.map(c => c.xpRecompensa);
 
             expect(xps).toEqual([100, 200, 300, 400, 500]);
         });
@@ -35,7 +35,7 @@ describe("[Integration] CapituloPostgresRepository", () => {
             expect(result.id).toBe(1);
             expect(result.idDesafio).toBe(1);
             expect(result.numero).toBe(1);
-            expect(result.xp_recompensa).toBe(100);
+            expect(result.xpRecompensa).toBe(100);
         });
 
         it("deve lançar erro para ID inexistente", async () => {

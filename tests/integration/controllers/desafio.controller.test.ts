@@ -5,12 +5,21 @@
 import { Request, Response } from "express";
 import { makeDesafio } from "../../helpers/factories";
 
-jest.mock("../../../src/service/adapters/repository/postgres/gestao/desafio.postgres.repository");
+// Factory mock: expõe as funções diretamente para que o teste controle
+// a instância que já foi criada no nível de módulo do controller.
+const mockGetAll = jest.fn();
+const mockGetById = jest.fn();
+const mockGetWithCapitulo = jest.fn();
 
-import { DesafioPostgresRepository } from "../../../src/service/adapters/repository/postgres/gestao/desafio.postgres.repository";
+jest.mock("../../../src/service/adapters/repository/postgres/gestao/desafio.postgres.repository", () => ({
+    DesafioPostgresRepository: jest.fn().mockImplementation(() => ({
+        getAll: mockGetAll,
+        getById: mockGetById,
+        getWithCapitulo: mockGetWithCapitulo,
+    })),
+}));
+
 import * as desafioController from "../../../src/service/adapters/controller/desafio.controller";
-
-const mockRepo = DesafioPostgresRepository as jest.MockedClass<typeof DesafioPostgresRepository>;
 
 const mockReq = (params = {}) => ({ params } as unknown as Request);
 const mockRes = () => {
@@ -23,8 +32,8 @@ const mockRes = () => {
 describe("[Integration] DesafioController", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockRepo.prototype.getAll = jest.fn().mockResolvedValue([makeDesafio()]);
-        mockRepo.prototype.getById = jest.fn().mockResolvedValue(makeDesafio());
+        mockGetAll.mockResolvedValue([makeDesafio()]);
+        mockGetById.mockResolvedValue(makeDesafio());
     });
 
     describe("getAll", () => {
@@ -39,7 +48,7 @@ describe("[Integration] DesafioController", () => {
         });
 
         it("deve responder 500 em caso de erro no repositório", async () => {
-            mockRepo.prototype.getAll = jest.fn().mockRejectedValue(new Error("DB error"));
+            mockGetAll.mockRejectedValueOnce(new Error("DB error"));
             const req = mockReq();
             const res = mockRes();
 
@@ -60,7 +69,7 @@ describe("[Integration] DesafioController", () => {
         });
 
         it("deve responder 500 quando desafio não é encontrado", async () => {
-            mockRepo.prototype.getById = jest.fn().mockRejectedValue(new Error("Desafio não encontrado."));
+            mockGetById.mockRejectedValueOnce(new Error("Desafio não encontrado."));
             const req = mockReq({ id: "999" });
             const res = mockRes();
 
