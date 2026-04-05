@@ -91,11 +91,16 @@ describe("[E2E] GET /api/capitulo", () => {
     });
 
     it("deve retornar 200 para /api/capitulo/view/:id com dados completos", async () => {
+        const visaoRow = { id: 1, id_capitulo: 1, comando: "magical_world.regioes_reinos" };
+
         (pool.query as jest.Mock)
             .mockResolvedValueOnce({ rows: [capituloRow] })       // getById (capitulo)
             .mockResolvedValueOnce({ rows: [objetivoRow] })       // getByCapituloId (objetivos)
             .mockResolvedValueOnce({ rows: [dicaRow] })           // getByCapituloId (dicas)
-            .mockResolvedValueOnce({ rows: [consultaRow] });      // getByCapituloId (consultas)
+            .mockResolvedValueOnce({ rows: [consultaRow] })       // getByCapituloId (consultas)
+            .mockResolvedValueOnce({ rows: [visaoRow] })          // getByCapituloId (visoes)
+            .mockResolvedValueOnce({ rows: [visaoRow] })          // getById (visao p/ executeViewById)
+            .mockResolvedValueOnce({ rows: [] });                 // executeView (dados da view)
 
         const res = await request(app).get("/api/capitulo/view/1");
 
@@ -104,5 +109,6 @@ describe("[E2E] GET /api/capitulo", () => {
         expect(res.body.data).toHaveProperty("objetivos");
         expect(res.body.data).toHaveProperty("dicas");
         expect(res.body.data).toHaveProperty("consultaSolucao");
+        expect(res.body.data).toHaveProperty("visoes");
     });
 });
