@@ -5,7 +5,7 @@ import { collection, getDocs, getDoc, doc, query, where, addDoc, updateDoc, dele
 import { authUser } from "../../auth/firebase.auth";
 
 export class UserFirebaseRepository implements IUserPort {
-	private userCollection = collection(db, "User");
+	private get userCollection() { return collection(db, "User"); }
 
 	async getAll(): Promise<IUserView[]> {
 		const snapshot = await getDocs(this.userCollection);

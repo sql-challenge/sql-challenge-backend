@@ -4,7 +4,7 @@ import { IRankingPort } from "../../../core/ports/ranking.port";
 import { db } from "../../../db/firebase/firebaseConfig";
 
 export class RankingFirebaseRepository implements IRankingPort {
-	private rankingCollection = collection(db, "Ranking");
+	private get rankingCollection() { return collection(db, "Ranking"); }
 
 	// Retorna todos os rankings
 	async getAll(): Promise<Ranking[]> {
