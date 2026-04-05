@@ -4,33 +4,34 @@ import { IConsultaPort } from "../../../../core/ports/consulta.port";
 
 export class ConsultaPostgresRepository implements IConsultaPort {
 
-	async getAll(): Promise<Consulta[]> {
-		const result = await pool.query(`SELECT * FROM consulta`);
+    async getAll(): Promise<Consulta[]> {
+        const result = await pool.query(`SELECT * FROM consulta`);
 
-		return result.rows.map(
-			(r) => new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado)
-		);
-	}
+        return result.rows.map(
+            (r) => new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, r.resultado)
+        );
+    }
 
-	async getById(id: number): Promise<Consulta | null> {
-		const result = await pool.query(
-			`SELECT * FROM consulta WHERE id = $1`,
-			[id]
-		);
+    async getById(id: number): Promise<Consulta | null> {
+        const result = await pool.query(
+            `SELECT * FROM consulta WHERE id = $1`,
+            [id]
+        );
 
-		if (result.rows.length === 0) return null;
+        if (result.rows.length === 0) return null;
 
-		const r = result.rows[0];
-		return new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado);
-	}
-	async getByCapituloId(idCapitulo: number): Promise<Consulta[]> {
-		const result = await pool.query(
-			`SELECT * FROM consulta WHERE id_capitulo = $1`,
-			[idCapitulo]
-		);
+        const r = result.rows[0];
+        return new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, r.resultado);
+    }
 
-		return result.rows.map(
-			(r) => new Consulta(r.id, r.id_capitulo, r.query, r.colunas, r.resultado)
-		);
-	}
+    async getByCapituloId(idCapitulo: number): Promise<Consulta[]> {
+        const result = await pool.query(
+            `SELECT * FROM consulta WHERE id_capitulo = $1`,
+            [idCapitulo]
+        );
+
+        return result.rows.map(
+            (r) => new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, r.resultado)
+        );
+    }
 }

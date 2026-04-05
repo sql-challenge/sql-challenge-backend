@@ -32,7 +32,7 @@ describe("[Integration] VisaoPostgresRepository", () => {
 
         it("deve conter a visão regioes_reinos do capítulo 1", async () => {
             const result = await repo.getAll();
-            const visao = result.find(v => v.comando === "regioes_reinos");
+            const visao = result.find(v => v.comando === "magical_world.regioes_reinos");
 
             expect(visao).toBeDefined();
             expect(visao?.idCapitulo).toBe(1);
@@ -44,7 +44,7 @@ describe("[Integration] VisaoPostgresRepository", () => {
             const result = await repo.getById(1);
 
             expect(result.id).toBe(1);
-            expect(result.comando).toBe("regioes_reinos");
+            expect(result.comando).toBe("magical_world.regioes_reinos");
         });
 
         it("deve lançar erro para ID inexistente", async () => {

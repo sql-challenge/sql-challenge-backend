@@ -9,7 +9,7 @@ export class LogPostgresRepository implements ILogPort {
 
         return result.rows.map((row: any) =>
             new Log(
-                row.id,
+                Number(row.id),
                 row.table_name,
                 row.operation,
                 row.old_data,
@@ -32,7 +32,7 @@ export class LogPostgresRepository implements ILogPort {
         const row = result.rows[0];
 
         return new Log(
-            row.id,
+            Number(row.id),
             row.table_name,
             row.operation,
             row.old_data,

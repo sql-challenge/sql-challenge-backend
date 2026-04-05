@@ -9,11 +9,11 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
 
         return result.rows.map((row: any) =>
             new Objetivo(
-                row.id,
-                row.id_capitulo,
+                Number(row.id),
+                Number(row.id_capitulo),
                 row.descricao,
-                row.ordem,
-                row.nivel
+                Number(row.ordem),
+                Number(row.nivel)
             )
         );
     }
@@ -30,11 +30,11 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
         const row = result.rows[0];
 
         return new Objetivo(
-            row.id,
-            row.id_capitulo,
+            Number(row.id),
+            Number(row.id_capitulo),
             row.descricao,
-            row.ordem,
-            row.nivel
+            Number(row.ordem),
+            Number(row.nivel)
         );
     }
 
@@ -46,11 +46,11 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
 
         return result.rows.map((row: any) =>
             new Objetivo(
-                row.id,
-                row.id_capitulo,
+                Number(row.id),
+                Number(row.id_capitulo),
                 row.descricao,
-                row.ordem,
-                row.nivel
+                Number(row.ordem),
+                Number(row.nivel)
             )
         );
     }

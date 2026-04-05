@@ -9,11 +9,11 @@ export class DicaPostgresRepository implements IDicaPort {
 
         return result.rows.map((row: any) =>
             new Dica(
-                row.id,
-                row.id_capitulo,
-                row.ordem,
+                Number(row.id),
+                Number(row.id_capitulo),
+                Number(row.ordem),
                 row.conteudo,
-                row.penalidade_xp
+                Number(row.penalidade_xp)
             )
         );
     }
@@ -30,11 +30,11 @@ export class DicaPostgresRepository implements IDicaPort {
         const row = result.rows[0];
 
         return new Dica(
-            row.id,
-            row.id_capitulo,
-            row.ordem,
+            Number(row.id),
+            Number(row.id_capitulo),
+            Number(row.ordem),
             row.conteudo,
-            row.penalidade_xp
+            Number(row.penalidade_xp)
         );
     }
 
@@ -46,11 +46,11 @@ export class DicaPostgresRepository implements IDicaPort {
 
         return result.rows.map((row: any) =>
             new Dica(
-                row.id,
-                row.id_capitulo,
-                row.ordem,
+                Number(row.id),
+                Number(row.id_capitulo),
+                Number(row.ordem),
                 row.conteudo,
-                row.penalidade_xp
+                Number(row.penalidade_xp)
             )
         );
     }
