@@ -30,8 +30,17 @@ export class ConsultaPostgresRepository implements IConsultaPort {
             [idCapitulo]
         );
 
-        return result.rows.map(
-            (r) => new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, r.resultado)
-        );
+        return Promise.all(result.rows.map(async (r) => {
+            let resultado = Array.isArray(r.resultado) ? r.resultado : [];
+            if (resultado.length === 0 && r.query) {
+                try {
+                    const queryResult = await pool.query(r.query);
+                    resultado = queryResult.rows;
+                } catch {
+                    resultado = [];
+                }
+            }
+            return new Consulta(Number(r.id), Number(r.id_capitulo), r.query, r.colunas, resultado);
+        }));
     }
 }
