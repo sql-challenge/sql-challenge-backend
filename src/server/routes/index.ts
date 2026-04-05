@@ -11,6 +11,7 @@ import cors from "cors";
 import challengeRoutes from "../../service/adapters/routes/challenge.routes";
 
 const routes = express();
+routes.disable("x-powered-by");
 //
 routes.use(express.json());
 //
