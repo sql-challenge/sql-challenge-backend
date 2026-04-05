@@ -5,14 +5,10 @@
  */
 
 import { LogPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/log.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new LogPostgresRepository();
 
 describe("[Integration] LogPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar registros de log", async () => {

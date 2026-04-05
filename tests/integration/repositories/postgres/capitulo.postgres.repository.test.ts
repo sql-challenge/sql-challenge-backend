@@ -4,14 +4,10 @@
  */
 
 import { CapituloPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/capitulo.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new CapituloPostgresRepository();
 
 describe("[Integration] CapituloPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar os 5 capítulos do Mundo Mágico", async () => {

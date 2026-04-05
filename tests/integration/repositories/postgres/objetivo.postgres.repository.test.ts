@@ -4,14 +4,10 @@
  */
 
 import { ObjetivoPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/objetivo.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new ObjetivoPostgresRepository();
 
 describe("[Integration] ObjetivoPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar os 26 objetivos do Mundo Mágico", async () => {
