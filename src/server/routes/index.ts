@@ -17,17 +17,14 @@ routes.use(express.json());
 
 const allowedOrigins = [
 	"http://localhost:3000",
-	`${process.env.FRONTEND_URL}`,
-	`${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`,
-].filter(Boolean);
+	process.env.FRONTEND_URL,
+].filter((o): o is string => !!o && o !== "undefined");
 
 routes.use(cors({
 	origin: (origin, callback) => {
-		if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
-			callback(null, true);
-		} else {
-			callback(new Error(`CORS: origem não permitida — ${origin}`));
-		}
+		if (!origin) return callback(null, true);
+		const allowed = allowedOrigins.some(o => origin.startsWith(o));
+		callback(null, allowed);
 	},
 	methods: ["GET", "POST", "PUT", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
