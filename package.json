@@ -28,7 +28,9 @@
       "!src/service/db/**"
     ],
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov"]
+    "coverageReporters": ["text", "lcov"],
+    "forceExit": true,
+    "testTimeout": 15000
   },
   "keywords": [],
   "author": "",

@@ -4,18 +4,17 @@ import { IDesafioPort } from "../../../../core/ports/desafio.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
 export class DesafioPostgresRepository implements IDesafioPort {
-    
+
     async getAll(): Promise<Desafio[]> {
         const result = await pool.query("SELECT * FROM desafio ORDER BY id ASC");
 
-        return result.rows.map((row: any) => 
+        return result.rows.map((row: any) =>
             new Desafio(
-                row.id,
+                Number(row.id),
                 row.titulo,
                 row.descricao,
-                // row.xp_recompensa,
                 row.tempo_estimado,
-                row.taxa_conclusao,
+                Number(row.taxa_conclusao),
                 row.criado_em,
                 row.atualizado_em
             )
@@ -34,16 +33,16 @@ export class DesafioPostgresRepository implements IDesafioPort {
         const row = result.rows[0];
 
         return new Desafio(
-            row.id,
+            Number(row.id),
             row.titulo,
             row.descricao,
-            // row.xp_recompensa,
             row.tempo_estimado,
-            row.taxa_conclusao,
+            Number(row.taxa_conclusao),
             row.criado_em,
             row.atualizado_em
         );
     }
+
     async getWithCapitulo(id: number, capituloId: number): Promise<Desafio & Capitulo> {
         const result = await pool.query(
             `SELECT d.*, c.id AS capitulo_id, c.intro_historia, c.xp_recompensa, c.contexto_historia, c.numero
@@ -59,18 +58,18 @@ export class DesafioPostgresRepository implements IDesafioPort {
         const row = result.rows[0];
 
         return {
-            id: row.id,
+            id: Number(row.id),
             titulo: row.titulo,
             descricao: row.descricao,
             tempoEstimado: row.tempo_estimado,
-            taxaConclusao: row.taxa_conclusao,
+            taxaConclusao: Number(row.taxa_conclusao),
             criadoEm: row.criado_em,
             atualizadoEm: row.atualizado_em,
-            idDesafio: row.id,
+            idDesafio: Number(row.id),
             introHistoria: row.intro_historia,
-            xpRecompensa: row.xp_recompensa,
+            xpRecompensa: Number(row.xp_recompensa),
             contextoHistoria: row.contexto_historia,
-            numero: row.numero
+            numero: Number(row.numero)
         };
     }
 }
