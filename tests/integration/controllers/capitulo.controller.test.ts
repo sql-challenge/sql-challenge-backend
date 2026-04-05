@@ -14,6 +14,9 @@ const mockCapGetByDesafioId = jest.fn();
 const mockObjGetByCapituloId = jest.fn();
 const mockDicaGetByCapituloId = jest.fn();
 const mockConsultaGetByCapituloId = jest.fn();
+const mockVisaoGetByCapituloId = jest.fn();
+const mockVisaoGetById = jest.fn();
+const mockVisaoExecuteView = jest.fn();
 
 jest.mock("../../../src/service/adapters/repository/postgres/gestao/capitulo.postgres.repository", () => ({
     CapituloPostgresRepository: jest.fn().mockImplementation(() => ({
@@ -47,6 +50,15 @@ jest.mock("../../../src/service/adapters/repository/postgres/gestao/consulta.pos
     })),
 }));
 
+jest.mock("../../../src/service/adapters/repository/postgres/gestao/visao.postgres.repository", () => ({
+    VisaoPostgresRepository: jest.fn().mockImplementation(() => ({
+        getAll: jest.fn(),
+        getById: mockVisaoGetById,
+        getByCapituloId: mockVisaoGetByCapituloId,
+        executeView: mockVisaoExecuteView,
+    })),
+}));
+
 import * as capituloController from "../../../src/service/adapters/controller/capitulo.controller";
 
 const mockReq = (params = {}, body = {}) => ({ params, body } as unknown as Request);
@@ -66,6 +78,9 @@ describe("[Integration] CapituloController", () => {
         mockObjGetByCapituloId.mockResolvedValue([makeObjetivo()]);
         mockDicaGetByCapituloId.mockResolvedValue([makeDica()]);
         mockConsultaGetByCapituloId.mockResolvedValue([makeConsulta()]);
+        mockVisaoGetByCapituloId.mockResolvedValue([{ id: 1, idCapitulo: 1, comando: "magical_world.regioes_reinos" }]);
+        mockVisaoGetById.mockResolvedValue({ id: 1, idCapitulo: 1, comando: "magical_world.regioes_reinos" });
+        mockVisaoExecuteView.mockResolvedValue([{ reino: "Eldoria", regiao: "Norte" }]);
     });
 
     describe("getAll", () => {
@@ -104,6 +119,7 @@ describe("[Integration] CapituloController", () => {
             expect(jsonArg.data).toHaveProperty("objetivos");
             expect(jsonArg.data).toHaveProperty("dicas");
             expect(jsonArg.data).toHaveProperty("consultaSolucao");
+            expect(jsonArg.data).toHaveProperty("visoes");
         });
 
         it("deve responder 400 para ID não numérico", async () => {
