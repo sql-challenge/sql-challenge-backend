@@ -32,15 +32,13 @@ describe("ConsultaUseCase", () => {
             const result = await useCase.getById(1);
 
             expect(mockPort.getById).toHaveBeenCalledWith(1);
-            expect(result?.query).toContain("SELECT");
+            expect(result.query).toContain("SELECT");
         });
 
-        it("deve retornar null quando consulta não é encontrada", async () => {
-            mockPort.getById.mockResolvedValue(null);
+        it("deve lançar erro quando consulta não é encontrada", async () => {
+            mockPort.getById.mockRejectedValue(new Error("Consulta não encontrada."));
 
-            const result = await useCase.getById(999);
-
-            expect(result).toBeNull();
+            await expect(useCase.getById(999)).rejects.toThrow("Consulta não encontrada.");
         });
     });
 
