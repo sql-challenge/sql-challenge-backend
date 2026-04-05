@@ -15,11 +15,28 @@ jobs:
 
       - name: Generate .env and deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          PORT: ${{ secrets.PORT }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
+          FB_API_KEY: ${{ secrets.FB_API_KEY }}
+          FB_AUTH_DOMAIN: ${{ secrets.FB_AUTH_DOMAIN }}
+          FB_PROJECT_ID: ${{ secrets.FB_PROJECT_ID }}
+          FB_STORAGE_BUCKET: ${{ secrets.FB_STORAGE_BUCKET }}
+          FB_MESSAGING_SENDER_ID: ${{ secrets.FB_MESSAGING_SENDER_ID }}
+          FB_APP_ID: ${{ secrets.FB_APP_ID }}
+          FB_MEASUREMENT_ID: ${{ secrets.FB_MEASUREMENT_ID }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.VPS_PORT}}
+          port: ${{ secrets.VPS_PORT || 22 }} # Fallback para 22 se não definido
           envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,DB_PORT,PORT,NODE_ENV,DATABASE_URL,FRONTEND_URL,FRONTEND_PORT,FB_API_KEY,FB_AUTH_DOMAIN,FB_PROJECT_ID,FB_STORAGE_BUCKET,FB_MESSAGING_SENDER_ID,FB_APP_ID,FB_MEASUREMENT_ID
           script: |
             cd ${{ secrets.VPS_APP_PATH }}
@@ -28,34 +45,37 @@ jobs:
             git pull origin main
 
             echo "Writing .env from GitHub Secrets..."
+            # Usando EOF sem aspas para permitir a expansão de variáveis
             cat > .env <<EOF
             # ─── PostgreSQL ───────────────────────────────────────────────
-            POSTGRES_USER=${POSTGRES_USER}
-            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-            POSTGRES_DB=${POSTGRES_DB}
-            DB_PORT=${DB_PORT}
+            POSTGRES_USER=$POSTGRES_USER
+            POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+            POSTGRES_DB=$POSTGRES_DB
+            DB_PORT=$DB_PORT
 
             # ─── API ──────────────────────────────────────────────────────
-            PORT=${PORT}
-            NODE_ENV=${NODE_ENV}
-            DATABASE_URL=${DATABASE_URL}
+            PORT=$PORT
+            NODE_ENV=$NODE_ENV
+            DATABASE_URL=$DATABASE_URL
 
             # ─── Firebase ─────────────────────────────────────────────────
-            apiKey=${FB_API_KEY}
-            authDomain=${FB_AUTH_DOMAIN}
-            projectId=${FB_PROJECT_ID}
-            storageBucket=${FB_STORAGE_BUCKET}
-            messagingSenderId=${FB_MESSAGING_SENDER_ID}
-            appId=${FB_APP_ID}
-            measurementId=${FB_MEASUREMENT_ID}
+            apiKey=$FB_API_KEY
+            authDomain=$FB_AUTH_DOMAIN
+            projectId=$FB_PROJECT_ID
+            storageBucket=$FB_STORAGE_BUCKET
+            messagingSenderId=$FB_MESSAGING_SENDER_ID
+            appId=$FB_APP_ID
+            measurementId=$FB_MEASUREMENT_ID
 
             # ─── CORS / Frontend ──────────────────────────────────────────
-            FRONTEND_URL=${FRONTEND_URL}
-            FRONTEND_PORT=${FRONTEND_PORT}
+            FRONTEND_URL=$FRONTEND_URL
+            FRONTEND_PORT=$FRONTEND_PORT
             EOF
 
             echo "Building and starting containers..."
-            docker-compose up --build -d
+            # Usando 'docker compose' (sem hífen) se a VPS for moderna, 
+            # ou mantendo o que você já testou que funciona
+            docker-compose up -d --build
 
             echo "Cleaning up unused images..."
             docker image prune -f
