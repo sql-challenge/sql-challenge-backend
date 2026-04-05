@@ -4,14 +4,10 @@
  */
 
 import { DicaPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/dica.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new DicaPostgresRepository();
 
 describe("[Integration] DicaPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar as 15 dicas (3 por capítulo × 5 capítulos)", async () => {

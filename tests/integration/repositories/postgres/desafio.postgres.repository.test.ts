@@ -9,14 +9,10 @@
  */
 
 import { DesafioPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/desafio.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new DesafioPostgresRepository();
 
 describe("[Integration] DesafioPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar ao menos um desafio do banco", async () => {

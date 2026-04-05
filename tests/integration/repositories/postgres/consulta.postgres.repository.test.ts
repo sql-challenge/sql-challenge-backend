@@ -4,14 +4,10 @@
  */
 
 import { ConsultaPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/consulta.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new ConsultaPostgresRepository();
 
 describe("[Integration] ConsultaPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar 5 consultas (uma por capítulo)", async () => {

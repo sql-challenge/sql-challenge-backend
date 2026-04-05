@@ -4,14 +4,10 @@
  */
 
 import { VisaoPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/visao.postgres.repository";
-import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new VisaoPostgresRepository();
 
 describe("[Integration] VisaoPostgresRepository", () => {
-    afterAll(async () => {
-        await pool.end();
-    });
 
     describe("getAll", () => {
         it("deve retornar todas as visões cadastradas", async () => {
