@@ -11,11 +11,14 @@ import { DicaUseCase } from "../../core/useCases/dica.useCase";
 import { DicaPostgresRepository } from "../repository/postgres/gestao/dica.postgres.repository";
 import { ConsultaPostgresRepository } from "../repository/postgres/gestao/consulta.postgres.repository";
 import { ConsultaUseCase } from "../../core/useCases/consulta.useCase";
+import { VisaoUseCase } from "../../core/useCases/visao.useCase";
+import { VisaoPostgresRepository } from "../repository/postgres/gestao/visao.postgres.repository";
 
 const capituloUseCase = new CapituloUseCase(new CapituloPostgresRepository());
 const objetivoUseCase = new ObjetivoUseCase(new ObjetivoPostgresRepository());
 const dicaUseCase = new DicaUseCase(new DicaPostgresRepository());
 const consultaUseCase = new ConsultaUseCase(new ConsultaPostgresRepository());
+const visaoUseCase = new VisaoUseCase(new VisaoPostgresRepository());
 // GET ALL
 export const getAll = async (req: Request, res: Response) => {
     try {
@@ -49,23 +52,33 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
         //
         const capitulo = await capituloUseCase.getById(capituloId);
         //
-        const [objetivos, dicas, consultaSolucao] = await Promise.all([
+        const [objetivos, dicas, consultaSolucao, visaoList] = await Promise.all([
             objetivoUseCase.getByCapituloId(capitulo.id),
             dicaUseCase.getByCapituloId(capitulo.id),
             consultaUseCase.getByCapituloId(capitulo.id),
+            visaoUseCase.getByCapituloId(capitulo.id),
         ]);
-        // 
+        //
         if (consultaSolucao.length === 0) {
             res.status(404).json({ error: "Solução esperada (consulta) não encontrada para este capítulo." });
             return;
-         }
+        }
+        //
+        const visoes = await Promise.all(
+            visaoList.map(async (v) => ({
+                id: v.id,
+                idCapitulo: v.idCapitulo,
+                comando: v.comando,
+                dados: await visaoUseCase.executeViewById(v.id),
+            }))
+        );
         //
         res.status(200).json({ data: {
             capitulo,
             objetivos,
             dicas,
             consultaSolucao: consultaSolucao[0],
-            schema: {} as any // TODO: adaptar gestão de schemas de banco, talvez incluir um endpoint específico para isso
+            visoes,
         } });
     } catch (error: any) {
         res.status(500).json({ error: error.message });

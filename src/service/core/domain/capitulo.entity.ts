@@ -79,11 +79,17 @@ export interface VisaoDadoExemplo {
   dados: Record<string, unknown>;
 }
 
-// Example CapituloView using the new DDL-matching names
+export interface VisaoComDados {
+  id: number;
+  idCapitulo: number;
+  comando: string;
+  dados: Record<string, unknown>[];
+}
+
 export interface CapituloView {
   capitulo: Capitulo;
   objetivos: Objetivo[];
   dicas: Dica[];
   consultaSolucao: Consulta;
-  schema: DatabaseSchema;
+  visoes: VisaoComDados[];
 }
