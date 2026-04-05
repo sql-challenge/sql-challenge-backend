@@ -9,7 +9,7 @@ export class ConsultaUseCase {
     return await this.consultaPort.getAll();
   }
 
-  async getById(id: number): Promise<Consulta | null> {
+  async getById(id: number): Promise<Consulta> {
     return await this.consultaPort.getById(id);
   }
 
