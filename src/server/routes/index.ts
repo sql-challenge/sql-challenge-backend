@@ -14,20 +14,24 @@ const routes = express();
 routes.disable("x-powered-by");
 //
 routes.use(express.json());
-//
-// DEVELOPMENT
+
+const allowedOrigins = [
+	"http://localhost:3000",
+	`${process.env.FRONTEND_URL}`,
+	`${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`,
+].filter(Boolean);
+
 routes.use(cors({
-	origin: "http://localhost:3000", // Permite somente seu frontend
+	origin: (origin, callback) => {
+		if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
+			callback(null, true);
+		} else {
+			callback(new Error(`CORS: origem não permitida — ${origin}`));
+		}
+	},
 	methods: ["GET", "POST", "PUT", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 }));
-// PRODUCTION OR STAGING
-routes.use(cors({
-	origin: `${process.env.FRONTEND_URL}:${process.env.FRONTEND_PORT}`, // Permite somente seu frontend
-	methods: ["GET", "POST", "PUT", "DELETE"],
-	allowedHeaders: ["Content-Type", "Authorization"]
-}));
-// IMPLEMENT LATER
 
 routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);

@@ -98,6 +98,7 @@ describe("[E2E] GET /api/capitulo", () => {
             .mockResolvedValueOnce({ rows: [objetivoRow] })       // getByCapituloId (objetivos)
             .mockResolvedValueOnce({ rows: [dicaRow] })           // getByCapituloId (dicas)
             .mockResolvedValueOnce({ rows: [consultaRow] })       // getByCapituloId (consultas)
+            .mockResolvedValueOnce({ rows: [] })                  // execução dinâmica da consulta (resultado null)
             .mockResolvedValueOnce({ rows: [visaoRow] })          // getByCapituloId (visoes)
             .mockResolvedValueOnce({ rows: [visaoRow] })          // getById (visao p/ executeViewById)
             .mockResolvedValueOnce({ rows: [] });                 // executeView (dados da view)
