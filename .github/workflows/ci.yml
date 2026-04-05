@@ -46,6 +46,13 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
+      - name: Setup integration test database
+        env:
+          PGPASSWORD: challenge_pass
+        run: |
+          psql -h localhost -U challenge_user -d db_gestao_challenge -f tests/fixtures/schema.sql
+          psql -h localhost -U challenge_user -d db_gestao_challenge -f tests/fixtures/data.sql
+
       - name: Run unit tests
         run: npm run test:unit
 

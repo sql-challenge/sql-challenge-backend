@@ -56,7 +56,7 @@ describe("[Integration] DesafioPostgresRepository", () => {
 
             expect(result.id).toBe(1);
             expect(result.numero).toBe(1);
-            expect(result.xp_recompensa).toBe(100);
+            expect(result.xpRecompensa).toBe(100);
         });
 
         it("deve lançar erro para combinação desafio+capítulo inválida", async () => {

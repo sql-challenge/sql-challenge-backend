@@ -3,7 +3,7 @@
  * Requer banco PostgreSQL ativo com dados do DML.
  */
 
-import { ConsultaPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/conuslta.postgres.repository";
+import { ConsultaPostgresRepository } from "../../../../src/service/adapters/repository/postgres/gestao/consulta.postgres.repository";
 import { pool } from "../../../../src/service/db/postgresql/postgresqlConfig";
 
 const repo = new ConsultaPostgresRepository();
