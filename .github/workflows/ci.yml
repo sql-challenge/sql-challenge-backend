@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "📄 Swagger disponível em:"
           echo "   Local  : http://localhost:3000/api/docs"
-          echo "   VPS    : https://apihub-macedo.duckdns.org/sql/api/docs"
+          echo "   VPS    : https://apihub-macedo.duckdns.org/api/docs"
 
       - name: Notificar falha por email
         if: failure()
