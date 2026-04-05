@@ -5,6 +5,8 @@ import { makeVisao } from "../../helpers/factories";
 const mockPort: jest.Mocked<IVisaoPort> = {
     getAll: jest.fn(),
     getById: jest.fn(),
+    getByCapituloId: jest.fn(),
+    executeView: jest.fn(),
 };
 
 const useCase = new VisaoUseCase(mockPort);

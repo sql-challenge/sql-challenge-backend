@@ -24,7 +24,7 @@ export const makeCapitulo = (override: Partial<Capitulo> = {}): Capitulo =>
         override.id ?? 1,
         override.idDesafio ?? 1,
         override.introHistoria ?? "O mundo mágico vive sob a sombra do preconceito.",
-        override.xp_recompensa ?? 100,
+        override.xpRecompensa ?? 100,
         override.contextoHistoria ?? "Mapeie as regiões e reinos do mundo mágico.",
         override.numero ?? 1
     );
