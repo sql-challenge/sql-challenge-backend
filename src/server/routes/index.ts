@@ -9,6 +9,7 @@ import dicaRoutes from '../../service/adapters/routes/dica.routes'
 import visaoRoutes from '../../service/adapters/routes/visao.routes'
 import cors from "cors";
 import challengeRoutes from "../../service/adapters/routes/challenge.routes";
+import sessionRoutes from "../../service/adapters/routes/chapter-session.routes";
 
 const routes = express();
 routes.disable("x-powered-by");
@@ -33,6 +34,7 @@ routes.use(cors({
 
 routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);
+routes.use("/api/sessions", sessionRoutes);
 // routes.use("/api/ranking", rankingRoutes);
 routes.use("/api/capitulo", capituloRoutes);
 routes.use("/api/desafios", desafioRoutes);
