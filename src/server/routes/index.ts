@@ -23,6 +23,7 @@ const allowedOrigins = [
 routes.use(cors({
 	origin: (origin, callback) => {
 		if (!origin) return callback(null, true);
+		if (origin.endsWith(".vercel.app")) return callback(null, true);
 		const allowed = allowedOrigins.some(o => origin.startsWith(o));
 		callback(null, allowed);
 	},
