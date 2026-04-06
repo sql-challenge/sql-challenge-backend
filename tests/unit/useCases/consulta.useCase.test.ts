@@ -6,6 +6,7 @@ const mockPort: jest.Mocked<IConsultaPort> = {
     getAll: jest.fn(),
     getById: jest.fn(),
     getByCapituloId: jest.fn(),
+    getByObjetivoId: jest.fn(),
 };
 
 const useCase = new ConsultaUseCase(mockPort);
