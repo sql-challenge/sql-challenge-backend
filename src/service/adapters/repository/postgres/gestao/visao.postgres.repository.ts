@@ -33,7 +33,7 @@ export class VisaoPostgresRepository implements IVisaoPort {
 	async executeView(comando: string): Promise<Record<string, unknown>[]> {
 		if (!/^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$/.test(comando))
 			throw new Error("Nome de visão inválido.");
-		const result = await pool.query(`SELECT * FROM ${comando}`);
+		const result = await pool.query(`SELECT * FROM ${comando} LIMIT 100`);
 		return result.rows;
 	}
 }
