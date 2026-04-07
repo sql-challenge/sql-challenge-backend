@@ -5,6 +5,8 @@ import { ApiResponse } from "../../core/domain/http.entity";
 import { IUserView } from "../../core/domain/user.entity";
 import { sendEmail } from "../email/email.service";
 import { newChallengeTemplate } from "../email/newChallengeTemplate";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+// Resend removido — usando Nodemailer + Gmail
 
 const userUseCase = new UserUseCase(new UserFirebaseRepository());
 
