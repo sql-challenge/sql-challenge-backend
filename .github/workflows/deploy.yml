@@ -70,7 +70,7 @@ jobs:
             [ -f "$ENV_FILE" ] || { echo "❌ $ENV_FILE não encontrado"; exit 1; }
 
             IMAGE_TAG=$IMAGE_TAG docker compose --env-file $ENV_FILE up -d --build
-            docker tag sql-challenge-backend-api:$IMAGE_TAG sql-challenge-backend-api:$SHA_TAG
+            docker tag backend-api:$IMAGE_TAG backend-api:$SHA_TAG || true
 
-            docker images sql-challenge-backend-api --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f || true
-            echo "✅ Deploy: sql-challenge-backend-api:$IMAGE_TAG ($SHA_TAG)"
+            docker images backend-api --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f || true
+            echo "✅ Deploy: backend-api:$IMAGE_TAG ($SHA_TAG)"
