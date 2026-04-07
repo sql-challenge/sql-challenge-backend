@@ -3,6 +3,7 @@ import { IUserView, IUser, IUserSignUp } from "../domain/user.entity"
 export interface IUserPort {
 	// GET
 	getAll(): Promise<IUserView[]>
+	getTopByXP(limit?: number): Promise<IUserView[]>
 	getUserByUID(uid: string): Promise<IUserView>
 	getUsersByName(name: string): Promise<IUserView[]>
 	getUserByEmail(email: string): Promise<IUserView>
@@ -13,6 +14,7 @@ export interface IUserPort {
 
 	loginWithEmail(email: string, password: string) : Promise<IUserView>
 	loginWithGoogle(idToken: string) : Promise<IUserView>
+	loginWithOAuth(idToken: string) : Promise<IUserView>
 
 	logout(uid: string) : void
 
@@ -21,7 +23,18 @@ export interface IUserPort {
 	// PUT
 	updateUser(user: Partial<IUserView>): Promise<boolean>
 
+	// challenge_progress subcollection
+	saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void>
+
 	// DELETE
 	deleteUser(uid: string): void
 
+}
+
+export interface IChapterProgressDto {
+	desafioId: string
+	nameChallenge: string
+	capFinish: number
+	xpObtido: number
+	tempoSegundos: number
 }
