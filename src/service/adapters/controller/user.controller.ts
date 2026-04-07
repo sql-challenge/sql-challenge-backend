@@ -7,6 +7,16 @@ import { IUserView } from "../../core/domain/user.entity";
 const userUseCase = new UserUseCase(new UserFirebaseRepository());
 
 // GET
+export const getTopByXP = async (req: Request, res: Response) => {
+	try {
+		const limit = req.query.limit ? Number(req.query.limit) : 20;
+		const users = await userUseCase.getTopByXP(limit);
+		res.status(200).json(users);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
 export const getAll = async (req: Request, res: Response) => {
 	try {
 		const users = await userUseCase.getAll();
@@ -90,6 +100,25 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
 	}
 };
 
+/**
+ * POST /api/user/auth/oauth
+ * Recebe um Firebase ID token (Google ou GitHub) e faz login/cadastro automático.
+ * O Firebase valida a identidade — o backend nunca armazena senhas de provedores OAuth.
+ */
+export const loginWithOAuth = async (req: Request, res: Response) => {
+	try {
+		const { idToken } = req.body;
+		if (!idToken) {
+			res.status(400).json({ error: "idToken é obrigatório." });
+			return;
+		}
+		const user = await userUseCase.loginWithOAuth(idToken);
+		res.status(200).json({ data: user });
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
 export const logout = async (req: Request, res: Response) => {
 	try {
 		const uid = req.params.uid
@@ -117,6 +146,22 @@ export const updateUser = async (req: Request, res: Response) => {
 		const user = req.body;
 		const updatedUser = await userUseCase.updateUser(user);
 		res.status(200).json({ data: updatedUser });
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+// POST /api/user/:uid/progress
+export const saveChapterProgress = async (req: Request, res: Response) => {
+	try {
+		const { uid } = req.params;
+		const { desafioId, nameChallenge, capFinish, xpObtido, tempoSegundos } = req.body;
+		if (!desafioId || !nameChallenge || capFinish == null || xpObtido == null || tempoSegundos == null) {
+			res.status(400).json({ error: "Campos obrigatórios: desafioId, nameChallenge, capFinish, xpObtido, tempoSegundos." });
+			return;
+		}
+		await userUseCase.saveChapterProgress(uid, { desafioId: String(desafioId), nameChallenge, capFinish: Number(capFinish), xpObtido: Number(xpObtido), tempoSegundos: Number(tempoSegundos) });
+		res.status(200).json({ data: { ok: true } });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}

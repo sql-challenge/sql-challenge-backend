@@ -69,7 +69,7 @@ describe("Entidades de Domínio", () => {
 
     describe("Consulta", () => {
         it("deve criar instância com query e colunas", () => {
-            const c = new Consulta(1, 1, "SELECT * FROM regioes_reinos;", ["nome_reino", "geografia"], []);
+            const c = new Consulta(1, 1, null, "SELECT * FROM regioes_reinos;", ["nome_reino", "geografia"], []);
 
             expect(c.query).toContain("SELECT");
             expect(c.colunas).toHaveLength(2);
@@ -78,7 +78,7 @@ describe("Entidades de Domínio", () => {
 
         it("deve aceitar resultado preenchido", () => {
             const resultado = [{ nome_reino: "Reino da Luz", geografia: "N" }];
-            const c = new Consulta(1, 1, "SELECT * FROM regioes_reinos;", ["nome_reino", "geografia"], resultado);
+            const c = new Consulta(1, 1, null, "SELECT * FROM regioes_reinos;", ["nome_reino", "geografia"], resultado);
 
             expect(c.resultado).toHaveLength(1);
         });

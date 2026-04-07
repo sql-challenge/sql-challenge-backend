@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getAuth } from "firebase-admin/auth";
 import { auth } from "../../db/firebase/firebaseConfig";
+import { admin } from "../../db/firebase/firebaseAdminConfig";
 
 export class UserAuthService {
 	async registerWithEmailAndPassword(email: string, password: string): Promise<string> {
@@ -14,7 +14,7 @@ export class UserAuthService {
 	}
 
 	async registerWithGoogle(idToken: string): Promise<{ uid: string; email: string; name?: string; picture?: string }> {
-		const decoded = await getAuth().verifyIdToken(idToken);
+		const decoded = await admin.auth().verifyIdToken(idToken);
 		return {
 			uid: decoded.uid,
 			email: decoded.email || "",
@@ -24,17 +24,28 @@ export class UserAuthService {
 	}
 
 	async loginWithGoogle(idToken: string): Promise<string> {
-		const decoded = await getAuth().verifyIdToken(idToken);
+		const decoded = await admin.auth().verifyIdToken(idToken);
 		return decoded.uid
 	}
 
 	async logout(uid: string): Promise<void> {
-		await getAuth().revokeRefreshTokens(uid);
+		await admin.auth().revokeRefreshTokens(uid);
 	}
 
 	async resetPassword(uid: string, newPassword: string): Promise<void> {
-		await getAuth().updateUser(uid, { password: newPassword });
-  }
+		await admin.auth().updateUser(uid, { password: newPassword });
+	}
+
+	/** Verifica ID token emitido pelo Firebase Client SDK e retorna os claims decodificados. */
+	async verifyIdToken(idToken: string): Promise<{ uid: string; email?: string; name?: string; picture?: string }> {
+		const decoded = await admin.auth().verifyIdToken(idToken);
+		return {
+			uid: decoded.uid,
+			email: decoded.email,
+			name: decoded.name,
+			picture: decoded.picture,
+		};
+	}
 }
 
 export const authUser = new UserAuthService()

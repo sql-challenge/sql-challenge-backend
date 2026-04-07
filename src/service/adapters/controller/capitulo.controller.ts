@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { CapituloUseCase } from "../../core/useCases/capitulo.useCase";
 import { CapituloPostgresRepository } from "../repository/postgres/gestao/capitulo.postgres.repository";
 import { ApiResponse } from "../../core/domain/http.entity";
-import { Capitulo, CapituloView } from "../../core/domain/capitulo.entity";
+import { Capitulo, CapituloView, ObjetivoComConsulta } from "../../core/domain/capitulo.entity";
 import { ObjetivoUseCase } from "../../core/useCases/objetivo.useCase";
 import { ObjetivoPostgresRepository } from "../repository/postgres/gestao/objetivo.postgres.repository";
 import { DicaUseCase } from "../../core/useCases/dica.useCase";
@@ -52,17 +52,29 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
         //
         const capitulo = await capituloUseCase.getById(capituloId);
         //
-        const [objetivos, dicas, consultaSolucao, visaoList] = await Promise.all([
+        const [objetivosRaw, dicas, visaoList] = await Promise.all([
             objetivoUseCase.getByCapituloId(capitulo.id),
             dicaUseCase.getByCapituloId(capitulo.id),
-            consultaUseCase.getByCapituloId(capitulo.id),
             visaoUseCase.getByCapituloId(capitulo.id),
         ]);
         //
-        if (consultaSolucao.length === 0) {
-            res.status(404).json({ error: "Solução esperada (consulta) não encontrada para este capítulo." });
-            return;
-        }
+        // Busca a consulta de cada objetivo em paralelo
+        const objetivos: ObjetivoComConsulta[] = await Promise.all(
+            objetivosRaw.map(async (obj) => {
+                const consulta = await consultaUseCase.getByObjetivoId(obj.id);
+                if (!consulta) {
+                    throw new Error(`Consulta não encontrada para o objetivo ${obj.id}.`);
+                }
+                return {
+                    id: obj.id,
+                    idCapitulo: obj.idCapitulo,
+                    descricao: obj.descricao,
+                    ordem: obj.ordem,
+                    nivel: obj.nivel,
+                    consulta,
+                };
+            })
+        );
         //
         const visaoTabelas = await Promise.all(
             visaoList.map(async (v, tabelaIdx) => {
@@ -92,7 +104,6 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             capitulo,
             objetivos,
             dicas,
-            consultaSolucao: consultaSolucao[0],
             schema: { visaoTabelas, visaoRelacionamentos: [] },
         } });
     } catch (error: any) {

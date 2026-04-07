@@ -79,10 +79,18 @@ export interface VisaoDadoExemplo {
   dados: Record<string, unknown>;
 }
 
+export interface ObjetivoComConsulta {
+  id: number;
+  idCapitulo: number;
+  descricao: string;
+  ordem: number;
+  nivel: number;
+  consulta: Consulta;
+}
+
 export interface CapituloView {
   capitulo: Capitulo;
-  objetivos: Objetivo[];
+  objetivos: ObjetivoComConsulta[];
   dicas: Dica[];
-  consultaSolucao: Consulta;
   schema: DatabaseSchema;
 }

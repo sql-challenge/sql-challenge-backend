@@ -1,216 +1,138 @@
 import { IUser, IUserSignUp, IUserView } from "../../../core/domain/user.entity";
-import { IUserPort } from "../../../core/ports/user.port";
-import { db } from "../../../db/firebase/firebaseConfig";
-import { collection, getDocs, getDoc, doc, query, where, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { IChapterProgressDto, IUserPort } from "../../../core/ports/user.port";
+import { adminDb } from "../../../db/firebase/firebaseAdminConfig";
 import { authUser } from "../../auth/firebase.auth";
 
 export class UserFirebaseRepository implements IUserPort {
-	private get userCollection() { return collection(db, "User"); }
+	private get userCollection() { return adminDb.collection("User"); }
+
+	private mapDoc(id: string, data: FirebaseFirestore.DocumentData): IUserView {
+		return {
+			uid: id,
+			username: data.username,
+			nick: data.nick ?? "",
+			email: data.email,
+			imagePerfil: data.imagePerfil ?? null,
+			createdAt: data.createdAt?.toDate() ?? new Date(),
+			lastLogin: data.lastLogin?.toDate() ?? new Date(),
+			rankingPosition: data.rankingPosition ?? 0,
+			xp: data.xp ?? 0,
+			friends: data.friends ?? [],
+			challenge_progress: data.challenge_progress ?? [],
+		};
+	}
 
 	async getAll(): Promise<IUserView[]> {
-		const snapshot = await getDocs(this.userCollection);
-		return snapshot.docs.map(
-			(docSnap) => {
-				return {
-					challenge_progress: docSnap.data().challenge_progress,
-					createdAt: docSnap.data().createdAt.toDate(),
-					email: docSnap.data().email,
-					nick: docSnap.data().nick,
-					friends: docSnap.data().friends,
-					imagePerfil: docSnap.data().imagePerfil,
-					lastLogin: docSnap.data().lastLogin.toDate(),
-					rankingPosition: docSnap.data().rankingPosition,
-					uid: docSnap.id,
-					username: docSnap.data().username,
-					xp: docSnap.data().xp,
-				}
-			}
-		)
-		// new User(
-		// 			docSnap.id,
-		// 			docSnap.data().username,
-		// 			docSnap.data().nick,
-		// 			docSnap.data().email,
-		// 			docSnap.data().imagePerfil,
-		// 			docSnap.data().createdAt.toDate(),
-		// 			docSnap.data().lastLogin.toDate(),
-		// 			docSnap.data().rankingPosition,
-		// 			docSnap.data().xp,
-		// 			docSnap.data().friends,
-		// 			docSnap.data().challenge_progress
-		// 		)
+		const snapshot = await this.userCollection.get();
+		return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
+	}
+
+	async getTopByXP(limit = 20): Promise<IUserView[]> {
+		const snapshot = await this.userCollection.orderBy("xp", "desc").limit(limit).get();
+		return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
 	}
 
 	async getUserByUID(uid: string): Promise<IUserView> {
-		const ref = doc(this.userCollection, uid);
-		const docSnap = await getDoc(ref);
-		//
-		if (!docSnap.exists()) throw new Error("User not found!");
-		const data = docSnap.data();
-		//
-		return {
-			challenge_progress: data.challenge_progress,
-			createdAt: data.createdAt.toDate(),
-			email: data.email,
-			nick: data.nick,
-			friends: data.friends,
-			imagePerfil: data.imagePerfil,
-			lastLogin: data.lastLogin.toDate(),
-			rankingPosition: data.rankingPosition,
-			uid: docSnap.id,
-			username: data.username,
-			xp: data.xp,
-		}
+		const snap = await this.userCollection.doc(uid).get();
+		if (!snap.exists) throw new Error("User not found!");
+		return this.mapDoc(snap.id, snap.data()!);
 	}
 
 	async getUsersByName(name: string): Promise<IUserView[]> {
-		const q = query(this.userCollection, where("username", "==", name));
-		const snapshot = await getDocs(q);
-		return snapshot.docs.map(
-			(docSnap) => {
-				return {
-					challenge_progress: docSnap.data().challenge_progress,
-					createdAt: docSnap.data().createdAt.toDate(),
-					email: docSnap.data().email,
-					friends: docSnap.data().friends,
-					imagePerfil: docSnap.data().imagePerfil,
-					lastLogin: docSnap.data().lastLogin.toDate(),
-					rankingPosition: docSnap.data().rankingPosition,
-					uid: docSnap.id,
-					nick: docSnap.data().nick,
-					username: docSnap.data().username,
-					xp: docSnap.data().xp,
-				}
-			}
-		);
+		const snapshot = await this.userCollection.where("username", "==", name).get();
+		return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
 	}
 
 	async getUserByEmail(email: string): Promise<IUserView> {
-		const q = query(this.userCollection, where("email", "==", email));
-		const snapshot = await getDocs(q);
-		//
+		const snapshot = await this.userCollection.where("email", "==", email).get();
 		if (snapshot.empty) throw new Error("User not found!");
-		//
-		const docSnap = snapshot.docs[0];
-		const data = docSnap.data();
-		//
-		return {
-			challenge_progress: data.challenge_progress,
-			createdAt: data.createdAt.toDate(),
-			email: data.email,
-			friends: data.friends,
-			imagePerfil: data.imagePerfil,
-			lastLogin: data.lastLogin.toDate(),
-			rankingPosition: data.rankingPosition,
-			uid: docSnap.id,
-			nick: data.nick,
-			username: data.username,
-			xp: data.xp,
-		}
-		// return new User(
-		// 	docSnap.id,
-		// 	data.username,
-		// 	data.nick,
-		// 	data.email,
-		// 	data.imagePerfil,
-		// 	data.createdAt.toDate(),
-		// 	data.lastLogin.toDate(),
-		// 	data.rankingPosition,
-		// 	data.xp,
-		// 	data.friends,
-		// 	data.challenge_progress
-		// );
+		const d = snapshot.docs[0];
+		return this.mapDoc(d.id, d.data());
 	}
 
 	async addUser(form: IUserSignUp): Promise<IUserView> {
-		// TODO: handle error in firebase layer, in case of a email used, the uuid is null
 		const uid = await authUser.registerWithEmailAndPassword(form.email, form.password);
-		// console.log('Criado usuário com uuid: ' + uid);
-		// Auth with google
-		// const uid = authUser.registerWithGoogle()
-		// [TODO]: verify which entitys use timestamp from api and which from the database (can be divergent)
-		const date = new Date()
-		const ref = doc(this.userCollection, uid);
-		//
+		const date = new Date();
 		const user: IUserView = {
+			uid,
 			username: form.username,
+			nick: form.nick,
 			email: form.email,
+			imagePerfil: null,
 			createdAt: date,
 			lastLogin: date,
 			rankingPosition: 0,
 			xp: 0,
-			imagePerfil: null, // create without, set later
 			friends: [],
 			challenge_progress: [],
-			uid: uid,
-			nick: form.nick,
-			// password: user.password
-		}
-		//
-		await setDoc(ref, {
+		};
+		await this.userCollection.doc(uid).set({
 			username: user.username,
-			// nick: user.nick,
+			nick: user.nick,
 			email: user.email,
+			imagePerfil: null,
 			createdAt: date,
 			lastLogin: date,
 			rankingPosition: 0,
 			xp: 0,
-			imagePerfil: user.imagePerfil, // create without, set later
-			// password: user.password
+			friends: [],
+			challenge_progress: [],
 		});
-		//
-		console.log(`Usuário criado: `, user)
+		console.log("Usuário criado:", user);
 		return user;
 	}
 
-	// async addUserbyGoogle(idToken: string): Promise<IUserView> {
-	// 	// valida o token e pega os dados do usuário
-	// 	const u = await authUser.registerWithGoogle(idToken);
-
-	// 	const date = new Date();
-	// 	const ref = doc(this.userCollection, u.uid);
-
-	// 	await setDoc(ref, {
-	// 		username: u.name || "",
-	// 		nick: u.name || "",
-	// 		email: u.email,
-	// 		imagePerfil: u.picture || "",
-	// 		createdAt: date,
-	// 		lastLogin: date,
-	// 		rankingPosition: -1,
-	// 		xp: 0,
-	// 	});
-
-	// 	return new User(
-	// 		u.uid, u.name || "", u.name || "", u.email, u.picture || "",
-	// 		date, date, 0, 0,
-	// 		[{ status: "", username: "", nick: "", rankingPosition: 0, xp: 0 }],
-	// 		[{ nameChallange: "", capFinish: 0, xpObtido: 0 }]
-	// 	);
-	// }
-
 	async loginWithEmail(email: string, password: string): Promise<IUserView> {
-		let uid = await authUser.loginWithEmailAndPassword(email, password)
-		return await this.getUserByUID(uid)
+		const uid = await authUser.loginWithEmailAndPassword(email, password);
+		return this.getUserByUID(uid);
+	}
+
+	/**
+	 * Login/cadastro via OAuth (Google, GitHub).
+	 * Verifica o ID token com Firebase Admin SDK e faz upsert do usuário no Firestore.
+	 */
+	async loginWithOAuth(idToken: string): Promise<IUserView> {
+		const decoded = await authUser.verifyIdToken(idToken);
+		const ref = this.userCollection.doc(decoded.uid);
+		const snap = await ref.get();
+
+		if (!snap.exists) {
+			const date = new Date();
+			const displayName = decoded.name || decoded.email?.split("@")[0] || "Detetive";
+			await ref.set({
+				username: displayName,
+				nick: displayName,
+				email: decoded.email ?? "",
+				imagePerfil: decoded.picture ?? null,
+				createdAt: date,
+				lastLogin: date,
+				rankingPosition: 0,
+				xp: 0,
+				friends: [],
+				challenge_progress: [],
+			});
+		} else {
+			await ref.update({ lastLogin: new Date() });
+		}
+
+		return this.getUserByUID(decoded.uid);
 	}
 
 	async loginWithGoogle(idToken: string): Promise<IUserView> {
-		let uid = await authUser.loginWithGoogle(idToken)
-		return await this.getUserByUID(uid)
+		return this.loginWithOAuth(idToken);
 	}
 
 	async logout(uid: string): Promise<void> {
-		await authUser.logout(uid)
+		await authUser.logout(uid);
 	}
 
 	async resetPassword(uid: string, new_psw: string): Promise<void> {
-		await authUser.resetPassword(uid, new_psw)
+		await authUser.resetPassword(uid, new_psw);
 	}
 
 	async updateUser(user: Partial<IUserView>): Promise<boolean> {
-		const ref = doc(this.userCollection, (user as any).uid);
-		//
-		await updateDoc(ref, {
+		const uid = (user as any).uid;
+		await this.userCollection.doc(uid).update({
 			username: (user as any).username,
 			nick: (user as any).nick,
 			email: (user as any).email,
@@ -220,12 +142,28 @@ export class UserFirebaseRepository implements IUserPort {
 			rankingPosition: (user as any).rankingPosition,
 			xp: (user as any).xp,
 		});
-
 		return true;
 	}
 
+	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {
+		const progressRef = this.userCollection
+			.doc(uid)
+			.collection("challenge_progress")
+			.doc(dto.desafioId);
+
+		const snap = await progressRef.get();
+		const prev = snap.exists ? snap.data()! : {};
+
+		await progressRef.set({
+			nameChallenge: dto.nameChallenge,
+			capFinish: Math.max(dto.capFinish, prev.capFinish ?? 0),
+			xpObtido: (prev.xpObtido ?? 0) + dto.xpObtido,
+			tempoSegundos: dto.tempoSegundos,
+			updatedAt: new Date(),
+		}, { merge: true });
+	}
+
 	async deleteUser(uid: string): Promise<void> {
-		const ref = doc(this.userCollection, uid);
-		await deleteDoc(ref);
+		await this.userCollection.doc(uid).delete();
 	}
 }

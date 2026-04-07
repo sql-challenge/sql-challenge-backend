@@ -51,6 +51,7 @@ export const makeConsulta = (override: Partial<Consulta> = {}): Consulta =>
     new Consulta(
         override.id ?? 1,
         override.idCapitulo ?? 1,
+        override.idObjetivo ?? null,
         override.query ?? "SELECT * FROM regioes_reinos;",
         override.colunas ?? ["nome_reino", "geografia"],
         override.resultado ?? []
