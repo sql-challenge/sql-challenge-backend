@@ -54,7 +54,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            DEPLOY_DIR="/home/admin/sql-challenge-backend"
+            DEPLOY_DIR="/opt/apps/sql-challenge/backend"
             IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
             SHA_TAG="${{ steps.tag.outputs.SHA_TAG }}"
             DEPLOY_ENV="${{ steps.tag.outputs.DEPLOY_ENV }}"
