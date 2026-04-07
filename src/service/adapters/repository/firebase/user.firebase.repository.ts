@@ -131,16 +131,108 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async updateUser(user: Partial<IUserView>): Promise<boolean> {
-		const uid = (user as any).uid;
-		await this.userCollection.doc(uid).update({
-			username: (user as any).username,
-			nick: (user as any).nick,
-			email: (user as any).email,
-			imagePerfil: (user as any).imagePerfil,
-			createdAt: (user as any).createdAt,
-			lastLogin: (user as any).lastLogin,
-			rankingPosition: (user as any).rankingPosition,
-			xp: (user as any).xp,
+		const uid = user.uid!;
+		const updates: Record<string, any> = {};
+		if (user.username    !== undefined) updates.username    = user.username;
+		if (user.nick        !== undefined) updates.nick        = user.nick;
+		if (user.email       !== undefined) updates.email       = user.email;
+		if (user.imagePerfil !== undefined) updates.imagePerfil = user.imagePerfil;
+		if (user.xp          !== undefined) updates.xp          = user.xp;
+		if (user.rankingPosition !== undefined) updates.rankingPosition = user.rankingPosition;
+		await this.userCollection.doc(uid).update(updates);
+		return true;
+	}
+
+	// ── Friends ────────────────────────────────────────────────
+
+	async addFriend(uid: string, targetUid: string): Promise<void> {
+		const [mySnap, targetSnap] = await Promise.all([
+			this.userCollection.doc(uid).get(),
+			this.userCollection.doc(targetUid).get(),
+		]);
+		if (!mySnap.exists || !targetSnap.exists) throw new Error("User not found");
+
+		const me = mySnap.data()!;
+		const target = targetSnap.data()!;
+
+		const myFriends: any[] = me.friends ?? [];
+		const targetFriends: any[] = target.friends ?? [];
+
+		if (myFriends.some((f: any) => f.uid === targetUid)) throw new Error("Já são amigos ou solicitação pendente");
+
+		myFriends.push({ uid: targetUid, status: "pending", username: target.username, nick: target.nick ?? "", rankingPosition: target.rankingPosition ?? 0, xp: target.xp ?? 0 });
+		targetFriends.push({ uid, status: "pending", username: me.username, nick: me.nick ?? "", rankingPosition: me.rankingPosition ?? 0, xp: me.xp ?? 0 });
+
+		await Promise.all([
+			this.userCollection.doc(uid).update({ friends: myFriends }),
+			this.userCollection.doc(targetUid).update({ friends: targetFriends }),
+		]);
+	}
+
+	async acceptFriend(uid: string, targetUid: string): Promise<void> {
+		const [mySnap, targetSnap] = await Promise.all([
+			this.userCollection.doc(uid).get(),
+			this.userCollection.doc(targetUid).get(),
+		]);
+		if (!mySnap.exists || !targetSnap.exists) throw new Error("User not found");
+
+		const updateFriends = (friends: any[], otherId: string) =>
+			friends.map((f: any) => f.uid === otherId ? { ...f, status: "accepted" } : f);
+
+		await Promise.all([
+			this.userCollection.doc(uid).update({ friends: updateFriends(mySnap.data()!.friends ?? [], targetUid) }),
+			this.userCollection.doc(targetUid).update({ friends: updateFriends(targetSnap.data()!.friends ?? [], uid) }),
+		]);
+	}
+
+	async removeFriend(uid: string, targetUid: string): Promise<void> {
+		const [mySnap, targetSnap] = await Promise.all([
+			this.userCollection.doc(uid).get(),
+			this.userCollection.doc(targetUid).get(),
+		]);
+		if (!mySnap.exists || !targetSnap.exists) throw new Error("User not found");
+
+		await Promise.all([
+			this.userCollection.doc(uid).update({ friends: (mySnap.data()!.friends ?? []).filter((f: any) => f.uid !== targetUid) }),
+			this.userCollection.doc(targetUid).update({ friends: (targetSnap.data()!.friends ?? []).filter((f: any) => f.uid !== uid) }),
+		]);
+	}
+
+	async getFriends(uid: string): Promise<import("../../../core/domain/user.entity").Friend[]> {
+		const snap = await this.userCollection.doc(uid).get();
+		if (!snap.exists) throw new Error("User not found");
+		return snap.data()!.friends ?? [];
+	}
+
+	async getFriendsRanking(uid: string): Promise<IUserView[]> {
+		const snap = await this.userCollection.doc(uid).get();
+		if (!snap.exists) throw new Error("User not found");
+		const friends: any[] = (snap.data()!.friends ?? []).filter((f: any) => f.status === "accepted");
+		const friendUids = friends.map((f: any) => f.uid);
+
+		const me = this.mapDoc(snap.id, snap.data()!);
+		if (friendUids.length === 0) return [me];
+
+		const friendSnaps = await Promise.all(friendUids.map((fuid: string) => this.userCollection.doc(fuid).get()));
+		const friendUsers = friendSnaps.filter(s => s.exists).map(s => this.mapDoc(s.id, s.data()!));
+
+		return [me, ...friendUsers].sort((a, b) => b.xp - a.xp);
+	}
+
+	// ── Achievements ───────────────────────────────────────────
+
+	async awardAchievement(uid: string, achievementId: string, xpBonus: number): Promise<boolean> {
+		const ref = this.userCollection.doc(uid);
+		const snap = await ref.get();
+		if (!snap.exists) throw new Error("User not found");
+
+		const data = snap.data()!;
+		const awarded: string[] = data.awardedAchievements ?? [];
+		if (awarded.includes(achievementId)) return false; // já concedido
+
+		await ref.update({
+			awardedAchievements: [...awarded, achievementId],
+			xp: (data.xp ?? 0) + xpBonus,
 		});
 		return true;
 	}

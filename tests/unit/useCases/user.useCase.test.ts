@@ -16,6 +16,12 @@ const mockPort: jest.Mocked<IUserPort> = {
     resetPassword: jest.fn(),
     updateUser: jest.fn(),
     saveChapterProgress: jest.fn(),
+    addFriend: jest.fn(),
+    acceptFriend: jest.fn(),
+    removeFriend: jest.fn(),
+    getFriends: jest.fn(),
+    getFriendsRanking: jest.fn(),
+    awardAchievement: jest.fn(),
     deleteUser: jest.fn(),
 };
 

@@ -1,6 +1,7 @@
 // Tipos auxiliares
 export type Friend = {
-	status: string;
+	uid: string;
+	status: "pending" | "accepted";
 	username: string;
 	nick: string;
 	rankingPosition: number;
@@ -19,8 +20,6 @@ export interface IUser {
 	xp: number;
 	nick: string;
 	email: string;
-	// password?: string;
-	// imagePerfil: string;
 	createdAt: Date;
 	lastLogin: Date;
 }
@@ -30,6 +29,7 @@ export interface IUserView extends IUser{
 	friends: Friend[];
 	challenge_progress: ChallengeProgress[];
 	imagePerfil: string | null;
+	awardedAchievements?: string[];
 }
 
 // export interface IUserSignUpView extends IUser {

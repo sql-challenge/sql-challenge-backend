@@ -177,3 +177,72 @@ export const deleteUser = async (req: Request, res: Response) => {
 		res.status(500).json({ error: error.message });
 	}
 };
+
+// ── Friends ────────────────────────────────────────────────
+
+export const addFriend = async (req: Request, res: Response) => {
+	try {
+		const { uid, targetUid } = req.params;
+		await userUseCase.addFriend(uid, targetUid);
+		res.status(200).json({ data: { ok: true } });
+	} catch (error: any) {
+		res.status(400).json({ error: error.message });
+	}
+};
+
+export const acceptFriend = async (req: Request, res: Response) => {
+	try {
+		const { uid, targetUid } = req.params;
+		await userUseCase.acceptFriend(uid, targetUid);
+		res.status(200).json({ data: { ok: true } });
+	} catch (error: any) {
+		res.status(400).json({ error: error.message });
+	}
+};
+
+export const removeFriend = async (req: Request, res: Response) => {
+	try {
+		const { uid, targetUid } = req.params;
+		await userUseCase.removeFriend(uid, targetUid);
+		res.status(200).json({ data: { ok: true } });
+	} catch (error: any) {
+		res.status(400).json({ error: error.message });
+	}
+};
+
+export const getFriends = async (req: Request, res: Response) => {
+	try {
+		const { uid } = req.params;
+		const friends = await userUseCase.getFriends(uid);
+		res.status(200).json(friends);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+export const getFriendsRanking = async (req: Request, res: Response) => {
+	try {
+		const { uid } = req.params;
+		const ranking = await userUseCase.getFriendsRanking(uid);
+		res.status(200).json(ranking);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
+
+// ── Achievements ───────────────────────────────────────────
+
+export const awardAchievement = async (req: Request, res: Response) => {
+	try {
+		const { uid } = req.params;
+		const { achievementId, xpBonus } = req.body;
+		if (!achievementId || xpBonus == null) {
+			res.status(400).json({ error: "achievementId e xpBonus são obrigatórios." });
+			return;
+		}
+		const awarded = await userUseCase.awardAchievement(uid, achievementId, Number(xpBonus));
+		res.status(200).json({ data: { awarded } });
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};

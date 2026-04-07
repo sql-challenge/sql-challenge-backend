@@ -19,6 +19,14 @@ router.post("/resetPassword/:uid/:newPsw", (req, res) => {controller.resetPasswo
 router.post("/:uid/progress", (req, res) => {controller.saveChapterProgress(req, res)});
 /** PUT */
 router.put("/", (req, res) => {controller.updateUser(req, res)});
+/** Friends */
+router.get("/:uid/friends", (req, res) => {controller.getFriends(req, res)});
+router.get("/:uid/friends/ranking", (req, res) => {controller.getFriendsRanking(req, res)});
+router.post("/:uid/friends/:targetUid", (req, res) => {controller.addFriend(req, res)});
+router.put("/:uid/friends/:targetUid/accept", (req, res) => {controller.acceptFriend(req, res)});
+router.delete("/:uid/friends/:targetUid", (req, res) => {controller.removeFriend(req, res)});
+/** Achievements */
+router.post("/:uid/achievements/award", (req, res) => {controller.awardAchievement(req, res)});
 /** delete */
 router.delete("/:uid", (req, res) => {controller.deleteUser(req, res)});
 

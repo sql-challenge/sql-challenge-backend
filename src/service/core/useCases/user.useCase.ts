@@ -54,6 +54,28 @@ export class UserUseCase {
 		return this.userPort.saveChapterProgress(uid, dto);
 	}
 
+	// Friends
+	async addFriend(uid: string, targetUid: string): Promise<void> {
+		return this.userPort.addFriend(uid, targetUid);
+	}
+	async acceptFriend(uid: string, targetUid: string): Promise<void> {
+		return this.userPort.acceptFriend(uid, targetUid);
+	}
+	async removeFriend(uid: string, targetUid: string): Promise<void> {
+		return this.userPort.removeFriend(uid, targetUid);
+	}
+	async getFriends(uid: string) {
+		return this.userPort.getFriends(uid);
+	}
+	async getFriendsRanking(uid: string) {
+		return this.userPort.getFriendsRanking(uid);
+	}
+
+	// Achievements
+	async awardAchievement(uid: string, achievementId: string, xpBonus: number): Promise<boolean> {
+		return this.userPort.awardAchievement(uid, achievementId, xpBonus);
+	}
+
 	// DELETE
 	async deleteUser(uid: string): Promise<void> {
 		return this.userPort.deleteUser(uid);

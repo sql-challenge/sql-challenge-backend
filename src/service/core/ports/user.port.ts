@@ -26,6 +26,16 @@ export interface IUserPort {
 	// challenge_progress subcollection
 	saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void>
 
+	// Friends
+	addFriend(uid: string, targetUid: string): Promise<void>
+	acceptFriend(uid: string, targetUid: string): Promise<void>
+	removeFriend(uid: string, targetUid: string): Promise<void>
+	getFriends(uid: string): Promise<import("../domain/user.entity").Friend[]>
+	getFriendsRanking(uid: string): Promise<import("../domain/user.entity").IUserView[]>
+
+	// Achievements
+	awardAchievement(uid: string, achievementId: string, xpBonus: number): Promise<boolean>
+
 	// DELETE
 	deleteUser(uid: string): void
 
