@@ -30,6 +30,7 @@ export interface IUserView extends IUser{
 	challenge_progress: ChallengeProgress[];
 	imagePerfil: string | null;
 	awardedAchievements?: string[];
+	emailNotifications?: boolean;
 }
 
 // export interface IUserSignUpView extends IUser {

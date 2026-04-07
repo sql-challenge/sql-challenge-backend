@@ -27,6 +27,8 @@ router.put("/:uid/friends/:targetUid/accept", (req, res) => {controller.acceptFr
 router.delete("/:uid/friends/:targetUid", (req, res) => {controller.removeFriend(req, res)});
 /** Achievements */
 router.post("/:uid/achievements/award", (req, res) => {controller.awardAchievement(req, res)});
+/** Email notifications */
+router.post("/notify/new-challenge", (req, res) => {controller.notifyNewChallenge(req, res)});
 /** delete */
 router.delete("/:uid", (req, res) => {controller.deleteUser(req, res)});
 

@@ -3,6 +3,8 @@ import { UserUseCase } from "../../core/useCases/user.useCase";
 import { UserFirebaseRepository } from "../repository/firebase/user.firebase.repository";
 import { ApiResponse } from "../../core/domain/http.entity";
 import { IUserView } from "../../core/domain/user.entity";
+import { sendEmail } from "../email/email.service";
+import { newChallengeTemplate } from "../email/newChallengeTemplate";
 
 const userUseCase = new UserUseCase(new UserFirebaseRepository());
 
@@ -214,7 +216,7 @@ export const getFriends = async (req: Request, res: Response) => {
 	try {
 		const { uid } = req.params;
 		const friends = await userUseCase.getFriends(uid);
-		res.status(200).json(friends);
+		res.status(200).json({ data: friends });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -224,13 +226,53 @@ export const getFriendsRanking = async (req: Request, res: Response) => {
 	try {
 		const { uid } = req.params;
 		const ranking = await userUseCase.getFriendsRanking(uid);
-		res.status(200).json(ranking);
+		res.status(200).json({ data: ranking });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
 };
 
 // ── Achievements ───────────────────────────────────────────
+
+// ── Email notifications ────────────────────────────────────
+
+/**
+ * POST /api/user/notify/new-challenge
+ * Body: { gameName: string, totalXP: number }
+ * Envia e-mail para todos os usuários com emailNotifications: true.
+ */
+export const notifyNewChallenge = async (req: Request, res: Response) => {
+	try {
+		const { gameName, totalXP } = req.body;
+		if (!gameName || totalXP == null) {
+			res.status(400).json({ error: "gameName e totalXP são obrigatórios." });
+			return;
+		}
+
+		const siteUrl = process.env.SITE_URL ?? "https://apihub-macedo.duckdns.org/sql-challenge";
+		const allUsers = await userUseCase.getAll();
+		const targets  = allUsers.filter((u: any) => u.emailNotifications === true && u.email);
+
+		const results = await Promise.allSettled(
+			targets.map((u: IUserView) => {
+				const { subject, html } = newChallengeTemplate({
+					userName: u.nick || u.username,
+					gameName,
+					totalXP: Number(totalXP),
+					siteUrl,
+				});
+				return sendEmail(u.email, subject, html);
+			})
+		);
+
+		const sent   = results.filter(r => r.status === "fulfilled").length;
+		const failed = results.filter(r => r.status === "rejected").length;
+
+		res.status(200).json({ data: { sent, failed, total: targets.length } });
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+};
 
 export const awardAchievement = async (req: Request, res: Response) => {
 	try {

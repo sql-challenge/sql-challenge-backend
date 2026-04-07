@@ -19,6 +19,8 @@ export class UserFirebaseRepository implements IUserPort {
 			xp: data.xp ?? 0,
 			friends: data.friends ?? [],
 			challenge_progress: data.challenge_progress ?? [],
+			awardedAchievements: data.awardedAchievements ?? [],
+			emailNotifications: data.emailNotifications ?? false,
 		};
 	}
 
@@ -39,7 +41,12 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async getUsersByName(name: string): Promise<IUserView[]> {
-		const snapshot = await this.userCollection.where("username", "==", name).get();
+		const lower = name.toLowerCase();
+		const snapshot = await this.userCollection
+			.where("username", ">=", lower)
+			.where("username", "<=", lower + "\uf8ff")
+			.limit(10)
+			.get();
 		return snapshot.docs.map(d => this.mapDoc(d.id, d.data()));
 	}
 
@@ -133,12 +140,13 @@ export class UserFirebaseRepository implements IUserPort {
 	async updateUser(user: Partial<IUserView>): Promise<boolean> {
 		const uid = user.uid!;
 		const updates: Record<string, any> = {};
-		if (user.username    !== undefined) updates.username    = user.username;
-		if (user.nick        !== undefined) updates.nick        = user.nick;
-		if (user.email       !== undefined) updates.email       = user.email;
-		if (user.imagePerfil !== undefined) updates.imagePerfil = user.imagePerfil;
-		if (user.xp          !== undefined) updates.xp          = user.xp;
-		if (user.rankingPosition !== undefined) updates.rankingPosition = user.rankingPosition;
+		if (user.username           !== undefined) updates.username           = user.username;
+		if (user.nick               !== undefined) updates.nick               = user.nick;
+		if (user.email              !== undefined) updates.email              = user.email;
+		if (user.imagePerfil        !== undefined) updates.imagePerfil        = user.imagePerfil;
+		if (user.xp                 !== undefined) updates.xp                 = user.xp;
+		if (user.rankingPosition    !== undefined) updates.rankingPosition    = user.rankingPosition;
+		if (user.emailNotifications !== undefined) updates.emailNotifications = user.emailNotifications;
 		await this.userCollection.doc(uid).update(updates);
 		return true;
 	}
