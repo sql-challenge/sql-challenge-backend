@@ -1,0 +1,73 @@
+name: Build & Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+      - feat/**
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Ambiente de deploy"
+        required: true
+        default: "production"
+        type: choice
+        options: [production, staging]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: tag
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            echo "IMAGE_TAG=latest"       >> $GITHUB_OUTPUT
+            echo "DEPLOY_ENV=production" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=staging"      >> $GITHUB_OUTPUT
+            echo "DEPLOY_ENV=staging"    >> $GITHUB_OUTPUT
+          fi
+          echo "SHA_TAG=${SHORT_SHA}"     >> $GITHUB_OUTPUT
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            DEPLOY_DIR="/home/admin/sql-challenge-backend"
+            IMAGE_TAG="${{ steps.tag.outputs.IMAGE_TAG }}"
+            SHA_TAG="${{ steps.tag.outputs.SHA_TAG }}"
+            DEPLOY_ENV="${{ steps.tag.outputs.DEPLOY_ENV }}"
+
+            echo "=== Deploy: env=$DEPLOY_ENV tag=$IMAGE_TAG sha=$SHA_TAG ==="
+
+            cd $DEPLOY_DIR
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+
+            ENV_FILE=".env.${DEPLOY_ENV}"
+            if [ ! -f "$ENV_FILE" ]; then
+              echo "❌ Arquivo $ENV_FILE não encontrado na VPS."
+              exit 1
+            fi
+
+            # Para backend usa o .env.${DEPLOY_ENV} como env file do compose
+            IMAGE_TAG=$IMAGE_TAG docker compose --env-file $ENV_FILE up -d --build
+
+            docker tag sql-challenge-backend-api:$IMAGE_TAG sql-challenge-backend-api:$SHA_TAG
+
+            echo "✅ Deploy concluído — imagem: sql-challenge-backend-api:$IMAGE_TAG ($SHA_TAG)"
+
+            docker images sql-challenge-backend-api --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f || true

@@ -18,6 +18,8 @@ routes.use(express.json());
 
 const allowedOrigins = [
 	"http://localhost:3000",
+	"http://localhost:3001",
+	"https://apihub-macedo.duckdns.org",
 	process.env.FRONTEND_URL,
 ].filter((o): o is string => !!o && o !== "undefined");
 
