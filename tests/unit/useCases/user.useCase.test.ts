@@ -4,15 +4,18 @@ import { makeUserView, makeUserSignUp } from "../../helpers/factories";
 
 const mockPort: jest.Mocked<IUserPort> = {
     getAll: jest.fn(),
+    getTopByXP: jest.fn(),
     getUserByUID: jest.fn(),
     getUsersByName: jest.fn(),
     getUserByEmail: jest.fn(),
     addUser: jest.fn(),
     loginWithEmail: jest.fn(),
     loginWithGoogle: jest.fn(),
+    loginWithOAuth: jest.fn(),
     logout: jest.fn(),
     resetPassword: jest.fn(),
     updateUser: jest.fn(),
+    saveChapterProgress: jest.fn(),
     deleteUser: jest.fn(),
 };
 
