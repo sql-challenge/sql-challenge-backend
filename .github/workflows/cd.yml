@@ -138,7 +138,7 @@ jobs:
             git checkout ${{ github.ref_name }}
             git reset --hard origin/${{ github.ref_name }}
 
-            IMAGE_TAG=$IMAGE_TAG docker compose -f "$COMPOSE_FILE" up -d --build
+            IMAGE_TAG=$IMAGE_TAG docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build
             docker image prune -f
             echo "✅ Backend $DEPLOY_ENV deployado"
 
