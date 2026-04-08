@@ -71,7 +71,7 @@ jobs:
             echo "DEPLOY_ENV=staging"                         >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=staging"                          >> $GITHUB_OUTPUT
             echo "COMPOSE_FILE=docker-compose.staging.yml"    >> $GITHUB_OUTPUT
-            echo "DB_NAME=db_gestao_challenge"                >> $GITHUB_OUTPUT
+            echo "DB_NAME=db_gestao_staging"                  >> $GITHUB_OUTPUT
             echo "FRONTEND_URL=https://apihub-macedo.duckdns.org" >> $GITHUB_OUTPUT
             echo "FRONTEND_PORT=3011"                         >> $GITHUB_OUTPUT
           fi
@@ -116,7 +116,7 @@ jobs:
             DB_PORT=5432
             PORT=3000
             NODE_ENV=production
-            DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+            DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-staging:5432/${DB_NAME}?sslmode=disable
             apiKey=${FB_API_KEY}
             authDomain=${FB_AUTH_DOMAIN}
             projectId=${FB_PROJECT_ID}
@@ -137,8 +137,6 @@ jobs:
             git fetch origin
             git checkout ${{ github.ref_name }}
             git reset --hard origin/${{ github.ref_name }}
-
-            docker network inspect sql-challenge-net >/dev/null 2>&1 || docker network create sql-challenge-net
 
             IMAGE_TAG=$IMAGE_TAG docker compose -f "$COMPOSE_FILE" up -d --build
             docker image prune -f

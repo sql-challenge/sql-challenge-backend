@@ -1,6 +1,27 @@
-# Sobe apenas a API de staging — reutiliza o postgres e a rede do compose de produção
-# Uso: docker compose -f docker-compose.staging.yml up -d --build
+# Staging completo — postgres próprio com inicialização automática
+# Uso: IMAGE_TAG=staging docker compose -f docker-compose.staging.yml up -d --build
 services:
+  db-staging:
+    image: postgres:16-alpine
+    container_name: sql-challenge-db-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB:       ${POSTGRES_DB}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+      - ./tests/fixtures/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./tests/fixtures/magical_world.sql:/docker-entrypoint-initdb.d/02_magical_world.sql:ro
+      - ./tests/fixtures/data.sql:/docker-entrypoint-initdb.d/03_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sql-net
+
   api:
     build:
       context: .
@@ -14,10 +35,16 @@ services:
     env_file: .env.staging
     environment:
       NODE_ENV: production
+    depends_on:
+      db-staging:
+        condition: service_healthy
     networks:
       - sql-net
 
 networks:
   sql-net:
-    name: sql-challenge-net
-    external: true   # rede criada pelo docker-compose.yml de produção
+    name: sql-challenge-net-staging
+    driver: bridge
+
+volumes:
+  postgres_staging_data:
