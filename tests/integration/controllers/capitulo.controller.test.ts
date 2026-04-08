@@ -14,6 +14,7 @@ const mockCapGetByDesafioId = jest.fn();
 const mockObjGetByCapituloId = jest.fn();
 const mockDicaGetByCapituloId = jest.fn();
 const mockConsultaGetByCapituloId = jest.fn();
+const mockConsultaGetByObjetivoId = jest.fn();
 const mockVisaoGetByCapituloId = jest.fn();
 const mockVisaoGetById = jest.fn();
 const mockVisaoExecuteView = jest.fn();
@@ -47,6 +48,7 @@ jest.mock("../../../src/service/adapters/repository/postgres/gestao/consulta.pos
         getAll: jest.fn(),
         getById: jest.fn(),
         getByCapituloId: mockConsultaGetByCapituloId,
+        getByObjetivoId: mockConsultaGetByObjetivoId,
     })),
 }));
 
@@ -78,6 +80,7 @@ describe("[Integration] CapituloController", () => {
         mockObjGetByCapituloId.mockResolvedValue([makeObjetivo()]);
         mockDicaGetByCapituloId.mockResolvedValue([makeDica()]);
         mockConsultaGetByCapituloId.mockResolvedValue([makeConsulta()]);
+        mockConsultaGetByObjetivoId.mockResolvedValue(makeConsulta());
         mockVisaoGetByCapituloId.mockResolvedValue([{ id: 1, idCapitulo: 1, comando: "magical_world.regioes_reinos" }]);
         mockVisaoGetById.mockResolvedValue({ id: 1, idCapitulo: 1, comando: "magical_world.regioes_reinos" });
         mockVisaoExecuteView.mockResolvedValue([{ reino: "Eldoria", regiao: "Norte" }]);
@@ -134,7 +137,7 @@ describe("[Integration] CapituloController", () => {
         });
 
         it("deve responder 404 quando não há consulta para o capítulo", async () => {
-            mockConsultaGetByCapituloId.mockResolvedValueOnce([]);
+            mockConsultaGetByObjetivoId.mockResolvedValueOnce(null);
             const req = mockReq({ id: "1" });
             const res = mockRes();
 
