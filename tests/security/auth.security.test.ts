@@ -11,12 +11,14 @@ jest.mock("../../src/service/db/postgresql/postgresqlConfig", () => ({
 }));
 
 jest.mock("firebase-admin", () => ({
+    apps: [],
     initializeApp: jest.fn(),
     credential: { cert: jest.fn() },
     auth: jest.fn().mockReturnValue({
         verifyIdToken: jest.fn().mockRejectedValue(new Error("Token inválido")),
         revokeRefreshTokens: jest.fn(),
     }),
+    firestore: jest.fn().mockReturnValue({ settings: jest.fn() }),
 }));
 
 jest.mock("firebase/app", () => ({
