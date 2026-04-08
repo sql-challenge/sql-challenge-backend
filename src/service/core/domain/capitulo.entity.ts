@@ -85,7 +85,7 @@ export interface ObjetivoComConsulta {
   descricao: string;
   ordem: number;
   nivel: number;
-  consulta: Consulta;
+  consulta: Consulta | null;
 }
 
 export interface CapituloView {
