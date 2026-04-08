@@ -2,70 +2,67 @@ name: CI
 
 on:
   push:
-    branches: [dev, "feature/**"]
+    branches: ["feat/**"]
   pull_request:
     branches: [main, dev]
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  test:
+    name: Lint, Build & Test
     runs-on: ubuntu-latest
 
     services:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: challenge_user
+          POSTGRES_USER:     challenge_user
           POSTGRES_PASSWORD: challenge_pass
-          POSTGRES_DB: db_gestao_challenge
-        ports:
-          - 5432:5432
+          POSTGRES_DB:       db_gestao_test
+        ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U challenge_user -d db_gestao_challenge"
+          --health-cmd "pg_isready -U challenge_user -d db_gestao_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
-      NODE_ENV: test
-      DATABASE_URL: postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao_challenge?sslmode=disable
+      NODE_ENV:     test
+      DATABASE_URL: postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao_test?sslmode=disable
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Instalar dependências
         run: npm ci
 
-      - name: Build TypeScript
+      - name: Compilar TypeScript
         run: npm run build
 
-      - name: Setup integration test database
+      - name: Preparar banco de testes
         env:
           PGPASSWORD: challenge_pass
         run: |
-          psql -h localhost -U challenge_user -d db_gestao_challenge -f tests/fixtures/schema.sql
-          psql -h localhost -U challenge_user -d db_gestao_challenge -f tests/fixtures/data.sql
+          psql -h localhost -U challenge_user -d db_gestao_test -f tests/fixtures/schema.sql
+          psql -h localhost -U challenge_user -d db_gestao_test -f tests/fixtures/data.sql
 
-      - name: Run unit tests
+      - name: Testes unitários
         run: npm run test:unit
 
-      - name: Run integration tests
+      - name: Testes de integração
         run: npm run test:integration
 
-      - name: Run security tests
+      - name: Testes de segurança
         run: npm run test:security
 
-      - name: Run E2E tests
+      - name: Testes E2E
         run: npm run test:e2e
 
-      - name: Upload coverage
+      - name: Upload de cobertura
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -73,14 +70,7 @@ jobs:
           path: coverage/
           retention-days: 7
 
-      - name: Swagger docs URL
-        if: success()
-        run: |
-          echo "📄 Swagger disponível em:"
-          echo "   Local  : http://localhost:3000/api/docs"
-          echo "   VPS    : https://apihub-macedo.duckdns.org/api/docs"
-
-      - name: Notificar falha por email
+      - name: Notificar falha
         if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -93,7 +83,7 @@ jobs:
           to: ${{ secrets.MAIL_USERNAME }}
           from: SQL Challenge CI <${{ secrets.MAIL_USERNAME }}>
           body: |
-            O pipeline de CI falhou.
+            O pipeline de CI (backend) falhou.
 
             Repositório : ${{ github.repository }}
             Branch      : ${{ github.ref_name }}

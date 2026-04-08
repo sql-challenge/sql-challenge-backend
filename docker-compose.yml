@@ -1,46 +1,48 @@
-version: "3.8"
-
 services:
-  # ─── PostgreSQL (gestão database) ───────────────────────────────
+  # ─── PostgreSQL ──────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: sql-challenge-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-challenge_user}
+      POSTGRES_USER:     ${POSTGRES_USER:-challenge_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-challenge_pass}
-      POSTGRES_DB: ${POSTGRES_DB:-db_gestao_challenge}
+      POSTGRES_DB:       ${POSTGRES_DB:-db_gestao}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro # Optional: for initial schema/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-challenge_user} -d ${POSTGRES_DB:-db_gestao_challenge}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-challenge_user} -d ${POSTGRES_DB:-db_gestao}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - sql-net
 
-  # ─── Backend API ────────────────────────────────────────────────
+  # ─── Backend API (production) ────────────────────────────────
   api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sql-challenge-api
+      target: runner
+    image: sql-challenge-backend:${IMAGE_TAG:-latest}
+    container_name: sql-challenge-api-production
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
-    env_file:
-      - .env
+      - "3000:3000"
+    env_file: .env.production
     environment:
       NODE_ENV: production
-      PORT: ${PORT:-3000}
-      # DATABASE_URL será lida diretamente de .env para evitar interpolação
-      # Firebase env vars e outros também virão do arquivo .env
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - sql-net
+
+networks:
+  sql-net:
+    name: sql-challenge-net
 
 volumes:
   pgdata:
-    driver: local

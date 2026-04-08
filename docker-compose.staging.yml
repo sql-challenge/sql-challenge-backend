@@ -1,0 +1,23 @@
+# Sobe apenas a API de staging — reutiliza o postgres e a rede do compose de produção
+# Uso: docker compose -f docker-compose.staging.yml up -d --build
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: sql-challenge-backend:staging
+    container_name: sql-challenge-api-staging
+    restart: unless-stopped
+    ports:
+      - "3010:3000"
+    env_file: .env.staging
+    environment:
+      NODE_ENV: production
+    networks:
+      - sql-net
+
+networks:
+  sql-net:
+    name: sql-challenge-net
+    external: true   # rede criada pelo docker-compose.yml de produção
