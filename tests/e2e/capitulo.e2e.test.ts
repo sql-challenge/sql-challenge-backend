@@ -59,7 +59,7 @@ const dicaRow = {
 };
 
 const consultaRow = {
-    id: 1, id_capitulo: 1, query: "SELECT * FROM regioes_reinos;",
+    id: 1, id_capitulo: 1, id_objetivo: 1, query: "SELECT * FROM regioes_reinos;",
     colunas: ["nome_reino", "geografia"], resultado: null
 };
 
@@ -97,9 +97,9 @@ describe("[E2E] GET /api/capitulo", () => {
             .mockResolvedValueOnce({ rows: [capituloRow] })       // getById (capitulo)
             .mockResolvedValueOnce({ rows: [objetivoRow] })       // getByCapituloId (objetivos)
             .mockResolvedValueOnce({ rows: [dicaRow] })           // getByCapituloId (dicas)
-            .mockResolvedValueOnce({ rows: [consultaRow] })       // getByCapituloId (consultas)
-            .mockResolvedValueOnce({ rows: [] })                  // execução dinâmica da consulta (resultado null)
             .mockResolvedValueOnce({ rows: [visaoRow] })          // getByCapituloId (visoes)
+            .mockResolvedValueOnce({ rows: [consultaRow] })       // getByObjetivoId (consulta do objetivo 1)
+            .mockResolvedValueOnce({ rows: [] })                  // execução dinâmica da query da consulta (resultado null)
             .mockResolvedValueOnce({ rows: [visaoRow] })          // getById (visao p/ executeViewById)
             .mockResolvedValueOnce({ rows: [] });                 // executeView (dados da view)
 
