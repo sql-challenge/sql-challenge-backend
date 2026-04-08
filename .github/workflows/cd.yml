@@ -1,6 +1,6 @@
 name: CD
 
-# ┌─ dev  ──► staging  (porta 3010, DB db_gestao_staging)
+# ┌─ dev  ──► staging    (porta 3010, DB db_gestao_staging)
 # └─ main ──► production (porta 3000, DB db_gestao)
 
 on:
@@ -8,7 +8,7 @@ on:
     branches: [main, dev]
 
 jobs:
-  # ── 1. Testes (obrigatório antes do deploy) ──────────────────
+  # ── 1. Testes ─────────────────────────────────────────────────
   test:
     name: Lint, Build & Test
     runs-on: ubuntu-latest
@@ -64,40 +64,84 @@ jobs:
             echo "DEPLOY_ENV=production"              >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=latest"                   >> $GITHUB_OUTPUT
             echo "COMPOSE_FILE=docker-compose.yml"    >> $GITHUB_OUTPUT
+            echo "DB_NAME=db_gestao"                  >> $GITHUB_OUTPUT
+            echo "FRONTEND_URL=https://apihub-macedo.duckdns.org"  >> $GITHUB_OUTPUT
+            echo "FRONTEND_PORT=3001"                 >> $GITHUB_OUTPUT
           else
             echo "DEPLOY_ENV=staging"                         >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=staging"                          >> $GITHUB_OUTPUT
             echo "COMPOSE_FILE=docker-compose.staging.yml"    >> $GITHUB_OUTPUT
+            echo "DB_NAME=db_gestao_staging"                  >> $GITHUB_OUTPUT
+            echo "FRONTEND_URL=https://apihub-macedo.duckdns.org" >> $GITHUB_OUTPUT
+            echo "FRONTEND_PORT=3011"                         >> $GITHUB_OUTPUT
           fi
 
-      - name: Deploy via SSH
+      - name: Escrever .env na VPS e fazer deploy
         uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_ENV:    ${{ steps.env.outputs.DEPLOY_ENV }}
+          IMAGE_TAG:     ${{ steps.env.outputs.IMAGE_TAG }}
+          COMPOSE_FILE:  ${{ steps.env.outputs.COMPOSE_FILE }}
+          DB_NAME:       ${{ steps.env.outputs.DB_NAME }}
+          FRONTEND_URL:  ${{ steps.env.outputs.FRONTEND_URL }}
+          FRONTEND_PORT: ${{ steps.env.outputs.FRONTEND_PORT }}
+          POSTGRES_USER:      ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD:  ${{ secrets.POSTGRES_PASSWORD }}
+          DATABASE_URL:       ${{ secrets.DATABASE_URL }}
+          FB_API_KEY:                   ${{ secrets.FB_API_KEY }}
+          FB_AUTH_DOMAIN:               ${{ secrets.FB_AUTH_DOMAIN }}
+          FB_PROJECT_ID:                ${{ secrets.FB_PROJECT_ID }}
+          FB_STORAGE_BUCKET:            ${{ secrets.FB_STORAGE_BUCKET }}
+          FB_MESSAGING_SENDER_ID:       ${{ secrets.FB_MESSAGING_SENDER_ID }}
+          FB_APP_ID:                    ${{ secrets.FB_APP_ID }}
+          FB_MEASUREMENT_ID:            ${{ secrets.FB_MEASUREMENT_ID }}
+          FIREBASE_ADMIN_PROJECT_ID:    ${{ secrets.FIREBASE_ADMIN_PROJECT_ID }}
+          FIREBASE_ADMIN_CLIENT_EMAIL:  ${{ secrets.FIREBASE_ADMIN_CLIENT_EMAIL }}
+          FIREBASE_ADMIN_PRIVATE_KEY:   ${{ secrets.FIREBASE_ADMIN_PRIVATE_KEY }}
         with:
           host:     ${{ secrets.VPS_HOST }}
           port:     ${{ secrets.VPS_PORT }}
           username: ${{ secrets.VPS_USER }}
           key:      ${{ secrets.VPS_SSH_KEY }}
+          envs: DEPLOY_ENV,IMAGE_TAG,COMPOSE_FILE,DB_NAME,FRONTEND_URL,FRONTEND_PORT,POSTGRES_USER,POSTGRES_PASSWORD,DATABASE_URL,FB_API_KEY,FB_AUTH_DOMAIN,FB_PROJECT_ID,FB_STORAGE_BUCKET,FB_MESSAGING_SENDER_ID,FB_APP_ID,FB_MEASUREMENT_ID,FIREBASE_ADMIN_PROJECT_ID,FIREBASE_ADMIN_CLIENT_EMAIL,FIREBASE_ADMIN_PRIVATE_KEY
           script: |
             set -e
-            DEPLOY_ENV="${{ steps.env.outputs.DEPLOY_ENV }}"
-            IMAGE_TAG="${{ steps.env.outputs.IMAGE_TAG }}"
-            COMPOSE_FILE="${{ steps.env.outputs.COMPOSE_FILE }}"
-            DEPLOY_DIR="/opt/apps/sql-challenge/backend"
+            DEPLOY_DIR="/home/admin/sql-challenge-backend"
+            ENV_FILE="$DEPLOY_DIR/.env.${DEPLOY_ENV}"
+
+            echo "=== Escrevendo $ENV_FILE ==="
+            cat > "$ENV_FILE" << EOF
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            POSTGRES_DB=${DB_NAME}
+            DB_PORT=5432
+            PORT=3000
+            NODE_ENV=production
+            DATABASE_URL=${DATABASE_URL}
+            apiKey=${FB_API_KEY}
+            authDomain=${FB_AUTH_DOMAIN}
+            projectId=${FB_PROJECT_ID}
+            storageBucket=${FB_STORAGE_BUCKET}
+            messagingSenderId=${FB_MESSAGING_SENDER_ID}
+            appId=${FB_APP_ID}
+            measurementId=${FB_MEASUREMENT_ID}
+            FIREBASE_ADMIN_PROJECT_ID=${FIREBASE_ADMIN_PROJECT_ID}
+            FIREBASE_ADMIN_CLIENT_EMAIL=${FIREBASE_ADMIN_CLIENT_EMAIL}
+            FIREBASE_ADMIN_PRIVATE_KEY=${FIREBASE_ADMIN_PRIVATE_KEY}
+            FRONTEND_URL=${FRONTEND_URL}
+            FRONTEND_PORT=${FRONTEND_PORT}
+            EOF
+            chmod 600 "$ENV_FILE"
 
             echo "=== Deploy: env=$DEPLOY_ENV tag=$IMAGE_TAG ==="
             cd "$DEPLOY_DIR"
-
             git fetch origin
             git checkout ${{ github.ref_name }}
-            git pull origin ${{ github.ref_name }}
-
-            ENV_FILE=".env.${DEPLOY_ENV}"
-            [ -f "$ENV_FILE" ] || { echo "❌ $ENV_FILE não encontrado na VPS"; exit 1; }
+            git reset --hard origin/${{ github.ref_name }}
 
             IMAGE_TAG=$IMAGE_TAG docker compose -f "$COMPOSE_FILE" up -d --build
             docker image prune -f
-
-            echo "✅ Backend $DEPLOY_ENV deployado com sucesso"
+            echo "✅ Backend $DEPLOY_ENV deployado"
 
       - name: Notificar falha
         if: failure()
