@@ -17,6 +17,8 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+-- Disable FK checks during bulk load (dump order doesn't respect all dependencies)
+SET session_replication_role = replica;
 
 --
 -- Name: magical_world; Type: SCHEMA; Schema: -; Owner: challenge_user
@@ -39976,6 +39978,7 @@ ALTER TABLE ONLY magical_world.transacoes_comerciais
 --
 -- PostgreSQL database dump complete
 --
+SET session_replication_role = DEFAULT;
 
 \unrestrict yLYQd9xvLLPsEAwFUyAyv4Hcfei2I8vSB3JzjLNVQP1ViLzuuigoNIYYt4yTNQI
 
