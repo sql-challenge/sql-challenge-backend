@@ -65,17 +65,13 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
                 return { obj, consulta };
             })
         );
-        if (objetivosResolved.some(({ consulta }) => !consulta)) {
-            res.status(404).json({ error: "Consulta não encontrada para um ou mais objetivos." });
-            return;
-        }
         const objetivos: ObjetivoComConsulta[] = objetivosResolved.map(({ obj, consulta }) => ({
             id: obj.id,
             idCapitulo: obj.idCapitulo,
             descricao: obj.descricao,
             ordem: obj.ordem,
             nivel: obj.nivel,
-            consulta: consulta!,
+            consulta: consulta ?? null,
         }));
         //
         const visaoTabelas = await Promise.all(
