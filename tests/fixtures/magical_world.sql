@@ -24,7 +24,7 @@ SET session_replication_role = replica;
 -- Name: magical_world; Type: SCHEMA; Schema: -; Owner: challenge_user
 --
 
-CREATE SCHEMA magical_world;
+CREATE SCHEMA IF NOT EXISTS magical_world;
 
 
 ALTER SCHEMA magical_world OWNER TO challenge_user;
