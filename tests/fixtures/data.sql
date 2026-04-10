@@ -94,20 +94,20 @@ INSERT INTO Visao (id, id_capitulo, comando) VALUES
 (22, 4, 'magical_world.ataques_origem_recurso'),
 (23, 4, 'magical_world.aliancas_raw');
 
--- Consultas-solução (5 total — uma por capítulo)
-INSERT INTO Consulta (id, id_capitulo, query, colunas, resultado) VALUES
-(1, 1,
+-- Consultas-solução (5 total — uma por capítulo, ligada ao primeiro objetivo)
+INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
+(1, 1, 1,
  'SELECT f.familiaFeudal AS nome_reino, f.geografia, p.nome AS nome_senhor, p.sobreNome AS sobrenome_senhor FROM Feudo f JOIN Cidade c ON f.id = c.id_feudo JOIN Pessoa p ON c.id_pessoa = p.id ORDER BY f.familiaFeudal;',
  '["nome_reino", "geografia", "nome_senhor", "sobrenome_senhor"]'::jsonb, NULL),
-(2, 2,
+(2, 2, 7,
  'WITH AtaquesPorAno AS (SELECT EXTRACT(YEAR FROM data_ocorrido) AS ano, COUNT(id) AS num_ataques FROM ataques_detalhe GROUP BY ano) SELECT ano, num_ataques, LAG(num_ataques, 1, 0) OVER (ORDER BY ano) AS ataques_ano_anterior, num_ataques - LAG(num_ataques, 1, 0) OVER (ORDER BY ano) AS variacao FROM AtaquesPorAno ORDER BY ano;',
  '["ano", "num_ataques", "ataques_ano_anterior", "variacao"]'::jsonb, NULL),
-(3, 3,
+(3, 3, 12,
  'SELECT p.nome AS senhor_autorizador, tc.recurso, a.data_ocorrido AS data_ataque FROM Transacoes_Comerciais tc JOIN Pessoa p ON tc.id_senhor_autorizador = p.id JOIN Ataques a ON tc.id_territorio_destino = a.id_territorio WHERE a.data_ocorrido > tc.data_transacao;',
  '["senhor_autorizador", "recurso", "data_ataque"]'::jsonb, NULL),
-(4, 4,
+(4, 4, 17,
  'SELECT p1.nome AS senhor_da_torre, p2.nome AS aliado FROM Pessoa p1 JOIN Torres_Magicas tm ON p1.id = tm.id_senhor_da_torre JOIN aliancas_raw al ON p1.id = al.id_personagem1 JOIN Pessoa p2 ON al.id_personagem2 = p2.id WHERE tm.nome = ''Torre Mágica de Val Nareth'';',
  '["senhor_da_torre", "aliado"]'::jsonb, NULL),
-(5, 5,
+(5, 5, 22,
  'SELECT * FROM grimorio_final;',
  '["conteudo"]'::jsonb, NULL);

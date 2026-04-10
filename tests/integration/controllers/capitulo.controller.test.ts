@@ -136,14 +136,16 @@ describe("[Integration] CapituloController", () => {
             expect(res.status).toHaveBeenCalledWith(400);
         });
 
-        it("deve responder 404 quando não há consulta para o capítulo", async () => {
+        it("deve responder 200 mesmo quando objetivo não tem consulta", async () => {
             mockConsultaGetByObjetivoId.mockResolvedValueOnce(null);
             const req = mockReq({ id: "1" });
             const res = mockRes();
 
             await capituloController.getCapituloViewById(req, res);
 
-            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.status).toHaveBeenCalledWith(200);
+            const jsonArg = (res.json as jest.Mock).mock.calls[0][0];
+            expect(jsonArg.data.objetivos[0].consulta).toBeNull();
         });
     });
 });
