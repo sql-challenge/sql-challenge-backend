@@ -38,10 +38,12 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 
         return Promise.all(result.rows.map(async (r) => {
             let resultado = Array.isArray(r.resultado) ? r.resultado : [];
-            if (resultado.length === 0 && r.query) {
+            let colunas = Array.isArray(r.colunas) && r.colunas.length > 0 ? r.colunas as string[] : null;
+            if ((resultado.length === 0 || !colunas) && r.query) {
                 try {
                     const queryResult = await pool.query(r.query as string);
-                    resultado = queryResult.rows;
+                    if (resultado.length === 0) resultado = queryResult.rows;
+                    if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
                 } catch {
                     resultado = [];
                 }
@@ -51,7 +53,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
                 Number(r.id_capitulo),
                 r.id_objetivo != null ? Number(r.id_objetivo) : null,
                 r.query as string,
-                r.colunas as string[],
+                colunas ?? [],
                 resultado
             );
         }));
@@ -67,10 +69,12 @@ export class ConsultaPostgresRepository implements IConsultaPort {
 
         const r = result.rows[0];
         let resultado = Array.isArray(r.resultado) ? r.resultado : [];
-        if (resultado.length === 0 && r.query) {
+        let colunas = Array.isArray(r.colunas) && r.colunas.length > 0 ? r.colunas as string[] : null;
+        if ((resultado.length === 0 || !colunas) && r.query) {
             try {
                 const queryResult = await pool.query(r.query as string);
-                resultado = queryResult.rows;
+                if (resultado.length === 0) resultado = queryResult.rows;
+                if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
             } catch {
                 resultado = [];
             }
@@ -80,7 +84,7 @@ export class ConsultaPostgresRepository implements IConsultaPort {
             Number(r.id_capitulo),
             Number(r.id_objetivo),
             r.query as string,
-            r.colunas as string[],
+            colunas ?? [],
             resultado
         );
     }
