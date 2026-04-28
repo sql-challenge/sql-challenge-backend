@@ -108,6 +108,13 @@ jobs:
             DEPLOY_DIR="/home/admin/sql-challenge-backend"
             ENV_FILE="$DEPLOY_DIR/.env.${DEPLOY_ENV}"
 
+            # Hostname do serviço PostgreSQL no docker-compose varia por ambiente
+            if [ "$DEPLOY_ENV" = "production" ]; then
+              DB_HOST="db"
+            else
+              DB_HOST="db-staging"
+            fi
+
             echo "=== Escrevendo $ENV_FILE ==="
             cat > "$ENV_FILE" << EOF
             POSTGRES_USER=${POSTGRES_USER}
@@ -116,7 +123,7 @@ jobs:
             DB_PORT=5432
             PORT=3000
             NODE_ENV=production
-            DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db-staging:5432/${DB_NAME}?sslmode=disable
+            DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:5432/${DB_NAME}?sslmode=disable
             apiKey=${FB_API_KEY}
             authDomain=${FB_AUTH_DOMAIN}
             projectId=${FB_PROJECT_ID}
