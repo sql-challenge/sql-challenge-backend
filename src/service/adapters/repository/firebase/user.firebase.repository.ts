@@ -246,6 +246,7 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {
+		// 1. Subcollection — histórico detalhado por desafio
 		const progressRef = this.userCollection
 			.doc(uid)
 			.collection("challenge_progress")
@@ -253,14 +254,46 @@ export class UserFirebaseRepository implements IUserPort {
 
 		const snap = await progressRef.get();
 		const prev = snap.exists ? snap.data()! : {};
+		const prevCapFinish = Number(prev.capFinish ?? 0);
+		const shouldGrantXp = Number(dto.capFinish) > prevCapFinish;
+		const xpToAdd = shouldGrantXp ? Number(dto.xpObtido) : 0;
 
 		await progressRef.set({
 			nameChallenge: dto.nameChallenge,
-			capFinish: Math.max(dto.capFinish, prev.capFinish ?? 0),
-			xpObtido: (prev.xpObtido ?? 0) + dto.xpObtido,
-			tempoSegundos: dto.tempoSegundos,
+			capFinish: Math.max(dto.capFinish, prevCapFinish),
+			xpObtido: (prev.xpObtido ?? 0) + xpToAdd,
+			totalQueries: (prev.totalQueries ?? 0) + (dto.totalQueries ?? 0),
+			totalHints: (prev.totalHints ?? 0) + (dto.totalHints ?? 0),
+			tempoSegundos: (prev.tempoSegundos ?? 0) + dto.tempoSegundos,
 			updatedAt: new Date(),
 		}, { merge: true });
+
+		// 2. Documento principal — array challenge_progress para radar/conquistas + xp
+		const userRef = this.userCollection.doc(uid);
+		const userSnap = await userRef.get();
+		if (!userSnap.exists) return;
+
+		const userData = userSnap.data()!;
+		const existing: any[] = userData.challenge_progress ?? [];
+		const idx = existing.findIndex((p: any) => p.nameChallange === dto.desafioId);
+
+		const updatedEntry = {
+			nameChallange: dto.desafioId,
+			capFinish: Math.max(dto.capFinish, idx >= 0 ? (existing[idx].capFinish ?? 0) : 0),
+			xpObtido: (idx >= 0 ? (existing[idx].xpObtido ?? 0) : 0) + xpToAdd,
+			totalQueries: (idx >= 0 ? (existing[idx].totalQueries ?? 0) : 0) + (dto.totalQueries ?? 0),
+			totalHints: (idx >= 0 ? (existing[idx].totalHints ?? 0) : 0) + (dto.totalHints ?? 0),
+			totalSeconds: (idx >= 0 ? (existing[idx].totalSeconds ?? 0) : 0) + dto.tempoSegundos,
+		};
+
+		const updatedProgress = idx >= 0
+			? existing.map((p: any, i: number) => i === idx ? updatedEntry : p)
+			: [...existing, updatedEntry];
+
+		await userRef.update({
+			challenge_progress: updatedProgress,
+			xp: (userData.xp ?? 0) + xpToAdd,
+		});
 	}
 
 	async deleteUser(uid: string): Promise<void> {

@@ -30,7 +30,7 @@ routes.use(cors({
 		const allowed = allowedOrigins.some(o => origin.startsWith(o));
 		callback(null, allowed);
 	},
-	methods: ["GET", "POST", "PUT", "DELETE"],
+	methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 }));
 

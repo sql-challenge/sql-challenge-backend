@@ -159,12 +159,20 @@ export const updateUser = async (req: Request, res: Response) => {
 export const saveChapterProgress = async (req: Request, res: Response) => {
 	try {
 		const { uid } = req.params;
-		const { desafioId, nameChallenge, capFinish, xpObtido, tempoSegundos } = req.body;
+		const { desafioId, nameChallenge, capFinish, xpObtido, tempoSegundos, totalQueries, totalHints } = req.body;
 		if (!desafioId || !nameChallenge || capFinish == null || xpObtido == null || tempoSegundos == null) {
 			res.status(400).json({ error: "Campos obrigatórios: desafioId, nameChallenge, capFinish, xpObtido, tempoSegundos." });
 			return;
 		}
-		await userUseCase.saveChapterProgress(uid, { desafioId: String(desafioId), nameChallenge, capFinish: Number(capFinish), xpObtido: Number(xpObtido), tempoSegundos: Number(tempoSegundos) });
+		await userUseCase.saveChapterProgress(uid, {
+			desafioId: String(desafioId),
+			nameChallenge,
+			capFinish: Number(capFinish),
+			xpObtido: Number(xpObtido),
+			tempoSegundos: Number(tempoSegundos),
+			totalQueries: totalQueries != null ? Number(totalQueries) : 0,
+			totalHints: totalHints != null ? Number(totalHints) : 0,
+		});
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });

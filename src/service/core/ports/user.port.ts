@@ -47,4 +47,6 @@ export interface IChapterProgressDto {
 	capFinish: number
 	xpObtido: number
 	tempoSegundos: number
+	totalQueries?: number
+	totalHints?: number
 }
