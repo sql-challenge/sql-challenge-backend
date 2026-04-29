@@ -85,7 +85,8 @@ check_modelagem() {
 
   local required=(
     "Games/magical world/ddl_game.sql"
-    "Games/magical world/dml_game.sql"
+    "Games/magical world/dml_gama.sql"
+    "Games/magical world/dml_gama_patch.sql"
     "Games/magical world/vw_ddl_game.sql"
     "PostgreSQL/Script/cadastro_games/dml_magical_world.sql"
     "PostgreSQL/Script/gestão/dcl_security.sql"
@@ -229,27 +230,32 @@ init_production() {
 
   # 3. DML do mundo mágico: insere dados das entidades do jogo
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$MODELAGEM_DIR/Games/magical world/dml_game.sql" \
-    "[3/6] Dados do mundo mágico (feudos, pessoas, artefatos, cidades...)"
+    "$MODELAGEM_DIR/Games/magical world/dml_gama.sql" \
+    "[3/7] Dados do mundo mágico (8 feudos, 7 pessoas, artefatos, cidades...)"
 
-  # 4. Views do jogo: uma view por objetivo de cada capítulo (5 capítulos)
+  # 4. Patch: corrige bugs nos dados
+  run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
+    "$MODELAGEM_DIR/Games/magical world/dml_gama_patch.sql" \
+    "[4/7] Patch de dados"
+
+  # 5. Views do jogo: uma view por objetivo de cada capítulo (5 capítulos)
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
     "$MODELAGEM_DIR/Games/magical world/vw_ddl_game.sql" \
-    "[4/6] Views do jogo (regioes_reinos, ataques_raw, posse_artefatos_base, grimorio_final...)"
+    "[5/7] Views do jogo (regioes_reinos, ataques_raw, posse_artefatos_base, grimorio_final...)"
 
-  # 5. Conteúdo de gestão: Desafios, Capítulos, Objetivos, Dicas, Visões, Consultas
+  # 6. Conteúdo de gestão: Desafios, Capítulos, Objetivos, Dicas, Visões, Consultas
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
     "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games/dml_magical_world.sql" \
-    "[5/6] Conteúdo do jogo (1 desafio, 5 capítulos, objetivos, dicas, consultas)"
+    "[6/7] Conteúdo do jogo (1 desafio, 5 capítulos, objetivos, dicas, consultas)"
 
-  # 6. Segurança: usuário de aplicação com acesso restrito (para queries dos jogadores)
+  # 7. Segurança: usuário de aplicação com acesso restrito (para queries dos jogadores)
   #    Adapta o dcl_security.sql substituindo a senha hardcoded pela variável de ambiente
   step "[7/7] Configurando usuário de aplicação (users_sql_challenge)"
   cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \
     | sed "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
     | docker compose -f "$compose_file" --env-file "$env_file" \
         exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1
-  sql_ok "[6/6] Usuário users_sql_challenge criado"
+  sql_ok "[7/7] Usuário users_sql_challenge criado"
 
   # Grants adicionais para o schema magical_world
   run_sql_inline "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
@@ -337,13 +343,16 @@ init_staging() {
     check_modelagem
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
       "$MODELAGEM_DIR/Games/magical world/ddl_game.sql" \
-      "[2a/3] DDL mundo mágico"
+      "[2a/4] DDL mundo mágico"
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-      "$MODELAGEM_DIR/Games/magical world/dml_game.sql" \
-      "[2b/3] Dados mundo mágico"
+      "$MODELAGEM_DIR/Games/magical world/dml_gama.sql" \
+      "[2b/4] Dados mundo mágico"
+    run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
+      "$MODELAGEM_DIR/Games/magical world/dml_gama_patch.sql" \
+      "[2c/4] Patches"
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
       "$MODELAGEM_DIR/Games/magical world/vw_ddl_game.sql" \
-      "[2c/3] Views do jogo"
+      "[2d/4] Views do jogo"
   fi
 
   # 3. Dados de teste (mínimo para os testes de integração passarem)
