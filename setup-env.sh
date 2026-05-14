@@ -5,7 +5,7 @@ ENV_FILE="/opt/apps/sql-challenge/backend/.env.production"
 cat > "$ENV_FILE" << 'EOF'
 PORT=3000
 NODE_ENV=production
-apiKey=AIzaSyCjcUNiPRfL20Di5Yd6gRCcVPeOBpnG9IE
+apiKey=your-firebase-api-key
 authDomain=sqlmystery.firebaseapp.com
 projectId=sqlmystery
 storageBucket=sqlmystery.firebasestorage.app

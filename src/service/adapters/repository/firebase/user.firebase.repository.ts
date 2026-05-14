@@ -269,10 +269,10 @@ export class UserFirebaseRepository implements IUserPort {
 
 		const userData = userSnap.data()!;
 		const existing: ChallengeProgress[] = userData.challenge_progress ?? [];
-		const idx = existing.findIndex(p => p.nameChallange === dto.desafioId);
+		const idx = existing.findIndex(p => p.nameChallenge === dto.desafioId);
 
 		const updatedEntry: ChallengeProgress = {
-			nameChallange: dto.desafioId,
+			nameChallenge: dto.desafioId,
 			capFinish: Math.max(dto.capFinish, idx >= 0 ? (existing[idx].capFinish ?? 0) : 0),
 			xpObtido: (idx >= 0 ? (existing[idx].xpObtido ?? 0) : 0) + xpToAdd,
 			totalQueries: (idx >= 0 ? (existing[idx].totalQueries ?? 0) : 0) + (dto.totalQueries ?? 0),

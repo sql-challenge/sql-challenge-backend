@@ -413,15 +413,27 @@ const options: swaggerJsdoc.Options = {
                     responses: { 200: { description: "OK" }, 500: { description: "Erro" } },
                 },
             },
-            "/api/user/resetPassword/{uid}/{newPsw}": {
+            "/api/user/resetPassword": {
                 post: {
                     tags: ["Usuários"],
-                    summary: "Redefine senha do usuário",
-                    parameters: [
-                        { name: "uid", in: "path", required: true, schema: { type: "string" } },
-                        { name: "newPsw", in: "path", required: true, schema: { type: "string" } },
-                    ],
-                    responses: { 200: { description: "OK" }, 500: { description: "Erro" } },
+                    summary: "Redefine senha do usuário (requer autenticação)",
+                    security: [{ bearerAuth: [] }],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        uid: { type: "string", description: "UID do usuário no Firebase" },
+                                        newPassword: { type: "string", description: "Nova senha" },
+                                    },
+                                    required: ["uid", "newPassword"],
+                                },
+                            },
+                        },
+                    },
+                    responses: { 200: { description: "Senha redefinida com sucesso" }, 500: { description: "Erro" } },
                 },
             },
         },

@@ -9,7 +9,7 @@ export type Friend = {
 };
 
 export type ChallengeProgress = {
-	nameChallange: string;
+	nameChallenge: string;
 	capFinish: number;
 	xpObtido: number;
 	totalQueries?: number;
