@@ -2,12 +2,20 @@ import { Objetivo } from "../../../../core/domain/objetivo.entity";
 import { IObjetivoPort } from "../../../../core/ports/objetivo.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
+interface ObjetivoRow {
+    id: number;
+    id_capitulo: number;
+    descricao: string;
+    ordem: number;
+    nivel: number;
+}
+
 export class ObjetivoPostgresRepository implements IObjetivoPort {
 
     async getAll(): Promise<Objetivo[]> {
         const result = await pool.query("SELECT * FROM objetivo ORDER BY id ASC");
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: ObjetivoRow) =>
             new Objetivo(
                 Number(row.id),
                 Number(row.id_capitulo),
@@ -27,7 +35,7 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
         if (result.rows.length === 0)
             throw new Error("Objetivo não encontrado.");
 
-        const row = result.rows[0];
+        const row = result.rows[0] as ObjetivoRow;
 
         return new Objetivo(
             Number(row.id),
@@ -44,7 +52,7 @@ export class ObjetivoPostgresRepository implements IObjetivoPort {
             [capituloId]
         );
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: ObjetivoRow) =>
             new Objetivo(
                 Number(row.id),
                 Number(row.id_capitulo),

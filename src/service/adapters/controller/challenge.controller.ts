@@ -47,8 +47,8 @@ class ChallengeController {
             const desafios = await desafioUseCase.getAll();
             const data: Mystery[] = desafios.map(d => toMystery(d));
             res.status(200).json({ data });
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+        } catch (error: unknown) {
+            res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
         }
     }
 
@@ -139,8 +139,8 @@ class ChallengeController {
             };
 
             res.status(200).json({ data: mystery });
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+        } catch (error: unknown) {
+            res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
         }
     }
 }

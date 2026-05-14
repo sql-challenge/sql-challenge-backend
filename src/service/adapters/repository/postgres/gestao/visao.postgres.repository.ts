@@ -27,7 +27,7 @@ export class VisaoPostgresRepository implements IVisaoPort {
 			`SELECT id, id_capitulo, comando FROM ${this.table} WHERE id_capitulo = $1 ORDER BY id ASC`,
 			[idCapitulo]
 		);
-		return result.rows.map((row: any) => new Visao(Number(row.id), Number(row.id_capitulo), row.comando));
+		return result.rows.map((row: { id: number; id_capitulo: number; comando: string }) => new Visao(Number(row.id), Number(row.id_capitulo), row.comando));
 	}
 
 	async executeView(comando: string): Promise<Record<string, unknown>[]> {

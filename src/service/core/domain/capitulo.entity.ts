@@ -13,31 +13,7 @@ export class Capitulo {
     public contextoHistoria: string,
     public numero: number
   ) {}
-}
-
-// export interface Objetivo {
-//   id: number;
-//   idCapitulo: number;
-//   descricao: string;
-//   ordem: number;
-// }
-
-// export interface Dica {
-//   id: number;
-//   idCapitulo: number;
-//   ordem: number;
-//   conteudo: string;
-//   penalidadeXp: number;
-// }
-
-// export interface Consulta {
-//   id: number;
-//   idCapitulo: number;
-//   colunas: string[];
-//   resultado: Record<string, unknown>[];
-// }
-
-export interface DatabaseSchema {
+}export interface DatabaseSchema {
   visaoTabelas: VisaoTabela[];
   visaoRelacionamentos: VisaoRelacionamento[];
 }

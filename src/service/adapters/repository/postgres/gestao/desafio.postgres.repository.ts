@@ -3,12 +3,30 @@ import { Desafio } from "../../../../core/domain/desafio.entity";
 import { IDesafioPort } from "../../../../core/ports/desafio.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
+interface DesafioRow {
+    id: number;
+    titulo: string;
+    descricao: string;
+    tempo_estimado: string;
+    taxa_conclusao: number | null;
+    criado_em: string;
+    atualizado_em: string;
+}
+
+interface DesafioCapituloRow extends DesafioRow {
+    capitulo_id: number;
+    intro_historia: string;
+    xp_recompensa: number;
+    contexto_historia: string;
+    numero: number;
+}
+
 export class DesafioPostgresRepository implements IDesafioPort {
 
     async getAll(): Promise<Desafio[]> {
         const result = await pool.query("SELECT * FROM desafio ORDER BY id ASC");
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: DesafioRow) =>
             new Desafio(
                 Number(row.id),
                 row.titulo,
@@ -30,7 +48,7 @@ export class DesafioPostgresRepository implements IDesafioPort {
         if (result.rows.length === 0)
             throw new Error("Desafio não encontrado.");
 
-        const row = result.rows[0];
+        const row = result.rows[0] as DesafioRow;
 
         return new Desafio(
             Number(row.id),
@@ -55,7 +73,7 @@ export class DesafioPostgresRepository implements IDesafioPort {
         if (result.rows.length === 0)
             throw new Error("Desafio com capítulo não encontrado.");
 
-        const row = result.rows[0];
+        const row = result.rows[0] as DesafioCapituloRow;
 
         return {
             id: Number(row.id),

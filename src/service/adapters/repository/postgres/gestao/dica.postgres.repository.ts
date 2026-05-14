@@ -2,12 +2,20 @@ import { Dica } from "../../../../core/domain/dica.entity";
 import { IDicaPort } from "../../../../core/ports/dica.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
+interface DicaRow {
+    id: number;
+    id_capitulo: number;
+    ordem: number;
+    conteudo: string;
+    penalidade_xp: number;
+}
+
 export class DicaPostgresRepository implements IDicaPort {
 
     async getAll(): Promise<Dica[]> {
         const result = await pool.query("SELECT * FROM dica ORDER BY id ASC");
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: DicaRow) =>
             new Dica(
                 Number(row.id),
                 Number(row.id_capitulo),
@@ -27,7 +35,7 @@ export class DicaPostgresRepository implements IDicaPort {
         if (result.rows.length === 0)
             throw new Error("Dica não encontrada.");
 
-        const row = result.rows[0];
+        const row = result.rows[0] as DicaRow;
 
         return new Dica(
             Number(row.id),
@@ -44,7 +52,7 @@ export class DicaPostgresRepository implements IDicaPort {
             [idCapitulo]
         );
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: DicaRow) =>
             new Dica(
                 Number(row.id),
                 Number(row.id_capitulo),

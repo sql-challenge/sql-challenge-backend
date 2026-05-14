@@ -2,12 +2,21 @@ import { Capitulo } from "../../../../core/domain/capitulo.entity";
 import { ICapituloPort } from "../../../../core/ports/capitulo.port";
 import { pool } from "../../../../db/postgresql/postgresqlConfig";
 
+interface CapituloRow {
+    id: number;
+    id_desafio: number;
+    intro_historia: string;
+    xp_recompensa: number;
+    contexto_historia: string;
+    numero: number;
+}
+
 export class CapituloPostgresRepository implements ICapituloPort {
 
     async getAll(): Promise<Capitulo[]> {
         const result = await pool.query("SELECT * FROM capitulo ORDER BY id ASC");
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: CapituloRow) =>
             new Capitulo(
                 Number(row.id),
                 Number(row.id_desafio),
@@ -28,7 +37,7 @@ export class CapituloPostgresRepository implements ICapituloPort {
         if (result.rows.length === 0)
             throw new Error("Capítulo não encontrado.");
 
-        const row = result.rows[0];
+        const row = result.rows[0] as CapituloRow;
 
         return new Capitulo(
             Number(row.id),
@@ -46,7 +55,7 @@ export class CapituloPostgresRepository implements ICapituloPort {
             [desafioId]
         );
 
-        return result.rows.map((row: any) =>
+        return result.rows.map((row: CapituloRow) =>
             new Capitulo(
                 Number(row.id),
                 Number(row.id_desafio),

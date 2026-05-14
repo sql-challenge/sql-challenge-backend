@@ -66,10 +66,10 @@ export class RankingFirebaseRepository implements IRankingPort {
 	async addRanking(ranking: Ranking): Promise<Ranking> {
 		const ref = doc(this.rankingCollection, ranking["username"]); // usa username como ID
 		await setDoc(ref, {
-			username: (ranking as any).username,
-			nick: (ranking as any).nick,
-			imagePerfil: (ranking as any).imagePerfil,
-			rankingPosition: (ranking as any).rankingPosition
+			username: ranking.username,
+			nick: ranking.nick,
+			imagePerfil: ranking.imagePerfil,
+			rankingPosition: ranking.rankingPosition
 		});
 		return ranking;
 	}

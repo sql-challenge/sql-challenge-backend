@@ -8,8 +8,8 @@ export const getAll = async (req: Request, res: Response) => {
     try {
         const data = await useCase.getAll();
         res.status(200).json({ data });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
 };
 
@@ -18,8 +18,8 @@ export const getById = async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         const data = await useCase.getById(id);
         res.status(200).json({ data });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
 };
 
@@ -28,7 +28,7 @@ export const getByCapituloId = async (req: Request, res: Response) => {
         const idCapitulo = Number(req.params.idCapitulo);
         const data = await useCase.getByCapituloId(idCapitulo);
         res.status(200).json({ data });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
 };
