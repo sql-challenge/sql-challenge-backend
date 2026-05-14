@@ -19,7 +19,7 @@ export const getSession = async (req: Request, res: Response) => {
     const session = await sessionUseCase.getSession(uid, desafioId, capId);
     res.status(200).json({ data: session ?? emptySession(uid, desafioId, capId) });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: `[API] ${err.message}` });
   }
 };
 
@@ -45,6 +45,6 @@ export const saveSession = async (req: Request, res: Response) => {
     const updated = await sessionUseCase.saveSession(uid, desafioId, capId, dto);
     res.status(200).json({ data: updated });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
+    res.status(500).json({ error: `[API] ${err.message}` });
+}
 };

@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, doc, query, where, addDoc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, query, where, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { Ranking } from "../../../core/domain/ranking.entity";
 import { IRankingPort } from "../../../core/ports/ranking.port";
 import { db } from "../../../db/firebase/firebaseConfig";
@@ -6,148 +6,144 @@ import { db } from "../../../db/firebase/firebaseConfig";
 export class RankingFirebaseRepository implements IRankingPort {
 	private get rankingCollection() { return collection(db, "Ranking"); }
 
-	// Retorna todos os rankings
 	async getAll(): Promise<Ranking[]> {
-		const snapshot = await getDocs(this.rankingCollection);
-		return snapshot.docs.map((docSnap) => {
-			const data = docSnap.data();
-			return new Ranking(
-				data.username,
-				data.nick,
-				data.imagePerfil,
-				data.rankingPosition
-			);
-		});
+		try {
+			const snapshot = await getDocs(this.rankingCollection);
+			return snapshot.docs.map((docSnap) => {
+				const data = docSnap.data();
+				return new Ranking(data.username, data.nick, data.imagePerfil, data.rankingPosition);
+			});
+		} catch (err) {
+			console.error(`[Firebase] Ranking getAll: requires Admin SDK credentials — ${(err as Error).message}`);
+			return [];
+		}
 	}
 
-	// Retorna um ranking pelo username
 	async getRankingByUsername(username: string): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("username", "==", username));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			data.imagePerfil,
-			data.rankingPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("username", "==", username));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, data.imagePerfil, data.rankingPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking getRankingByUsername: ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Retorna um ranking pelo nick
 	async getRankingByNick(nick: string): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("nick", "==", nick));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			data.imagePerfil,
-			data.rankingPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("nick", "==", nick));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, data.imagePerfil, data.rankingPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking getRankingByNick: ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Retorna um ranking pela posição
 	async getRankingByPosition(position: number): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("rankingPosition", "==", position));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			data.imagePerfil,
-			data.rankingPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("rankingPosition", "==", position));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, data.imagePerfil, data.rankingPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking getRankingByPosition: ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Adiciona um novo ranking
 	async addRanking(ranking: Ranking): Promise<Ranking> {
-		const ref = doc(this.rankingCollection, ranking["username"]); // usa username como ID
-		await setDoc(ref, {
-			username: ranking.username,
-			nick: ranking.nick,
-			imagePerfil: ranking.imagePerfil,
-			rankingPosition: ranking.rankingPosition
-		});
-		return ranking;
+		try {
+			const ref = doc(this.rankingCollection, ranking["username"]);
+			await setDoc(ref, {
+				username: ranking.username,
+				nick: ranking.nick,
+				imagePerfil: ranking.imagePerfil,
+				rankingPosition: ranking.rankingPosition,
+			});
+			return ranking;
+		} catch (err) {
+			console.error(`[Firebase] Ranking addRanking: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Atualiza a posição com base no username
 	async updatePositionByUsername(username: string, newPosition: number): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("username", "==", username));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const ref = snapshot.docs[0].ref;
-		await updateDoc(ref, { rankingPosition: newPosition });
-
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			data.imagePerfil,
-			newPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("username", "==", username));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const ref = snapshot.docs[0].ref;
+			await updateDoc(ref, { rankingPosition: newPosition });
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, data.imagePerfil, newPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking updatePositionByUsername: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Atualiza a posição com base no nick
 	async updatePositionByNick(nick: string, newPosition: number): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("nick", "==", nick));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const ref = snapshot.docs[0].ref;
-		await updateDoc(ref, { rankingPosition: newPosition });
-
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			data.imagePerfil,
-			newPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("nick", "==", nick));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const ref = snapshot.docs[0].ref;
+			await updateDoc(ref, { rankingPosition: newPosition });
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, data.imagePerfil, newPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking updatePositionByNick: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Atualiza a imagem com base no username
 	async updateImageByUsername(username: string, newImage: string): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("username", "==", username));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const ref = snapshot.docs[0].ref;
-		await updateDoc(ref, { imagePerfil: newImage });
-
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			newImage,
-			data.rankingPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("username", "==", username));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const ref = snapshot.docs[0].ref;
+			await updateDoc(ref, { imagePerfil: newImage });
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, newImage, data.rankingPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking updateImageByUsername: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Atualiza a imagem com base no nick
 	async updateImageByNick(nick: string, newImage: string): Promise<Ranking> {
-		const q = query(this.rankingCollection, where("nick", "==", nick));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const ref = snapshot.docs[0].ref;
-		await updateDoc(ref, { imagePerfil: newImage });
-
-		const data = snapshot.docs[0].data();
-		return new Ranking(
-			data.username,
-			data.nick,
-			newImage,
-			data.rankingPosition
-		);
+		try {
+			const q = query(this.rankingCollection, where("nick", "==", nick));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const ref = snapshot.docs[0].ref;
+			await updateDoc(ref, { imagePerfil: newImage });
+			const data = snapshot.docs[0].data();
+			return new Ranking(data.username, data.nick, newImage, data.rankingPosition);
+		} catch (err) {
+			console.error(`[Firebase] Ranking updateImageByNick: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 
-	// Deleta um ranking com base no username
 	async deleteRanking(username: string): Promise<void> {
-		const q = query(this.rankingCollection, where("username", "==", username));
-		const snapshot = await getDocs(q);
-		if (snapshot.empty) throw new Error("Ranking not found!");
-		const ref = snapshot.docs[0].ref;
-		await deleteDoc(ref);
+		try {
+			const q = query(this.rankingCollection, where("username", "==", username));
+			const snapshot = await getDocs(q);
+			if (snapshot.empty) throw new Error("Ranking not found!");
+			const ref = snapshot.docs[0].ref;
+			await deleteDoc(ref);
+		} catch (err) {
+			console.error(`[Firebase] Ranking deleteRanking: requires Admin SDK credentials — ${(err as Error).message}`);
+			throw err;
+		}
 	}
 }

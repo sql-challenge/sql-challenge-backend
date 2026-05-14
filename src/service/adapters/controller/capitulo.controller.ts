@@ -25,7 +25,7 @@ export const getAll = async (req: Request, res: Response) => {
         const data = await capituloUseCase.getAll();
         res.status(200).json({ data });
     } catch (error: unknown) {
-        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+        res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
     }
 };
 
@@ -36,7 +36,7 @@ export const getById = async (req: Request, res: Response) => {
         const data = await capituloUseCase.getById(id);
         res.status(200).json({ data });
     } catch (error: unknown) {
-        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+        res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
     }
 };
 
@@ -105,6 +105,6 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             schema: { visaoTabelas, visaoRelacionamentos: [] },
         } });
     } catch (error: unknown) {
-        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+        res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
     }
 }

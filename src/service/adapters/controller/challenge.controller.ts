@@ -48,7 +48,7 @@ class ChallengeController {
             const data: Mystery[] = desafios.map(d => toMystery(d));
             res.status(200).json({ data });
         } catch (error: unknown) {
-            res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+            res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
         }
     }
 
@@ -140,7 +140,7 @@ class ChallengeController {
 
             res.status(200).json({ data: mystery });
         } catch (error: unknown) {
-            res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+            res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
         }
     }
 }

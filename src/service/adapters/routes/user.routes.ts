@@ -5,9 +5,9 @@ import { requireAuth } from "../middleware/auth.middleware";
 const router = Router();
 
 // ── Public routes (no auth required) ──────────────────────────
-router.post("/auth/", (req, res) => { controller.loginWithEmail(req, res); });
+// router.post("/auth/", (req, res) => { controller.loginWithEmail(req, res); });
 router.post("/auth/oauth", (req, res) => { controller.loginWithOAuth(req, res); });
-router.post("/", (req, res) => { controller.addUser(req, res); });
+// router.post("/", (req, res) => { controller.addUser(req, res); }); // disabled — sign-up only via OAuth
 
 // ── Protected routes (auth required) ──────────────────────────
 

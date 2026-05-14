@@ -30,10 +30,10 @@ services:
     container_name: sql-challenge-api-production
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"
     env_file: .env.production
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
     depends_on:
       db:
         condition: service_healthy

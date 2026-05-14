@@ -11,8 +11,8 @@ export class UserUseCase {
 	async getTopByXP(limit?: number): Promise<IUserView[]> {
 		return await this.userPort.getTopByXP(limit);
 	}
-	async getUserByUID(uid: string): Promise<IUserView> {
-		return await this.userPort.getUserByUID(uid);
+	async getUserByUID(uid: string, idToken?: string): Promise<IUserView> {
+		return await this.userPort.getUserByUID(uid, idToken);
 	}
 	async getUsersByName(name: string): Promise<IUserView[]> {
 		return await this.userPort.getUsersByName(name);
@@ -23,11 +23,9 @@ export class UserUseCase {
 	}
 
 	// POST
-	async addUser(user: IUserSignUp): Promise<IUserView> {
-		return await this.userPort.addUser(user);
-	}
-	// async addUserbyGoogle(idToken: string): Promise<IUserView> {
-	// 	return await this.userPort.addUserbyGoogle(idToken);
+	// ⚠️ Disabled — sign-up only via OAuth
+	// async addUser(user: IUserSignUp): Promise<IUserView> {
+	// 	return await this.userPort.addUser(user);
 	// }
 	async loginWithEmail(email: string, password: string): Promise<IUserView> {
 		return await this.userPort.loginWithEmail(email, password);
@@ -35,8 +33,8 @@ export class UserUseCase {
 	async loginWithGoogle(idToken: string): Promise<IUserView> {
 		return await this.userPort.loginWithGoogle(idToken);
 	}
-	async loginWithOAuth(idToken: string): Promise<IUserView> {
-		return await this.userPort.loginWithOAuth(idToken);
+	async loginWithOAuth(idToken: string, displayName?: string, photoURL?: string): Promise<IUserView> {
+		return await this.userPort.loginWithOAuth(idToken, displayName, photoURL);
 	}
 	async logout(uid: string): Promise<void> {
 		return await this.userPort.logout(uid);

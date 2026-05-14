@@ -4,7 +4,7 @@ export interface IUserPort {
 	// GET
 	getAll(): Promise<IUserView[]>
 	getTopByXP(limit?: number): Promise<IUserView[]>
-	getUserByUID(uid: string): Promise<IUserView>
+	getUserByUID(uid: string, idToken?: string): Promise<IUserView>
 	getUsersByName(name: string): Promise<IUserView[]>
 	getUserByEmail(email: string): Promise<IUserView>
 
@@ -14,7 +14,7 @@ export interface IUserPort {
 
 	loginWithEmail(email: string, password: string) : Promise<IUserView>
 	loginWithGoogle(idToken: string) : Promise<IUserView>
-	loginWithOAuth(idToken: string) : Promise<IUserView>
+	loginWithOAuth(idToken: string, displayName?: string, photoURL?: string): Promise<IUserView>
 
 	logout(uid: string) : void
 
