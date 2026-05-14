@@ -45,8 +45,8 @@ class ChallengeController {
     async getAll(req: Request, res: Response) {
         try {
             const desafios = await desafioUseCase.getAll();
-            const mysteries: Mystery[] = desafios.map(d => toMystery(d));
-            res.status(200).json(mysteries);
+            const data: Mystery[] = desafios.map(d => toMystery(d));
+            res.status(200).json({ data });
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
@@ -138,7 +138,7 @@ class ChallengeController {
                 }],
             };
 
-            res.status(200).json(mystery);
+            res.status(200).json({ data: mystery });
         } catch (error: any) {
             res.status(500).json({ error: error.message });
         }

@@ -49,7 +49,7 @@ describe("[E2E] GET /api/objetivos", () => {
         const res = await request(app).get("/api/objetivos");
 
         expect(res.status).toBe(200);
-        expect(res.body[0].nivel).toBeDefined();
+        expect(res.body.data[0].nivel).toBeDefined();
     });
 
     it("deve retornar 200 para /api/objetivos/:id", async () => {
@@ -58,7 +58,7 @@ describe("[E2E] GET /api/objetivos", () => {
         const res = await request(app).get("/api/objetivos/1");
 
         expect(res.status).toBe(200);
-        expect(res.body.nivel).toBe(0);
+        expect(res.body.data.nivel).toBe(0);
     });
 
     it("deve retornar 500 para /api/objetivos/:id inexistente", async () => {

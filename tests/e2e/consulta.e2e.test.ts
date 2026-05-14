@@ -55,7 +55,7 @@ describe("[E2E] GET /api/consultas", () => {
         const res = await request(app).get("/api/consultas");
 
         expect(res.status).toBe(200);
-        expect(Array.isArray(res.body)).toBe(true);
+        expect(Array.isArray(res.body.data)).toBe(true);
     });
 
     it("deve retornar 200 para /api/consultas/:id", async () => {
@@ -64,7 +64,7 @@ describe("[E2E] GET /api/consultas", () => {
         const res = await request(app).get("/api/consultas/1");
 
         expect(res.status).toBe(200);
-        expect(res.body.query).toContain("SELECT");
+        expect(res.body.data.query).toContain("SELECT");
     });
 
     it("deve retornar 500 para /api/consultas/:id inexistente", async () => {

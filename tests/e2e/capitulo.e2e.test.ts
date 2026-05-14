@@ -72,7 +72,7 @@ describe("[E2E] GET /api/capitulo", () => {
         const res = await request(app).get("/api/capitulo");
 
         expect(res.status).toBe(200);
-        expect(Array.isArray(res.body)).toBe(true);
+        expect(Array.isArray(res.body.data)).toBe(true);
     });
 
     it("deve retornar 200 para /api/capitulo/:id", async () => {
@@ -81,7 +81,7 @@ describe("[E2E] GET /api/capitulo", () => {
         const res = await request(app).get("/api/capitulo/1");
 
         expect(res.status).toBe(200);
-        expect(res.body.numero).toBe(1);
+        expect(res.body.data.numero).toBe(1);
     });
 
     it("deve retornar 400 para /api/capitulo/view/:id com ID não numérico", async () => {

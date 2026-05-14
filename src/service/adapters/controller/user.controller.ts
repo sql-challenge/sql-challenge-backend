@@ -14,8 +14,8 @@ const userUseCase = new UserUseCase(new UserFirebaseRepository());
 export const getTopByXP = async (req: Request, res: Response) => {
 	try {
 		const limit = req.query.limit ? Number(req.query.limit) : 20;
-		const users = await userUseCase.getTopByXP(limit);
-		res.status(200).json(users);
+		const data = await userUseCase.getTopByXP(limit);
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -23,8 +23,8 @@ export const getTopByXP = async (req: Request, res: Response) => {
 
 export const getAll = async (req: Request, res: Response) => {
 	try {
-		const users = await userUseCase.getAll();
-		res.status(200).json(users);
+		const data = await userUseCase.getAll();
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -33,8 +33,8 @@ export const getAll = async (req: Request, res: Response) => {
 export const getUserByUID = async (req: Request, res: Response) => {
 	try {
 		const uid = req.params.uid;
-		const user = await userUseCase.getUserByUID(uid);
-		res.status(200).json(user);
+		const data = await userUseCase.getUserByUID(uid);
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -43,8 +43,8 @@ export const getUserByUID = async (req: Request, res: Response) => {
 export const getUsersByName = async (req: Request, res: Response) => {
 	try {
 		const name = req.params.name;
-		const users = await userUseCase.getUsersByName(name);
-		res.status(200).json(users);
+		const data = await userUseCase.getUsersByName(name);
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -53,8 +53,8 @@ export const getUsersByName = async (req: Request, res: Response) => {
 export const getUserByEmail = async (req: Request, res: Response) => {
 	try {
 		const email = req.params.email;
-		const user = await userUseCase.getUserByEmail(email);
-		res.status(200).json(user);
+		const data = await userUseCase.getUserByEmail(email);
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -135,10 +135,13 @@ export const logout = async (req: Request, res: Response) => {
 
 export const resetPassword = async (req: Request, res: Response) => {
 	try {
-		const uid = req.params.uid
-		const newPsw = req.params.newPsw
-		await userUseCase.resetPassword(uid, newPsw);
-		res.status(201).json();
+		const { uid, newPassword } = req.body;
+		if (!uid || !newPassword) {
+			res.status(400).json({ error: "uid e newPassword são obrigatórios no corpo da requisição." });
+			return;
+		}
+		await userUseCase.resetPassword(uid, newPassword);
+		res.status(200).json({ data: { ok: true } });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}

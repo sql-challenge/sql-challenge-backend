@@ -53,7 +53,7 @@ describe("[E2E] GET /api/dicas", () => {
         const res = await request(app).get("/api/dicas");
 
         expect(res.status).toBe(200);
-        expect(res.body.length).toBe(3);
+        expect(res.body.data.length).toBe(3);
     });
 
     it("deve retornar 200 para /api/dicas/:id", async () => {
@@ -62,7 +62,7 @@ describe("[E2E] GET /api/dicas", () => {
         const res = await request(app).get("/api/dicas/1");
 
         expect(res.status).toBe(200);
-        expect(res.body.penalidadeXp).toBe(10);
+        expect(res.body.data.penalidadeXp).toBe(10);
     });
 
     it("deve retornar 200 para /api/dicas/capitulo/:idCapitulo", async () => {
@@ -71,6 +71,6 @@ describe("[E2E] GET /api/dicas", () => {
         const res = await request(app).get("/api/dicas/capitulo/1");
 
         expect(res.status).toBe(200);
-        expect(res.body).toHaveLength(3);
+        expect(res.body.data).toHaveLength(3);
     });
 });

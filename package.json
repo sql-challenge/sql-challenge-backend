@@ -9,10 +9,10 @@
     "build": "tsc",
     "start": "node dist/server/server.js",
     "test": "jest",
-    "test:unit": "jest --testPathPatterns=tests/unit",
-    "test:integration": "jest --testPathPatterns=tests/integration",
-    "test:e2e": "jest --testPathPatterns=tests/e2e",
-    "test:security": "jest --testPathPatterns=tests/security",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration",
+    "test:e2e": "jest --testPathPattern=tests/e2e",
+    "test:security": "jest --testPathPattern=tests/security",
     "test:coverage": "jest --coverage"
   },
   "jest": {
@@ -48,6 +48,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.5.1",
     "firebase": "^12.1.0",
     "firebase-admin": "^13.5.0",
     "nodemailer": "^8.0.4",

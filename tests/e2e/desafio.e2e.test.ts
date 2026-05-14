@@ -65,8 +65,8 @@ describe("[E2E] GET /api/desafios", () => {
         const res = await request(app).get("/api/desafios");
 
         expect(res.status).toBe(200);
-        expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body[0].titulo).toBe("Mistério do Mundo Mágico");
+        expect(Array.isArray(res.body.data)).toBe(true);
+        expect(res.body.data[0].titulo).toBe("Mistério do Mundo Mágico");
     });
 
     it("deve retornar 200 para /api/desafios/:id existente", async () => {
@@ -85,7 +85,7 @@ describe("[E2E] GET /api/desafios", () => {
         const res = await request(app).get("/api/desafios/1");
 
         expect(res.status).toBe(200);
-        expect(res.body.id).toBe(1);
+        expect(res.body.data.id).toBe(1);
     });
 
     it("deve retornar 500 para /api/desafios/:id inexistente", async () => {

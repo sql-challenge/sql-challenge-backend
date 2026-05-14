@@ -1,10 +1,11 @@
 import { Router } from "express";
 import * as controller from "../controller/visao.controller";
+import { requireAuth } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", (req, res) => controller.getAll(req, res));
-router.get("/:id/dados", (req, res) => controller.getDados(req, res));
-router.get("/:id", (req, res) => controller.getById(req, res));
+router.get("/", requireAuth, (req, res) => controller.getAll(req, res));
+router.get("/:id/dados", requireAuth, (req, res) => controller.getDados(req, res));
+router.get("/:id", requireAuth, (req, res) => controller.getById(req, res));
 
 export default router;

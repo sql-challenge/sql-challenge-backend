@@ -15,7 +15,4 @@ export const pool = new Pool({
   options: '-c search_path=public,magical_world',
 })
 
-// opcional: teste de conexão
-pool.connect()
-  .then(() => console.log('✅ Conectado ao PostgreSQL com sucesso!'))
-  .catch((err) => console.error('❌ Erro ao conectar ao PostgreSQL:', err))
+

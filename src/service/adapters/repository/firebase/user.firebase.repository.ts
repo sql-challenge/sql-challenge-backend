@@ -1,4 +1,4 @@
-import { IUser, IUserSignUp, IUserView } from "../../../core/domain/user.entity";
+import { IUser, IUserSignUp, IUserView, Friend, ChallengeProgress } from "../../../core/domain/user.entity";
 import { IChapterProgressDto, IUserPort } from "../../../core/ports/user.port";
 import { adminDb } from "../../../db/firebase/firebaseAdminConfig";
 import { authUser } from "../../auth/firebase.auth";
@@ -94,10 +94,6 @@ export class UserFirebaseRepository implements IUserPort {
 		return this.getUserByUID(uid);
 	}
 
-	/**
-	 * Login/cadastro via OAuth (Google, GitHub).
-	 * Verifica o ID token com Firebase Admin SDK e faz upsert do usuário no Firestore.
-	 */
 	async loginWithOAuth(idToken: string): Promise<IUserView> {
 		const decoded = await authUser.verifyIdToken(idToken);
 		const ref = this.userCollection.doc(decoded.uid);
@@ -139,7 +135,7 @@ export class UserFirebaseRepository implements IUserPort {
 
 	async updateUser(user: Partial<IUserView>): Promise<boolean> {
 		const uid = user.uid!;
-		const updates: Record<string, any> = {};
+		const updates: Record<string, unknown> = {};
 		if (user.username           !== undefined) updates.username           = user.username;
 		if (user.nick               !== undefined) updates.nick               = user.nick;
 		if (user.email              !== undefined) updates.email              = user.email;
@@ -163,10 +159,10 @@ export class UserFirebaseRepository implements IUserPort {
 		const me = mySnap.data()!;
 		const target = targetSnap.data()!;
 
-		const myFriends: any[] = me.friends ?? [];
-		const targetFriends: any[] = target.friends ?? [];
+		const myFriends: Friend[] = me.friends ?? [];
+		const targetFriends: Friend[] = target.friends ?? [];
 
-		if (myFriends.some((f: any) => f.uid === targetUid)) throw new Error("Já são amigos ou solicitação pendente");
+		if (myFriends.some(f => f.uid === targetUid)) throw new Error("Já são amigos ou solicitação pendente");
 
 		myFriends.push({ uid: targetUid, status: "pending", username: target.username, nick: target.nick ?? "", rankingPosition: target.rankingPosition ?? 0, xp: target.xp ?? 0 });
 		targetFriends.push({ uid, status: "pending", username: me.username, nick: me.nick ?? "", rankingPosition: me.rankingPosition ?? 0, xp: me.xp ?? 0 });
@@ -184,8 +180,8 @@ export class UserFirebaseRepository implements IUserPort {
 		]);
 		if (!mySnap.exists || !targetSnap.exists) throw new Error("User not found");
 
-		const updateFriends = (friends: any[], otherId: string) =>
-			friends.map((f: any) => f.uid === otherId ? { ...f, status: "accepted" } : f);
+		const updateFriends = (friends: Friend[], otherId: string) =>
+			friends.map(f => f.uid === otherId ? { ...f, status: "accepted" as const } : f);
 
 		await Promise.all([
 			this.userCollection.doc(uid).update({ friends: updateFriends(mySnap.data()!.friends ?? [], targetUid) }),
@@ -201,12 +197,12 @@ export class UserFirebaseRepository implements IUserPort {
 		if (!mySnap.exists || !targetSnap.exists) throw new Error("User not found");
 
 		await Promise.all([
-			this.userCollection.doc(uid).update({ friends: (mySnap.data()!.friends ?? []).filter((f: any) => f.uid !== targetUid) }),
-			this.userCollection.doc(targetUid).update({ friends: (targetSnap.data()!.friends ?? []).filter((f: any) => f.uid !== uid) }),
+			this.userCollection.doc(uid).update({ friends: (mySnap.data()!.friends ?? []).filter((f: Friend) => f.uid !== targetUid) }),
+			this.userCollection.doc(targetUid).update({ friends: (targetSnap.data()!.friends ?? []).filter((f: Friend) => f.uid !== uid) }),
 		]);
 	}
 
-	async getFriends(uid: string): Promise<import("../../../core/domain/user.entity").Friend[]> {
+	async getFriends(uid: string): Promise<Friend[]> {
 		const snap = await this.userCollection.doc(uid).get();
 		if (!snap.exists) throw new Error("User not found");
 		return snap.data()!.friends ?? [];
@@ -215,8 +211,8 @@ export class UserFirebaseRepository implements IUserPort {
 	async getFriendsRanking(uid: string): Promise<IUserView[]> {
 		const snap = await this.userCollection.doc(uid).get();
 		if (!snap.exists) throw new Error("User not found");
-		const friends: any[] = (snap.data()!.friends ?? []).filter((f: any) => f.status === "accepted");
-		const friendUids = friends.map((f: any) => f.uid);
+		const friends: Friend[] = (snap.data()!.friends ?? []).filter((f: Friend) => f.status === "accepted");
+		const friendUids = friends.map(f => f.uid);
 
 		const me = this.mapDoc(snap.id, snap.data()!);
 		if (friendUids.length === 0) return [me];
@@ -236,7 +232,7 @@ export class UserFirebaseRepository implements IUserPort {
 
 		const data = snap.data()!;
 		const awarded: string[] = data.awardedAchievements ?? [];
-		if (awarded.includes(achievementId)) return false; // já concedido
+		if (awarded.includes(achievementId)) return false;
 
 		await ref.update({
 			awardedAchievements: [...awarded, achievementId],
@@ -246,7 +242,6 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {
-		// 1. Subcollection — histórico detalhado por desafio
 		const progressRef = this.userCollection
 			.doc(uid)
 			.collection("challenge_progress")
@@ -268,16 +263,15 @@ export class UserFirebaseRepository implements IUserPort {
 			updatedAt: new Date(),
 		}, { merge: true });
 
-		// 2. Documento principal — array challenge_progress para radar/conquistas + xp
 		const userRef = this.userCollection.doc(uid);
 		const userSnap = await userRef.get();
 		if (!userSnap.exists) return;
 
 		const userData = userSnap.data()!;
-		const existing: any[] = userData.challenge_progress ?? [];
-		const idx = existing.findIndex((p: any) => p.nameChallange === dto.desafioId);
+		const existing: ChallengeProgress[] = userData.challenge_progress ?? [];
+		const idx = existing.findIndex(p => p.nameChallange === dto.desafioId);
 
-		const updatedEntry = {
+		const updatedEntry: ChallengeProgress = {
 			nameChallange: dto.desafioId,
 			capFinish: Math.max(dto.capFinish, idx >= 0 ? (existing[idx].capFinish ?? 0) : 0),
 			xpObtido: (idx >= 0 ? (existing[idx].xpObtido ?? 0) : 0) + xpToAdd,
@@ -287,7 +281,7 @@ export class UserFirebaseRepository implements IUserPort {
 		};
 
 		const updatedProgress = idx >= 0
-			? existing.map((p: any, i: number) => i === idx ? updatedEntry : p)
+			? existing.map((p, i) => i === idx ? updatedEntry : p)
 			: [...existing, updatedEntry];
 
 		await userRef.update({

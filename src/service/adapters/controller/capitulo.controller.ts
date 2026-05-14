@@ -22,8 +22,8 @@ const visaoUseCase = new VisaoUseCase(new VisaoPostgresRepository());
 // GET ALL
 export const getAll = async (req: Request, res: Response) => {
     try {
-        const caps = await capituloUseCase.getAll();
-        res.status(200).json(caps);
+        const data = await capituloUseCase.getAll();
+        res.status(200).json({ data });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -33,8 +33,8 @@ export const getAll = async (req: Request, res: Response) => {
 export const getById = async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
-        const cap = await capituloUseCase.getById(id);
-        res.status(200).json(cap);
+        const data = await capituloUseCase.getById(id);
+        res.status(200).json({ data });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

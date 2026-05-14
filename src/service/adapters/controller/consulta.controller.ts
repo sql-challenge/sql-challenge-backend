@@ -10,8 +10,8 @@ const useCase = new ConsultaUseCase(new ConsultaPostgresRepository());
 // GET ALL
 export const getAll = async (req: Request, res: Response) => {
     try {
-        const consultas = await useCase.getAll();
-        res.status(200).json(consultas);
+        const data = await useCase.getAll();
+        res.status(200).json({ data });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
@@ -21,8 +21,8 @@ export const getAll = async (req: Request, res: Response) => {
 export const getById = async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
-        const consulta = await useCase.getById(id);
-        res.status(200).json(consulta);
+        const data = await useCase.getById(id);
+        res.status(200).json({ data });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

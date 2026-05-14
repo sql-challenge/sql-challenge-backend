@@ -12,6 +12,9 @@ export type ChallengeProgress = {
 	nameChallange: string;
 	capFinish: number;
 	xpObtido: number;
+	totalQueries?: number;
+	totalHints?: number;
+	totalSeconds?: number;
 };
 
 export interface IUser {

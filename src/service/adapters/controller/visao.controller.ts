@@ -7,8 +7,8 @@ const visaoUseCase = new VisaoUseCase(new VisaoPostgresRepository());
 // GET /visao/
 export const getAll = async (req: Request, res: Response) => {
 	try {
-		const visoes = await visaoUseCase.getAll();
-		res.status(200).json(visoes);
+		const data = await visaoUseCase.getAll();
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
@@ -18,8 +18,8 @@ export const getAll = async (req: Request, res: Response) => {
 export const getById = async (req: Request, res: Response) => {
 	try {
 		const id = Number(req.params.id);
-		const visao = await visaoUseCase.getById(id);
-		res.status(200).json(visao);
+		const data = await visaoUseCase.getById(id);
+		res.status(200).json({ data });
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}
