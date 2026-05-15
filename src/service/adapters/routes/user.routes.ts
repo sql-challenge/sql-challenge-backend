@@ -12,7 +12,7 @@ router.post("/auth/oauth", (req, res) => { controller.loginWithOAuth(req, res); 
 // ── Protected routes (auth required) ──────────────────────────
 
 /** GET */
-router.get("/top", requireAuth, (req, res) => { controller.getTopByXP(req, res); });
+router.get("/top", (req, res) => { controller.getTopByXP(req, res); });
 router.get("/", requireAuth, (req, res) => { controller.getAll(req, res); });
 router.get("/uid/:uid", requireAuth, (req, res) => { controller.getUserByUID(req, res); });
 router.get("/name/:name", requireAuth, (req, res) => { controller.getUsersByName(req, res); });

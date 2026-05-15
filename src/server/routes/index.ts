@@ -38,6 +38,7 @@ routes.use(cors({
 		const allowed = allowedOrigins.some(o => origin.startsWith(o));
 		callback(null, allowed);
 	},
+	credentials: true,
 	methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 	allowedHeaders: ["Content-Type", "Authorization"]
 }));
