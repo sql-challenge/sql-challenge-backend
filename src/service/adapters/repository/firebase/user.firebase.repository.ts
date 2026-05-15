@@ -275,12 +275,21 @@ export class UserFirebaseRepository implements IUserPort {
 		}, undefined as unknown as void, "removeFriend");
 	}
 
-	async getFriends(uid: string): Promise<Friend[]> {
-		return this.withFallback(async () => {
+	async getFriends(uid: string, idToken?: string): Promise<Friend[]> {
+		if (hasServiceAccount) {
 			const snap = await this.userCollection.doc(uid).get();
-			if (!snap.exists) throw new Error("User not found");
+			if (!snap.exists) return [];
 			return snap.data()!.friends ?? [];
-		}, [], "getFriends");
+		}
+		if (!idToken) return [];
+		try {
+			const data = await firestoreGetDoc(idToken, "User", uid);
+			if (!data) return [];
+			return Array.isArray(data.friends) ? data.friends as Friend[] : [];
+		} catch (err) {
+			console.error(`[Firebase] getFriends: ${(err as Error).message}`);
+			return [];
+		}
 	}
 
 	async getFriendsRanking(uid: string): Promise<IUserView[]> {

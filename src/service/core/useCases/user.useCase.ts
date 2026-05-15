@@ -62,8 +62,8 @@ export class UserUseCase {
 	async removeFriend(uid: string, targetUid: string): Promise<void> {
 		return this.userPort.removeFriend(uid, targetUid);
 	}
-	async getFriends(uid: string) {
-		return this.userPort.getFriends(uid);
+	async getFriends(uid: string, idToken?: string) {
+		return this.userPort.getFriends(uid, idToken);
 	}
 	async getFriendsRanking(uid: string) {
 		return this.userPort.getFriendsRanking(uid);

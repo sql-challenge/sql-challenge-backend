@@ -219,7 +219,9 @@ export const removeFriend = async (req: Request, res: Response) => {
 export const getFriends = async (req: Request, res: Response) => {
 	try {
 		const { uid } = req.params;
-		const friends = await userUseCase.getFriends(uid);
+		const authHeader = req.headers.authorization;
+		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+		const friends = await userUseCase.getFriends(uid, idToken);
 		res.status(200).json({ data: friends });
 	} catch (error: unknown) {
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });

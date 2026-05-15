@@ -30,7 +30,7 @@ export interface IUserPort {
 	addFriend(uid: string, targetUid: string): Promise<void>
 	acceptFriend(uid: string, targetUid: string): Promise<void>
 	removeFriend(uid: string, targetUid: string): Promise<void>
-	getFriends(uid: string): Promise<import("../domain/user.entity").Friend[]>
+	getFriends(uid: string, idToken?: string): Promise<import("../domain/user.entity").Friend[]>
 	getFriendsRanking(uid: string): Promise<import("../domain/user.entity").IUserView[]>
 
 	// Achievements
