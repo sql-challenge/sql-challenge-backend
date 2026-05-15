@@ -30,6 +30,21 @@ export const getAll = async (req: Request, res: Response) => {
 	}
 };
 
+/**
+ * GET /api/user/token/valid
+ * Validates the token and returns fresh user data.
+ * Token already validated by requireAuth middleware.
+ */
+export const verifyToken = async (req: Request, res: Response) => {
+	try {
+		const uid = (req.user as any).uid
+		const user = await userUseCase.getUserByUID(uid)
+		res.status(200).json({ data: user })
+	} catch (error: unknown) {
+		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` })
+	}
+};
+
 export const getUserByUID = async (req: Request, res: Response) => {
 	try {
 		const uid = req.params.uid;
