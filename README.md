@@ -14,6 +14,206 @@ API backend do SQL Challenge: plataforma gamificada de aprendizado de SQL onde u
 | Testes | Jest |
 | Docs | Swagger/OpenAPI |
 
+## Quick Start (primeira vez)
+
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Criar .env a partir do exemplo
+cp .env.example .env
+
+# 3. Subir PostgreSQL
+docker compose up -d db
+
+# 4. Inicializar schemas e dados do jogo
+bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_de_dados
+
+# 5. Iniciar servidor
+npm run dev
+```
+
+> ⚠️ Se o repositório `sql-challenge-modelagem_de_dados` não estiver clonado, veja [Setup manual do banco](#setup-manual-do-banco-sem-db-init) para criar o schema `magical_world` manualmente.
+
+---
+
+## Pré-requisitos
+
+- **Node.js** ≥ 20
+- **npm** ≥ 9
+- **Docker** + **Docker Compose** (para PostgreSQL)
+- **Firebase project** (console.firebase.google.com)
+- **Repositório modelagem** (opcional, para db-init.sh):
+  ```bash
+  git clone https://github.com/sql-challenge/sql-challenge-modelagem_de_dados.git \
+    ../sql-challenge-modelagem_de_dados
+  ```
+
+---
+
+## Setup Local Passo a Passo
+
+### 1. Variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Edite `.env` com seus valores. Veja [Variáveis de ambiente](#variáveis-de-ambiente) para detalhes.
+
+### 2. Banco de dados
+
+```bash
+# Sobe o container PostgreSQL
+docker compose up -d db
+
+# Verifica se está saudável
+docker exec sql-challenge-db pg_isready -U challenge_user -d db_gestao
+```
+
+O banco precisa de dois schemas:
+
+**Schema `public`** — tabelas de gestão (Desafio, Capitulo, Objetivo, Dica, Visao, Consulta, Log)
+
+**Schema `magical_world`** — tabelas e views do jogo (Feudo, Pessoa, Cidade, etc.)
+
+#### Via db-init.sh (recomendado)
+
+```bash
+# Com o repositório modelagem clonado:
+bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_de_dados
+```
+
+#### Setup manual do banco (sem db-init)
+
+```bash
+# Schema de gestão
+docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
+  < tests/fixtures/schema.sql
+
+# Tabelas do mundo mágico
+docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
+  -c "SET search_path TO magical_world;" \
+  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/ddl_game.sql")
+
+# Dados do mundo mágico
+docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
+  -c "SET search_path TO magical_world;" \
+  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/dml_game.sql")
+
+# Views do jogo
+docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
+  -c "SET search_path TO magical_world;" \
+  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/vw_ddl_game.sql")
+
+# Conteúdo de gestão (desafios, capítulos, objetivos)
+docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
+  < tests/fixtures/data.sql
+```
+
+### 3. Firebase
+
+#### Cliente SDK (frontend)
+
+Crie um projeto no [Firebase Console](https://console.firebase.google.com). Em **Configurações do projeto > Geral > Seus apps > Web**, copie as credenciais para o `.env`:
+
+```env
+apiKey=AIza...
+authDomain=seu-projeto.firebaseapp.com
+projectId=seu-projeto
+storageBucket=seu-projeto.appspot.com
+messagingSenderId=123456789
+appId=1:123456789:web:abc123
+measurementId=G-XXXXXXXX
+```
+
+#### Admin SDK (backend — service account)
+
+```env
+FIREBASE_ADMIN_PROJECT_ID=seu-projeto
+FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH=./firebase-admin.json
+```
+
+1. No Firebase Console, vá em **Configurações do projeto > Contas de serviço > SDK Admin**
+2. Clique em **Gerar nova chave privada**
+3. Salve o arquivo baixado como `firebase-admin.json` na raiz do backend
+4. O servidor reconhecerá automaticamente o arquivo e exibirá no log:
+   ```
+   [Firebase Admin] Inicializado com service account: /caminho/para/firebase-admin.json
+   ```
+
+> Sem o arquivo, o servidor inicializa em modo **token-only** (funciona apenas com `idToken` do cliente via REST fallback). Alguns endpoints (como ranking e sessões) podem retornar dados vazios.
+
+### 4. Rodar o servidor
+
+```bash
+npm run dev
+```
+
+Acesse `http://localhost:3000/api/health`.
+
+---
+
+## Variáveis de ambiente
+
+```env
+# ─── Environment ─────────────────────────────
+NODE_ENV=development
+
+# ─── Database ─────────────────────────────────
+DATABASE_URL=postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao?sslmode=disable
+
+# ─── API ──────────────────────────────────────
+PORT=3000
+
+# ─── Firebase Client (obrigatório) ────────────
+apiKey=your-api-key
+authDomain=your-project.firebaseapp.com
+projectId=your-project-id
+storageBucket=your-project.appspot.com
+messagingSenderId=your-sender-id
+appId=your-app-id
+measurementId=G-XXXXXXXXXX
+
+# ─── Firebase Admin (opcional, mas recomendado) ─
+FIREBASE_ADMIN_PROJECT_ID=your-project-id
+FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH=./firebase-admin.json
+
+# ─── CORS / Frontend ─────────────────────────
+FRONTEND_URL=http://localhost:3000
+
+# ─── Email (Nodemailer — opcional) ───────────
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# ─── URLs ────────────────────────────────────
+SITE_URL=http://localhost:3000
+```
+
+---
+
+## API Endpoints
+
+| Method | Route | Descrição |
+|--------|-------|-----------|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/user` | Lista usuários |
+| `POST` | `/api/user` | Cadastrar usuário |
+| `POST` | `/api/user/auth/oauth` | Login OAuth (Google/GitHub) |
+| `GET` | `/api/user/token/valid` | Valida token JWT |
+| `GET` | `/api/user/top` | Ranking por XP |
+| `GET` | `/api/user/:uid` | Perfil do usuário |
+| `GET` | `/api/user/:uid/friends` | Amigos do usuário |
+| `PUT` | `/api/user/:uid` | Atualizar perfil |
+| `GET` | `/api/desafios/` | Lista desafios |
+| `GET` | `/api/desafios/:id` | Detalhe do desafio |
+| `GET` | `/api/capitulo/` | Lista capítulos |
+| `GET` | `/api/capitulo/view/:id` | Capítulo com objetivos, dicas e schema |
+| `GET` | `/api/sessions/:uid/:desafioId/:capituloId` | Sessão do capítulo |
+| `POST` | `/api/sessions/:uid/:desafioId/:capituloId` | Salvar sessão |
+
+---
+
 ## Arquitetura
 
 ```
@@ -35,80 +235,57 @@ src/
         └── auth/        # Adaptador Firebase Auth
 ```
 
-## API Endpoints
+### Firebase — dois modos de operação
 
-| Method | Route | Descrição |
-|--------|-------|-----------|
-| `GET` | `/api/health` | Health check |
-| `GET` | `/api/challenge` | Lista todos os desafios |
-| `GET` | `/api/challenge/:id` | Detalhe de um desafio |
-| `GET` | `/api/user` | Lista usuários |
-| `POST` | `/api/user` | Cadastrar usuário |
-| `POST` | `/api/user/login` | Login |
+O backend usa o Firebase de duas formas, controlado pela flag `hasServiceAccount`:
 
-## Desenvolvimento local
+| Modo | Quando ativa | Como acessa Firestore |
+|------|-------------|----------------------|
+| **Admin SDK** | `firebase-admin.json` existe | `admin.firestore()` — acesso total, sem restrições |
+| **Token-only** | `firebase-admin.json` não existe | REST API com `idToken` do cliente — sujeito a Security Rules |
 
-```bash
-# Instalar dependências
-npm install
+Endpoints que fazem operações no Firestore:
+- **Usuários** (`User` collection) — usa Admin SDK quando disponível, com fallback REST
+- **Sessões** (`User/{uid}/chapter_sessions`) — atualmente usando client SDK (será migrado)
+- **Ranking** (`Ranking` collection) — atualmente usando client SDK (será migrado)
 
-# Criar variáveis de ambiente
-cp .env.example .env.local
-# edite com seus valores
+### Banco de dados — dois schemas
 
-# Iniciar em modo dev (com hot-reload)
-npm run dev:local
+O PostgreSQL contém dois schemas no mesmo banco `db_gestao`:
 
-# Build TypeScript
-npm run build
+**Schema `public`** (tabelas de gestão):
+| Tabela | Propósito |
+|--------|-----------|
+| `Desafio` | Desafios disponíveis (título, XP, tempo estimado) |
+| `Capitulo` | Capítulos narrativos de cada desafio |
+| `Objetivo` | Tarefas SQL a completar |
+| `Dica` | Dicas com penalidade de XP |
+| `Visao` | Referências a views do `magical_world` para exibir schema |
+| `Consulta` | Resposta esperada para cada objetivo |
+| `Log` | Auditoria automática via triggers |
 
-# Iniciar produção (após build)
-npm start
-```
+**Schema `magical_world`** (dados do jogo):
+| Tabela | Propósito |
+|--------|-----------|
+| `Feudo`, `Pessoa`, `Cidade` | Entidades principais do mundo |
+| `Artefato`, `Posse_Artefatos` | Sistema de itens |
+| `AcademiaMagica`, `Torres_Magicas` | Facções |
+| `Ataques`, `Aliados_Politicos` | Eventos e relações |
 
-### Variáveis de ambiente
+Views (19 no total) — `regioes_reinos`, `pessoas_vivas`, `senhores_das_terras`, `ataques_raw`, `grimorio_final`, etc.
 
-```env
-# PostgreSQL
-POSTGRES_USER=challenge_user
-POSTGRES_PASSWORD=challenge_pass
-POSTGRES_DB=db_gestao
-DB_PORT=5432
-DATABASE_URL=postgresql://challenge_user:challenge_pass@db:5432/db_gestao?sslmode=disable
+A pool do PostgreSQL já inclui `search_path=public,magical_world` no `postgresqlConfig.ts`, então tabelas e views de ambos os schemas são acessíveis sem prefixo.
 
-# API
-PORT=3000
-NODE_ENV=development
-
-# Firebase Client SDK
-apiKey=
-authDomain=
-projectId=
-storageBucket=
-messagingSenderId=
-appId=
-measurementId=
-
-# Firebase Admin SDK
-FIREBASE_ADMIN_PROJECT_ID=
-FIREBASE_ADMIN_CLIENT_EMAIL=
-FIREBASE_ADMIN_PRIVATE_KEY=
-
-# CORS
-FRONTEND_URL=http://localhost
-FRONTEND_PORT=3000
-
-# Email
-EMAIL_USER=
-EMAIL_PASS=
-SITE_URL=
-```
+---
 
 ## Docker local
 
 ```bash
 # API + banco de dados
 docker compose up -d --build
+
+# Apenas banco
+docker compose up -d db
 
 # Ver logs
 docker compose logs -f api
@@ -119,6 +296,8 @@ docker compose down
 # Parar e apagar dados do banco
 docker compose down -v
 ```
+
+---
 
 ## Testes
 
@@ -136,175 +315,21 @@ npm run test:security
 npm run test:coverage
 ```
 
-Os testes de integração/e2e precisam de PostgreSQL rodando com o banco inicializado:
+Os testes de integração/e2e precisam de PostgreSQL rodando:
 
 ```bash
-# O banco de testes é inicializado automaticamente via docker-compose.staging.yml
-# com os fixtures de tests/fixtures/
 docker compose -f docker-compose.staging.yml up -d db-staging
 ```
 
-## Script de banco de dados
-
-O script `scripts/db-init.sh` gerencia a criação e inicialização completa dos dois bancos.
-
-### Uso
-
-```bash
-# Inicializa ambos (produção + staging)
-bash scripts/db-init.sh
-
-# Só produção
-bash scripts/db-init.sh --env production
-
-# Só staging
-bash scripts/db-init.sh --env staging
-
-# Repositório modelagem em caminho personalizado
-bash scripts/db-init.sh --modelagem /home/admin/sql-challenge-modelagem_de_dados
-
-# Reset completo (⚠️ APAGA TODOS OS DADOS)
-bash scripts/db-init.sh --env production --reset
-bash scripts/db-init.sh --env staging --reset
-```
-
-### Ordem de execução — banco de produção (`db_gestao`)
-
-| Passo | Arquivo | O que faz |
-|-------|---------|-----------|
-| 1/7 | `tests/fixtures/schema.sql` | Tabelas de gestão (Desafio, Capitulo, Objetivo, Dica, Visao, Consulta, Log) + triggers + schema `magical_world` vazio |
-| 2/7 | `Games/magical world/ddl_game.sql` | Tabelas do mundo mágico (Feudo, Pessoa, Artefato, Cidade, Torres, etc.) |
-| 3/7 | `Games/magical world/dml_gama.sql` | Dados das entidades do jogo (feudos, pessoas, artefatos, cidades…) |
-| 4/7 | `Games/magical world/dml_gama_patch.sql` | Patches de dados (categorias, proprietários, Val'Nareth, vw_Pistas_Decifradas) |
-| 5/7 | `Games/magical world/vw_ddl_game.sql` | Views por capítulo/objetivo (regioes_reinos, ataques_raw, grimorio_final…) |
-| 6/7 | `PostgreSQL/Script/cadastro_games/dml_magical_world.sql` | Conteúdo de gestão (1 desafio, 5 capítulos, objetivos, dicas, consultas) |
-| 7/7 | `PostgreSQL/Script/gestão/dcl_security.sql` | Usuário `users_sql_challenge` (somente leitura, para queries dos jogadores) |
-
-Os arquivos de `Games/` e `PostgreSQL/` vêm do repositório `sql-challenge-modelagem_de_dados` (passado via `--modelagem`).
-
-### Banco de staging (`db_gestao_staging`)
-
-O staging usa os fixtures em `tests/fixtures/` (schema + pg_dump do magical_world + dados de teste). A auto-inicialização via `docker-entrypoint-initdb.d` ocorre na primeira criação do volume; o script detecta isso e pula a inicialização manual quando o banco já está populado.
-
-### Pré-requisitos
-
-- Docker e Docker Compose instalados
-- `.env.production` e/ou `.env.staging` preenchidos (gerados pelo `setup-server.sh`)
-- Repositório `sql-challenge-modelagem_de_dados` clonado (obrigatório para produção)
+Veja [`tests/TESTES.md`](./tests/TESTES.md) para detalhes.
 
 ---
-
-## Banco de dados
-
-O banco `db_gestao` contém os dados de gestão da plataforma:
-
-| Tabela | Propósito |
-|--------|-----------|
-| `Desafio` | Desafios disponíveis (título, XP, tempo estimado) |
-| `Capitulo` | Capítulos narrativos de cada desafio |
-| `Objetivo` | Tarefas SQL a completar |
-| `Dica` | Dicas com penalidade de XP |
-| `Visao` | Container de schema de banco para o desafio |
-| `Consulta` | Resposta esperada para cada objetivo |
-| `Log` | Auditoria automática via triggers (JSONB) |
-
-O schema `magical_world` (dentro do mesmo banco) contém os dados do jogo:
-
-| Tabela | Propósito |
-|--------|-----------|
-| `Feudo`, `Pessoa`, `Cidade` | Entidades principais do mundo |
-| `Artefato`, `Posse_Artefatos` | Sistema de itens |
-| `AcademiaMagica`, `Torres_Magicas` | Facções |
-| `Ataques`, `Aliados_Politicos` | Eventos e relações |
-
----
-
-## Arquitetura de deploy
-
-```
-GitHub Actions
-   ├── feat/** ──► CI apenas (lint + build + testes)
-   ├── dev     ──► CI → CD staging  (porta 3010, DB db_gestao_staging)
-   └── main    ──► CI → CD produção (porta 3000, DB db_gestao)
-
-VPS (Nginx + Let's Encrypt)
-   ├── /api/         → localhost:3000 (produção)
-   └── /staging/api/ → localhost:3010 (staging)
-```
-
----
-
-## Setup do servidor
-
-> O setup completo é feito pelo script do repositório frontend.
-> Siga as instruções em [sql-challenge-frontend/scripts/setup-server.sh](https://github.com/sql-challenge/sql-challenge-frontend/blob/main/scripts/setup-server.sh).
-
-### Resumo rápido
-
-```bash
-# 1. Clonar frontend (contém o script de setup)
-git clone https://github.com/sql-challenge/sql-challenge-frontend.git \
-  ~/sql-challenge-frontend
-
-# 2. Primeira execução — cria ~/setup.env
-bash ~/sql-challenge-frontend/scripts/setup-server.sh
-
-# 3. Preencher credenciais
-nano ~/setup.env
-
-# 4. Execução completa
-bash ~/sql-challenge-frontend/scripts/setup-server.sh
-```
-
-### GitHub Secrets necessários (neste repositório)
-
-| Secret | Descrição |
-|--------|-----------|
-| `VPS_HOST` | IP da VPS |
-| `VPS_PORT` | Porta SSH (`2222`) |
-| `VPS_USER` | Usuário SSH (`admin`) |
-| `VPS_SSH_KEY` | Chave privada Ed25519 (gerada pelo setup script) |
-| `MAIL_USERNAME` | Email para notificações de CI/CD |
-| `MAIL_PASSWORD` | Senha de app do Gmail |
-| `POSTGRES_USER` | Usuário PostgreSQL |
-| `POSTGRES_PASSWORD` | Senha PostgreSQL |
-| `FB_API_KEY` | Firebase API Key |
-| `FB_AUTH_DOMAIN` | Firebase Auth Domain |
-| `FB_PROJECT_ID` | Firebase Project ID |
-| `FB_STORAGE_BUCKET` | Firebase Storage Bucket |
-| `FB_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID |
-| `FB_APP_ID` | Firebase App ID |
-| `FB_MEASUREMENT_ID` | Firebase Measurement ID |
-| `FIREBASE_ADMIN_PROJECT_ID` | Firebase Admin Project ID |
-| `FIREBASE_ADMIN_CLIENT_EMAIL` | Firebase Admin Client Email |
-| `FIREBASE_ADMIN_PRIVATE_KEY` | Firebase Admin Private Key (chave completa com `\n`) |
-
-### Comandos úteis na VPS
-
-```bash
-# Ver containers rodando
-docker ps
-
-# Logs do backend produção
-docker compose -f ~/sql-challenge-backend/docker-compose.yml logs -f api
-
-# Logs do backend staging
-docker compose -f ~/sql-challenge-backend/docker-compose.staging.yml logs -f api
-
-# Conectar ao banco de produção
-docker compose -f ~/sql-challenge-backend/docker-compose.yml exec db \
-  psql -U challenge_user -d db_gestao
-
-# Conectar ao banco de staging
-docker compose -f ~/sql-challenge-backend/docker-compose.staging.yml exec db-staging \
-  psql -U challenge_user -d db_gestao_staging
-```
 
 ## Scripts disponíveis
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Dev server com nodemon |
+| `npm run dev` | Dev server com nodemon (`.env`) |
 | `npm run dev:local` | Dev server com `.env.local` |
 | `npm run build` | Compilar TypeScript |
 | `npm start` | Iniciar servidor compilado |
@@ -314,3 +339,71 @@ docker compose -f ~/sql-challenge-backend/docker-compose.staging.yml exec db-sta
 | `npm run test:e2e` | Testes end-to-end |
 | `npm run test:security` | Testes de segurança |
 | `npm run test:coverage` | Cobertura de código |
+
+---
+
+## Setup do servidor (produção)
+
+> O setup completo da VPS é feito pelo script do frontend.
+> Veja [sql-challenge-frontend/scripts/setup-server.sh](https://github.com/sql-challenge/sql-challenge-frontend/blob/main/scripts/setup-server.sh).
+
+### GitHub Secrets (neste repositório)
+
+| Secret | Descrição |
+|--------|-----------|
+| `VPS_HOST` | IP da VPS |
+| `VPS_PORT` | Porta SSH (`2222`) |
+| `VPS_USER` | Usuário SSH (`admin`) |
+| `VPS_SSH_KEY` | Chave privada Ed25519 |
+| `POSTGRES_USER` | Usuário PostgreSQL |
+| `POSTGRES_PASSWORD` | Senha PostgreSQL |
+| `FB_API_KEY` | Firebase API Key |
+| `FB_AUTH_DOMAIN` | Firebase Auth Domain |
+| `FB_PROJECT_ID` | Firebase Project ID |
+| `FIREBASE_ADMIN_PROJECT_ID` | Firebase Admin Project ID |
+| `FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON` | Conteúdo do JSON da service account (base64) |
+
+### Comandos úteis na VPS
+
+```bash
+# Ver containers rodando
+docker ps
+
+# Logs do backend
+docker compose -f ~/sql-challenge-backend/docker-compose.yml logs -f api
+
+# Conectar ao banco
+docker compose -f ~/sql-challenge-backend/docker-compose.yml exec db \
+  psql -U challenge_user -d db_gestao
+```
+
+---
+
+## db-init.sh — Script de inicialização do banco
+
+O script `scripts/db-init.sh` gerencia a criação e inicialização completa dos bancos de produção e staging.
+
+```bash
+# Inicializa ambos (produção + staging)
+bash scripts/db-init.sh
+
+# Só produção
+bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_de_dados
+
+# Só staging
+bash scripts/db-init.sh --env staging
+
+# Reset completo (⚠️ APAGA TODOS OS DADOS)
+bash scripts/db-init.sh --env production --reset
+```
+
+### Ordem de execução — banco de produção
+
+| Passo | Arquivo | O que faz |
+|-------|---------|-----------|
+| 1/6 | `tests/fixtures/schema.sql` | Tabelas de gestão + schema `magical_world` vazio |
+| 2/6 | `Games/magical world/ddl_game.sql` | Tabelas do jogo (Feudo, Pessoa, Artefato, etc.) |
+| 3/6 | `Games/magical world/dml_game.sql` | Dados das entidades do jogo |
+| 4/6 | `Games/magical world/vw_ddl_game.sql` | Views por capítulo (19 views) |
+| 5/6 | `PostgreSQL/Script/cadastro_games/dml_magical_world.sql` | Conteúdo de gestão (desafio, capítulos) |
+| 6/6 | `PostgreSQL/Script/gestão/dcl_security.sql` | Usuário `users_sql_challenge` (somente leitura) |
