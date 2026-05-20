@@ -10,6 +10,7 @@ export const getAll = async (req: Request, res: Response) => {
 		const data = await visaoUseCase.getAll();
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[visao.controller] getAll:`, (error as Error).name, (error as Error).message, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -21,6 +22,7 @@ export const getById = async (req: Request, res: Response) => {
 		const data = await visaoUseCase.getById(id);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[visao.controller] getById:`, (error as Error).name, (error as Error).message, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -32,6 +34,7 @@ export const getDados = async (req: Request, res: Response) => {
 		const dados = await visaoUseCase.executeViewById(id);
 		res.status(200).json({ data: dados });
 	} catch (error: unknown) {
+		console.error(`[visao.controller] getDados:`, (error as Error).name, (error as Error).message, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };

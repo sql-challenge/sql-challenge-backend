@@ -18,8 +18,9 @@ export const getSession = async (req: Request, res: Response) => {
 
     const session = await sessionUseCase.getSession(uid, desafioId, capId);
     res.status(200).json({ data: session ?? emptySession(uid, desafioId, capId) });
-  } catch (err: any) {
-    res.status(500).json({ error: `[API] ${err.message}` });
+  } catch (err: unknown) {
+    console.error(`[chapter-session.controller] getSession:`, (err as Error).name, (err as Error).message, (err as Error).stack);
+    res.status(500).json({ error: `[API] ${err instanceof Error ? err.message : "Unknown error"}` });
   }
 };
 
@@ -44,7 +45,9 @@ export const saveSession = async (req: Request, res: Response) => {
 
     const updated = await sessionUseCase.saveSession(uid, desafioId, capId, dto);
     res.status(200).json({ data: updated });
-  } catch (err: any) {
-    res.status(500).json({ error: `[API] ${err.message}` });
-}
+  } catch (err: unknown) {
+    console.error(`[chapter-session.controller] saveSession:`, (err as Error).name, (err as Error).message, (err as Error).stack);
+    res.status(500).json({ error: `[API] ${err instanceof Error ? err.message : "Unknown error"}` });
+  }
+};
 };

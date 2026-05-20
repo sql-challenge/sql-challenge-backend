@@ -224,7 +224,14 @@ export const addFriend = async (req: Request, res: Response) => {
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
 		console.error(`[user.controller] addFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
-		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
+		const msg = error instanceof Error ? error.message : "Unknown error";
+		if (msg.includes("Já são amigos")) {
+			res.status(409).json({ error: "Já são amigos ou solicitação pendente." });
+		} else if (msg.includes("User not found")) {
+			res.status(404).json({ error: "Usuário não encontrado." });
+		} else {
+			res.status(400).json({ error: msg });
+		}
 	}
 };
 
@@ -235,7 +242,12 @@ export const acceptFriend = async (req: Request, res: Response) => {
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
 		console.error(`[user.controller] acceptFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
-		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
+		const msg = error instanceof Error ? error.message : "Unknown error";
+		if (msg.includes("User not found")) {
+			res.status(404).json({ error: "Usuário não encontrado." });
+		} else {
+			res.status(400).json({ error: msg });
+		}
 	}
 };
 
@@ -246,7 +258,12 @@ export const removeFriend = async (req: Request, res: Response) => {
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
 		console.error(`[user.controller] removeFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
-		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
+		const msg = error instanceof Error ? error.message : "Unknown error";
+		if (msg.includes("User not found")) {
+			res.status(404).json({ error: "Usuário não encontrado." });
+		} else {
+			res.status(400).json({ error: msg });
+		}
 	}
 };
 

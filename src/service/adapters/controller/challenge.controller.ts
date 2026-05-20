@@ -48,6 +48,7 @@ class ChallengeController {
             const data: Mystery[] = desafios.map(d => toMystery(d));
             res.status(200).json({ data });
         } catch (error: unknown) {
+            console.error(`[challenge.controller] getAll:`, (error as Error).name, (error as Error).message, (error as Error).stack);
             res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
         }
     }
@@ -140,6 +141,7 @@ class ChallengeController {
 
             res.status(200).json({ data: mystery });
         } catch (error: unknown) {
+            console.error(`[challenge.controller] getById:`, (error as Error).name, (error as Error).message, (error as Error).stack);
             res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
         }
     }
