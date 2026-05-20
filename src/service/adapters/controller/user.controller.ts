@@ -17,6 +17,7 @@ export const getTopByXP = async (req: Request, res: Response) => {
 		const data = await userUseCase.getTopByXP(limit);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getTopByXP:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -26,6 +27,7 @@ export const getAll = async (req: Request, res: Response) => {
 		const data = await userUseCase.getAll();
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getAll:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -38,9 +40,12 @@ export const getAll = async (req: Request, res: Response) => {
 export const verifyToken = async (req: Request, res: Response) => {
 	try {
 		const uid = (req.user as any).uid
-		const user = await userUseCase.getUserByUID(uid)
+		const authHeader = req.headers.authorization;
+		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+		const user = await userUseCase.getUserByUID(uid, idToken)
 		res.status(200).json({ data: user })
 	} catch (error: unknown) {
+		console.error(`[user.controller] verifyToken:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` })
 	}
 };
@@ -53,6 +58,7 @@ export const getUserByUID = async (req: Request, res: Response) => {
 		const data = await userUseCase.getUserByUID(uid, idToken);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getUserByUID:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -63,6 +69,7 @@ export const getUsersByName = async (req: Request, res: Response) => {
 		const data = await userUseCase.getUsersByName(name);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getUsersByName:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -73,6 +80,7 @@ export const getUserByEmail = async (req: Request, res: Response) => {
 		const data = await userUseCase.getUserByEmail(email);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getUserByEmail:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -125,6 +133,7 @@ export const loginWithOAuth = async (req: Request, res: Response) => {
 		const user = await userUseCase.loginWithOAuth(idToken, displayName, photoURL);
 		res.status(200).json({ data: user });
 	} catch (error: unknown) {
+		console.error(`[user.controller] loginWithOAuth:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -135,6 +144,7 @@ export const logout = async (req: Request, res: Response) => {
 		await userUseCase.logout(uid);
 		res.status(201).json();
 	} catch (error: unknown) {
+		console.error(`[user.controller] logout:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -149,6 +159,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 		await userUseCase.resetPassword(uid, newPassword);
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] resetPassword:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -157,9 +168,12 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
 	try {
 		const user = req.body;
-		const updatedUser = await userUseCase.updateUser(user);
+		const authHeader = req.headers.authorization;
+		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+		const updatedUser = await userUseCase.updateUser(user, idToken);
 		res.status(200).json({ data: updatedUser });
 	} catch (error: unknown) {
+		console.error(`[user.controller] updateUser:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -184,6 +198,7 @@ export const saveChapterProgress = async (req: Request, res: Response) => {
 		});
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] saveChapterProgress:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -195,6 +210,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 		await userUseCase.deleteUser(uid);
 		res.status(204).send();
 	} catch (error: unknown) {
+		console.error(`[user.controller] deleteUser:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -207,6 +223,7 @@ export const addFriend = async (req: Request, res: Response) => {
 		await userUseCase.addFriend(uid, targetUid);
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] addFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -217,6 +234,7 @@ export const acceptFriend = async (req: Request, res: Response) => {
 		await userUseCase.acceptFriend(uid, targetUid);
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] acceptFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -227,6 +245,7 @@ export const removeFriend = async (req: Request, res: Response) => {
 		await userUseCase.removeFriend(uid, targetUid);
 		res.status(200).json({ data: { ok: true } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] removeFriend:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(400).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -239,6 +258,7 @@ export const getFriends = async (req: Request, res: Response) => {
 		const friends = await userUseCase.getFriends(uid, idToken);
 		res.status(200).json({ data: friends });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getFriends:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -249,6 +269,7 @@ export const getFriendsRanking = async (req: Request, res: Response) => {
 		const ranking = await userUseCase.getFriendsRanking(uid);
 		res.status(200).json({ data: ranking });
 	} catch (error: unknown) {
+		console.error(`[user.controller] getFriendsRanking:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -291,6 +312,7 @@ export const notifyNewChallenge = async (req: Request, res: Response) => {
 
 		res.status(200).json({ data: { sent, failed, total: targets.length } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] notifyNewChallenge:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };
@@ -306,6 +328,7 @@ export const awardAchievement = async (req: Request, res: Response) => {
 		const awarded = await userUseCase.awardAchievement(uid, achievementId, Number(xpBonus));
 		res.status(200).json({ data: { awarded } });
 	} catch (error: unknown) {
+		console.error(`[user.controller] awardAchievement:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
 	}
 };

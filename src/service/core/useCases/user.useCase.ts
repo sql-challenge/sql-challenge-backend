@@ -44,8 +44,8 @@ export class UserUseCase {
 	}
 
 	// PUT
-	async updateUser(user: Partial<IUserView>): Promise<boolean> {
-		return await this.userPort.updateUser(user);
+	async updateUser(user: Partial<IUserView>, idToken?: string): Promise<IUserView> {
+		return await this.userPort.updateUser(user, idToken);
 	}
 
 	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {

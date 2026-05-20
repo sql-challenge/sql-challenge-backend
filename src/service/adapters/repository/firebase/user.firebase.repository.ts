@@ -12,7 +12,7 @@ export class UserFirebaseRepository implements IUserPort {
 		try {
 			return await op();
 		} catch (err) {
-			console.error(`[Firebase] ${methodName}: requires Admin SDK credentials — ${(err as Error).message}`);
+			console.error(`[Firebase] ${methodName}: requires Admin SDK credentials — ${(err as Error).message}`, (err as Error).stack);
 			return fallback;
 		}
 	}
@@ -56,18 +56,20 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async getUserByUID(uid: string, idToken?: string): Promise<IUserView> {
-		console.error("getUserByUID");
-		if (hasServiceAccount) {
-			const snap = await this.userCollection.doc(uid).get();
-			if (!snap.exists) throw new Error("User not found!");
-			return this.mapDoc(snap.id, snap.data()!);
-		}
-		if (!idToken) {
-			throw new Error("Firestore REST requer idToken — configure FIREBASE_ADMIN_PRIVATE_KEY no .env");
-		}
-		const data = await firestoreGetDoc(idToken, "User", uid);
-		if (!data) throw new Error("User not found!");
-		return this.mapDoc(uid, data);
+		return this.withFallback(async () => {
+			if (hasServiceAccount) {
+				const snap = await this.userCollection.doc(uid).get();
+				if (!snap.exists) throw new Error("User not found!");
+				return this.mapDoc(snap.id, snap.data()!);
+			}
+			if (!idToken) {
+				console.error(`[Firebase] getUserByUID: sem service account e sem idToken — impossível buscar usuário`);
+				throw new Error("Firestore REST requer idToken — configure FIREBASE_ADMIN_PRIVATE_KEY no .env");
+			}
+			const data = await firestoreGetDoc(idToken, "User", uid);
+			if (!data) throw new Error("User not found!");
+			return this.mapDoc(uid, data);
+		}, null as unknown as IUserView, "getUserByUID");
 	}
 
 	async getUsersByName(name: string): Promise<IUserView[]> {
@@ -198,7 +200,7 @@ export class UserFirebaseRepository implements IUserPort {
 		await authUser.resetPassword(uid, new_psw);
 	}
 
-	async updateUser(user: Partial<IUserView>): Promise<boolean> {
+	async updateUser(user: Partial<IUserView>, idToken?: string): Promise<IUserView> {
 		return this.withFallback(async () => {
 			const uid = user.uid!;
 			const updates: Record<string, unknown> = {};
@@ -209,9 +211,16 @@ export class UserFirebaseRepository implements IUserPort {
 			if (user.xp                 !== undefined) updates.xp                 = user.xp;
 			if (user.rankingPosition    !== undefined) updates.rankingPosition    = user.rankingPosition;
 			if (user.emailNotifications !== undefined) updates.emailNotifications = user.emailNotifications;
-			await this.userCollection.doc(uid).update(updates);
-			return true;
-		}, false, "updateUser");
+
+			if (hasServiceAccount) {
+				await this.userCollection.doc(uid).update(updates);
+			} else {
+				if (!idToken) throw new Error("Firestore REST requer idToken para updateUser");
+				await firestoreUpdateDoc(idToken, "User", uid, updates);
+			}
+
+			return this.getUserByUID(uid, idToken);
+		}, null as unknown as IUserView, "updateUser");
 	}
 
 	// ── Friends ────────────────────────────────────────────────
@@ -287,7 +296,7 @@ export class UserFirebaseRepository implements IUserPort {
 			if (!data) return [];
 			return Array.isArray(data.friends) ? data.friends as Friend[] : [];
 		} catch (err) {
-			console.error(`[Firebase] getFriends: ${(err as Error).message}`);
+			console.error(`[Firebase] getFriends: ${(err as Error).message}`, (err as Error).stack);
 			return [];
 		}
 	}

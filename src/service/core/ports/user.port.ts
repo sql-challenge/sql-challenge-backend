@@ -21,7 +21,7 @@ export interface IUserPort {
 	resetPassword(uid: string, new_psw: string): Promise<void>
 
 	// PUT
-	updateUser(user: Partial<IUserView>): Promise<boolean>
+	updateUser(user: Partial<IUserView>, idToken?: string): Promise<IUserView>
 
 	// challenge_progress subcollection
 	saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void>
