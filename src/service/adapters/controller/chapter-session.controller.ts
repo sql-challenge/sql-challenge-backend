@@ -50,4 +50,3 @@ export const saveSession = async (req: Request, res: Response) => {
     res.status(500).json({ error: `[API] ${err instanceof Error ? err.message : "Unknown error"}` });
   }
 };
-};

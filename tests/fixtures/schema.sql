@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS Consulta (
     id_capitulo BIGINT    NOT NULL REFERENCES Capitulo(id) ON DELETE CASCADE,
     id_objetivo BIGINT             REFERENCES Objetivo(id) ON DELETE SET NULL,
     query       TEXT      NOT NULL,
-    colunas     JSONB,
+    colunas     VARCHAR[] NOT NULL,
     resultado   JSONB
 );
 

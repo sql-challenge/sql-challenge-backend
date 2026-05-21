@@ -69,4 +69,5 @@ export interface CapituloView {
   objetivos: ObjetivoComConsulta[];
   dicas: Dica[];
   schema: DatabaseSchema;
+  visoes: string[];
 }

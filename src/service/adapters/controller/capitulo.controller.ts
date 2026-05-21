@@ -100,11 +100,13 @@ export const getCapituloViewById = async (req: Request, res: Response<ApiRespons
             })
         );
         //
+        const visoes = visaoList.map(v => v.comando);
         res.status(200).json({ data: {
             capitulo,
             objetivos,
             dicas,
             schema: { visaoTabelas, visaoRelacionamentos: [] },
+            visoes,
         } });
     } catch (error: unknown) {
         console.error(`[capitulo.controller] getCapituloViewById:`, (error as Error).name, (error as Error).message, (error as Error).stack);

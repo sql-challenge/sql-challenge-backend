@@ -346,12 +346,19 @@ init_staging() {
       "[2c/3] Views do jogo"
   fi
 
-  # 3. Dados de teste (mínimo para os testes de integração passarem)
-  run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$BACKEND_DIR/tests/fixtures/data.sql" \
-    "[3/3] Dados de teste (Desafios, Capítulos, Objetivos, Dicas)"
+  # 3. Conteúdo do jogo: Desafios, Capítulos, Objetivos, Dicas, Visões, Consultas
+  #    Usa o modelagem como fonte principal; data.sql como fallback (CI sem modelagem)
+  if [ -d "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games" ]; then
+    run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
+      "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games/dml_magical_world.sql" \
+      "[3/4] Conteúdo do jogo (via modelagem)"
+  else
+    run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
+      "$BACKEND_DIR/tests/fixtures/data.sql" \
+      "[3/4] Conteúdo do jogo (via fixture)"
+  fi
 
-  # 4. Usuário de aplicação (merged into step 3, or independent fallback)
+  # 4. Usuário de aplicação
   step "[4/4] Configurando usuário de aplicação (users_sql_challenge)"
   if [ -f "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" ]; then
     cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \

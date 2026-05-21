@@ -13,7 +13,6 @@ services:
       - postgres_staging_data:/var/lib/postgresql/data
       - ./tests/fixtures/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./tests/fixtures/magical_world.sql:/docker-entrypoint-initdb.d/02_magical_world.sql:ro
-      - ./tests/fixtures/data.sql:/docker-entrypoint-initdb.d/03_data.sql:ro
     ports:
       - "5433:5432"
     healthcheck:
