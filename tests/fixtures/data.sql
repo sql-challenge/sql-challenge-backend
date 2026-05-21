@@ -111,10 +111,10 @@ INSERT INTO Visao (id, id_capitulo, comando) VALUES
 INSERT INTO Objetivo (id, id_capitulo, descricao, ordem, nivel) VALUES
 (1, 1, 'Identificar todas as regiões e reinos do mundo mágico listados no banco de dados.', 1, 0),
 (2, 1, 'Listar as espécies que governam cada território.', 2, 0),
-(3, 1, 'Encontrar o nome e sobrenome dos Senhores das Terras de cada território.', 3, 0),
+(3, 1, 'Encontrar o nome e sobrenome dos Senhores das Terras.', 3, 0),
 (4, 1, 'Verificar quais territórios possuem ligação com artefatos da categoria Lendário (''L'').', 4, 1),
 (5, 1, 'Explorar as regiões com geografia Norte (''N'') e Sul (''S'').', 5, 1),
-(6, 1, 'Identificar a pessoa mais antiga ainda viva, obtendo seu nome e idade calculada.', 6, 2);
+(6, 1, 'Identificar o nome e sobrenome da pessoa mais antiga ainda viva.', 6, 2);
 
 INSERT INTO Objetivo (id, id_capitulo, descricao, ordem, nivel) VALUES
 (7,  2, 'Encontrar os ataques cujo autor é "Os Justiceiros".', 1, 1),
@@ -124,16 +124,16 @@ INSERT INTO Objetivo (id, id_capitulo, descricao, ordem, nivel) VALUES
 (11, 2, 'Cruzar vínculos suspeitos com os territórios atacados e contar as ocorrências.', 5, 3);
 
 INSERT INTO Objetivo (id, id_capitulo, descricao, ordem, nivel) VALUES
-(12, 3, 'Identificar personagens que possuem artefatos e têm acesso a minas.', 1, 3),
+(12, 3, 'Identificar quais artefatos lendários estão ligados a minas de recursos através de seus portadores.', 1, 3),
 (13, 3, 'Cruzar transações de pedras flamejantes com ataques ao território de destino.', 2, 3),
 (14, 3, 'Relacionar ordens da Torre Mágica com ataques registrados no mesmo território.', 3, 3),
-(15, 3, 'Listar minerações de pedras flamejantes e a quantidade total por mina.', 4, 3),
+(15, 3, 'Listar as minerações de pedras flamejantes e os recursos transacionados por cada mina.', 4, 3),
 (16, 3, 'Calcular quantos ataques e recursos atingiram cada território que recebeu transações.', 5, 4);
 
 INSERT INTO Objetivo (id, id_capitulo, descricao, ordem, nivel) VALUES
 (17, 4, 'Encontrar ordens da Torre ligadas a ataques com uso de recursos acima da média.', 1, 4),
 (18, 4, 'Somar recursos e contar ataques por território de origem.', 2, 4),
-(19, 4, 'Cruzar a origem dos recursos com o volume de ataques em cada território.', 3, 4),
+(19, 4, 'Cruzar a origem dos recursos de Val Nareth com o volume de ataques em cada território.', 3, 4),
 (20, 4, 'Identificar o personagem com mais alianças.', 4, 4),
 (21, 4, 'Calcular o total de ataques e recursos movimentados por cada torre.', 5, 4);
 
@@ -154,14 +154,11 @@ INSERT INTO Dica (id, id_capitulo, ordem, conteudo, penalidade_xp) VALUES
  'Experimente: SELECT * FROM regioes_reinos;',
  10),
 (2, 1, 2,
- 'A VIEW "senhores_das_terras" já une Pessoa, Cidade e Feudo. '
- 'Combine-a com "regioes_reinos" para enriquecer o resultado.',
+ 'A VIEW "senhores_das_terras" tem as colunas nome_senhor e sobrenome_senhor. '
+ 'Use SELECT com colunas específicas em vez de SELECT *.',
  25),
 (3, 1, 3,
- 'Query completa: SELECT f.familiaFeudal AS nome_reino, f.geografia, '
- 'p.nome AS nome_senhor, p.sobreNome AS sobrenome_senhor '
- 'FROM Feudo f JOIN Cidade c ON f.id = c.id_feudo '
- 'JOIN Pessoa p ON c.id_pessoa = p.id ORDER BY f.familiaFeudal;',
+ 'Ordene por nascimento com ORDER BY e use LIMIT 1 para obter a pessoa mais velha.',
  50);
 
 INSERT INTO Dica (id, id_capitulo, ordem, conteudo, penalidade_xp) VALUES
@@ -171,13 +168,13 @@ INSERT INTO Dica (id, id_capitulo, ordem, conteudo, penalidade_xp) VALUES
  10),
 (5, 2, 2,
  'Use GROUP BY sobre "ataques_detalhe" para agrupar por territorio_atacado '
- 'e COUNT(id) para contar ocorrências. Adicione HAVING COUNT(id) > média para filtrar.',
+ 'e COUNT(id) para contar ocorrências.',
  25),
 (6, 2, 3,
- 'Para variação anual, crie uma CTE: WITH AtaquesPorAno AS (SELECT EXTRACT(YEAR FROM data_ocorrido) '
- 'AS ano, COUNT(id) AS num_ataques FROM ataques_detalhe GROUP BY ano) '
- 'SELECT ano, num_ataques, LAG(num_ataques, 1, 0) OVER (ORDER BY ano) AS ataques_ano_anterior, '
- 'num_ataques - LAG(num_ataques, 1, 0) OVER (ORDER BY ano) AS variacao FROM AtaquesPorAno ORDER BY ano;',
+ 'SELECT vs.especie_associada, vs.territorio_associado, COUNT(ad.id) AS total_ataques '
+ 'FROM vinculos_suspeitos vs '
+ 'JOIN ataques_detalhe ad ON vs.territorio_associado = ad.territorio_atacado '
+ 'GROUP BY vs.especie_associada, vs.territorio_associado ORDER BY total_ataques DESC;',
  50);
 
 INSERT INTO Dica (id, id_capitulo, ordem, conteudo, penalidade_xp) VALUES
@@ -222,18 +219,11 @@ INSERT INTO Dica (id, id_capitulo, ordem, conteudo, penalidade_xp) VALUES
  'SELECT conteudo_hex FROM registros_hex_raw WHERE nome_torre = ''Torre Mágica de Val Nareth'';',
  10),
 (14, 5, 2,
- 'Decodifique o hexadecimal com: '
- 'SELECT ENCODE(DECODE(conteudo_hex, ''hex''), ''escape'') AS palavra_chave '
- 'FROM registros_hex_raw WHERE nome_torre = ''Torre Mágica de Val Nareth'';',
+ 'O registro hexadecimal pode ser decodificado com uma ferramenta externa. '
+ 'Use o resultado como palavra-chave nas próximas consultas.',
  25),
 (15, 5, 3,
- 'Query completa do Cap 5: '
- 'SELECT * FROM ordens_emitidas_raw '
- 'WHERE conteudo_ordem LIKE ''%'' || '
- '(SELECT ENCODE(DECODE(conteudo_hex,''hex''),''escape'') '
- ' FROM registros_hex_raw WHERE nome_torre = ''Torre Mágica de Val Nareth'' LIMIT 1) '
- '|| ''%'' '
- 'AND id_emissor = (SELECT id FROM Pessoa WHERE nome || '' '' || sobreNome = ''Líder dos Justiceiros''); '
+ 'Com a palavra-chave em mãos, filtre ordens_emitidas_raw com LIKE e subconsulta. '
  'Depois: SELECT * FROM grimorio_final;',
  50);
 
@@ -256,8 +246,8 @@ INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) V
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
 (3, 1, 3,
- 'SELECT * FROM senhores_das_terras;',
- ARRAY['nome_senhor', 'sobrenome_senhor', 'territorio_governado'],
+ 'SELECT nome_senhor, sobrenome_senhor FROM senhores_das_terras;',
+ ARRAY['nome_senhor', 'sobrenome_senhor'],
  NULL);
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
@@ -274,8 +264,8 @@ INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) V
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
 (6, 1, 6,
- 'SELECT * FROM pessoas_vivas ORDER BY nascimento ASC LIMIT 1;',
- ARRAY['nome', 'sobreNome', 'nascimento', 'óbito'],
+ 'SELECT nome, sobreNome FROM pessoas_vivas ORDER BY nascimento ASC LIMIT 1;',
+ ARRAY['nome', 'sobreNome'],
  NULL);
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
@@ -304,11 +294,11 @@ INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) V
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
 (10, 2, 10,
- 'SELECT ar.data_ocorrido, ar.autor, ad.territorio_atacado '
+ 'SELECT ar.autor, ad.territorio_atacado '
  'FROM ataques_raw ar '
  'JOIN ataques_detalhe ad ON ar.data_ocorrido = ad.data_ocorrido '
  'WHERE ar.autor = ''Os Justiceiros'';',
- ARRAY['data_ocorrido', 'autor', 'territorio_atacado'],
+ ARRAY['autor', 'territorio_atacado'],
  NULL);
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
@@ -448,9 +438,9 @@ INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) V
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
 (25, 5, 25,
- 'SELECT * FROM posse_artefato_personagem '
+ 'SELECT nome_portador, sobrenome_portador FROM posse_artefato_personagem '
  'WHERE nome_artefato = ''Cajado do Coração de Fogo'';',
- ARRAY['id_artefato', 'nome_portador', 'sobrenome_portador', 'nome_artefato'],
+ ARRAY['nome_portador', 'sobrenome_portador'],
  NULL);
 
 INSERT INTO Consulta (id, id_capitulo, id_objetivo, query, colunas, resultado) VALUES
