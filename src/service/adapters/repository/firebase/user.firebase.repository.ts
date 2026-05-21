@@ -3,6 +3,7 @@ import { IChapterProgressDto, IUserPort } from "../../../core/ports/user.port";
 import { db as firestore, adminDb, hasServiceAccount } from "../../../db/firebase/firebaseAdminConfig";
 import { authUser } from "../../auth/firebase.auth";
 import { firestoreGetDoc, firestoreSetDoc, firestoreUpdateDoc } from "./firestoreRest";
+import { FieldValue } from "firebase-admin/firestore";
 
 export class UserFirebaseRepository implements IUserPort {
 	private get userCollection() { return firestore!.collection("User"); }
@@ -331,8 +332,8 @@ export class UserFirebaseRepository implements IUserPort {
 			if (awarded.includes(achievementId)) return false;
 
 			await ref.update({
-				awardedAchievements: [...awarded, achievementId],
-				xp: (data.xp ?? 0) + xpBonus,
+				awardedAchievements: FieldValue.arrayUnion(achievementId),
+				xp: FieldValue.increment(xpBonus),
 			});
 			return true;
 		}, false, "awardAchievement");
@@ -384,7 +385,7 @@ export class UserFirebaseRepository implements IUserPort {
 
 			await userRef.update({
 				challenge_progress: updatedProgress,
-				xp: (userData.xp ?? 0) + xpToAdd,
+				xp: FieldValue.increment(xpToAdd),
 			});
 		}, undefined as unknown as void, "saveChapterProgress");
 	}
