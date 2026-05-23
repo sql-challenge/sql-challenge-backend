@@ -1,46 +1,56 @@
-import * as admin from "firebase-admin";
-import dotenv from "dotenv";
-import { existsSync } from "fs";
-import { resolve } from "path";
-import { compatFirestore } from "./firestoreCompat";
-import { db as clientDb } from "./firebaseConfig";
+import * as _admin from "firebase-admin";
 
-dotenv.config();
+let _initialized = false;
+let _db: FirebaseFirestore.Firestore | null = null;
 
-const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID ?? process.env.projectId;
+function ensureInit() {
+  if (_initialized) return;
+  _initialized = true;
 
-const serviceAccountPathRaw = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH;
-const serviceAccountPath = serviceAccountPathRaw
-  ? resolve(__dirname, serviceAccountPathRaw)
-  : null;
-const hasServiceAccount = !!serviceAccountPath && existsSync(serviceAccountPath);
+  const projectId = process.env.FIREBASE_PROJECT_ID || "";
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-if (!admin.apps.length) {
-  if (hasServiceAccount) {
-    try {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccountPath!),
-      });
-      console.log("[Firebase Admin] Inicializado com service account:", serviceAccountPath);
-    } catch (err) {
-      console.error("[Firebase Admin] Service account inválida, fallback para token-only:", (err as Error).message);
-      admin.initializeApp({ projectId });
+  if (!_admin.apps.length) {
+    if (clientEmail && privateKey) {
+      try {
+        _admin.initializeApp({
+          credential: _admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey: privateKey.replace(/\\n/g, "\n"),
+          }),
+        });
+      } catch (err) {
+        console.error("[Firebase Admin] Credenciais inválidas, fallback para token-only:", (err as Error).message);
+        _admin.initializeApp({ projectId });
+      }
+    } else {
+      _admin.initializeApp({ projectId });
     }
-  } else {
-    admin.initializeApp({ projectId });
-    console.log("[Firebase Admin] Inicializado sem service account (token-only). projectId=" + projectId);
   }
+
+  _db = _admin.firestore();
+  _db.settings({ preferRest: true });
 }
 
-const adminDb: FirebaseFirestore.Firestore | null = hasServiceAccount ? admin.firestore() : null;
-if (adminDb) {
-  adminDb.settings({ preferRest: true });
+const db = new Proxy({} as FirebaseFirestore.Firestore, {
+  get(_, prop) {
+    ensureInit();
+    return _db![prop as keyof FirebaseFirestore.Firestore];
+  },
+});
+
+const admin = new Proxy(_admin, {
+  get(target, prop) {
+    ensureInit();
+    return (target as any)[prop];
+  },
+});
+
+export { db, admin };
+
+/** Expõe o estado de inicialização para testes */
+export function isFirebaseReady(): boolean {
+  return _initialized;
 }
-
-const db = hasServiceAccount
-  ? adminDb
-  : clientDb
-    ? (compatFirestore(clientDb) as unknown as FirebaseFirestore.Firestore)
-    : null;
-
-export { db, admin, adminDb, hasServiceAccount };

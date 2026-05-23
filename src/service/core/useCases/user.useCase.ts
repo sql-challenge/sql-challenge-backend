@@ -1,4 +1,4 @@
-import { IUserSignUp, IUserView } from "../domain/user.entity"
+import { IUserView } from "../domain/user.entity"
 import { IChapterProgressDto, IUserPort } from "../ports/user.port";
 
 export class UserUseCase {
@@ -11,28 +11,16 @@ export class UserUseCase {
 	async getTopByXP(limit?: number): Promise<IUserView[]> {
 		return await this.userPort.getTopByXP(limit);
 	}
-	async getUserByUID(uid: string, idToken?: string): Promise<IUserView> {
-		return await this.userPort.getUserByUID(uid, idToken);
+	async getUserByUID(uid: string): Promise<IUserView> {
+		return await this.userPort.getUserByUID(uid);
 	}
 	async getUsersByName(name: string): Promise<IUserView[]> {
 		return await this.userPort.getUsersByName(name);
 	}
 	async getUserByEmail(email: string): Promise<IUserView> {
-		// validate email
 		return await this.userPort.getUserByEmail(email);
 	}
 
-	// POST
-	// ⚠️ Disabled — sign-up only via OAuth
-	// async addUser(user: IUserSignUp): Promise<IUserView> {
-	// 	return await this.userPort.addUser(user);
-	// }
-	async loginWithEmail(email: string, password: string): Promise<IUserView> {
-		return await this.userPort.loginWithEmail(email, password);
-	}
-	async loginWithGoogle(idToken: string): Promise<IUserView> {
-		return await this.userPort.loginWithGoogle(idToken);
-	}
 	async loginWithOAuth(idToken: string, displayName?: string, photoURL?: string): Promise<IUserView> {
 		return await this.userPort.loginWithOAuth(idToken, displayName, photoURL);
 	}
@@ -44,8 +32,8 @@ export class UserUseCase {
 	}
 
 	// PUT
-	async updateUser(user: Partial<IUserView>, idToken?: string): Promise<IUserView> {
-		return await this.userPort.updateUser(user, idToken);
+	async updateUser(user: Partial<IUserView>): Promise<IUserView> {
+		return await this.userPort.updateUser(user);
 	}
 
 	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {
@@ -62,8 +50,8 @@ export class UserUseCase {
 	async removeFriend(uid: string, targetUid: string): Promise<void> {
 		return this.userPort.removeFriend(uid, targetUid);
 	}
-	async getFriends(uid: string, idToken?: string) {
-		return this.userPort.getFriends(uid, idToken);
+	async getFriends(uid: string) {
+		return this.userPort.getFriends(uid);
 	}
 	async getFriendsRanking(uid: string) {
 		return this.userPort.getFriendsRanking(uid);

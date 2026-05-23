@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { UserUseCase } from "../../core/useCases/user.useCase";
 import { UserFirebaseRepository } from "../repository/firebase/user.firebase.repository";
-import { ApiResponse } from "../../core/domain/http.entity";
 import { IUserView } from "../../core/domain/user.entity";
 import { sendEmail } from "../email/email.service";
 import { newChallengeTemplate } from "../email/newChallengeTemplate";
@@ -40,9 +39,7 @@ export const getAll = async (req: Request, res: Response) => {
 export const verifyToken = async (req: Request, res: Response) => {
 	try {
 		const uid = (req.user as any).uid
-		const authHeader = req.headers.authorization;
-		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-		const user = await userUseCase.getUserByUID(uid, idToken)
+		const user = await userUseCase.getUserByUID(uid)
 		res.status(200).json({ data: user })
 	} catch (error: unknown) {
 		console.error(`[user.controller] verifyToken:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
@@ -53,9 +50,7 @@ export const verifyToken = async (req: Request, res: Response) => {
 export const getUserByUID = async (req: Request, res: Response) => {
 	try {
 		const uid = req.params.uid;
-		const authHeader = req.headers.authorization;
-		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-		const data = await userUseCase.getUserByUID(uid, idToken);
+		const data = await userUseCase.getUserByUID(uid);
 		res.status(200).json({ data });
 	} catch (error: unknown) {
 		console.error(`[user.controller] getUserByUID:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
@@ -85,38 +80,7 @@ export const getUserByEmail = async (req: Request, res: Response) => {
 	}
 };
 
-// ⚠️ Disabled — sign-up only via OAuth
-// export const addUser = async (req: Request, res: Response<ApiResponse<IUserView>>) => {
-// 	try {
-// 		const user = req.body;
-// 		const newUser = await userUseCase.addUser(user);
-// 		const body: ApiResponse<IUserView> = { data: newUser }
-// 		res.status(201).json(body);
-// 	} catch (error: unknown) {
-// 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-// 	}
-// };
 
-// export const addUserbyGoogle = async (req: Request, res: Response) => {
-// 	try {
-// 		const idToken = req.params.token
-// 		const newUser = await userUseCase.addUserbyGoogle(idToken);
-// 		res.status(201).json(newUser);
-// 	} catch (error: unknown) {
-// 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-// 	}
-// };
-
-// ⚠️ Dead code — frontend usa /auth/oauth para todos os logins (incluindo email/senha).
-// export const loginWithEmail = async (req: Request, res: Response) => {
-// 	try {
-// 		const body = req.body
-// 		const newUser = await userUseCase.loginWithEmail(body.email, body.password);
-// 		res.status(201).json({ data: newUser });
-// 	} catch (error: unknown) {
-// 		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-// 	}
-// };
 
 /**
  * POST /api/user/auth/oauth
@@ -168,9 +132,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
 	try {
 		const user = req.body;
-		const authHeader = req.headers.authorization;
-		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-		const updatedUser = await userUseCase.updateUser(user, idToken);
+		const updatedUser = await userUseCase.updateUser(user);
 		res.status(200).json({ data: updatedUser });
 	} catch (error: unknown) {
 		console.error(`[user.controller] updateUser:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);
@@ -270,9 +232,7 @@ export const removeFriend = async (req: Request, res: Response) => {
 export const getFriends = async (req: Request, res: Response) => {
 	try {
 		const { uid } = req.params;
-		const authHeader = req.headers.authorization;
-		const idToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-		const friends = await userUseCase.getFriends(uid, idToken);
+		const friends = await userUseCase.getFriends(uid);
 		res.status(200).json({ data: friends });
 	} catch (error: unknown) {
 		console.error(`[user.controller] getFriends:`, (error as Error).name, (error as Error).message, (error as any)?.code, (error as Error).stack);

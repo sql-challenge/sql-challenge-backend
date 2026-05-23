@@ -1,6 +1,6 @@
 import { UserUseCase } from "../../../src/service/core/useCases/user.useCase";
 import { IUserPort } from "../../../src/service/core/ports/user.port";
-import { makeUserView, makeUserSignUp } from "../../helpers/factories";
+import { makeUserView } from "../../helpers/factories";
 
 const mockPort: jest.Mocked<IUserPort> = {
     getAll: jest.fn(),
@@ -8,9 +8,6 @@ const mockPort: jest.Mocked<IUserPort> = {
     getUserByUID: jest.fn(),
     getUsersByName: jest.fn(),
     getUserByEmail: jest.fn(),
-    addUser: jest.fn(),
-    loginWithEmail: jest.fn(),
-    loginWithGoogle: jest.fn(),
     loginWithOAuth: jest.fn(),
     logout: jest.fn(),
     resetPassword: jest.fn(),
@@ -76,45 +73,14 @@ describe("UserUseCase", () => {
         });
     });
 
-    describe("addUser", () => {
-        it("deve cadastrar novo usuário e retornar IUserView", async () => {
-            const signUp = makeUserSignUp();
-            const userCreated = makeUserView();
-            mockPort.addUser.mockResolvedValue(userCreated);
-
-            const result = await useCase.addUser(signUp);
-
-            expect(mockPort.addUser).toHaveBeenCalledWith(signUp);
-            expect(result.uid).toBeDefined();
-        });
-    });
-
-    describe("loginWithEmail", () => {
-        it("deve autenticar via email e senha", async () => {
-            const user = makeUserView();
-            mockPort.loginWithEmail.mockResolvedValue(user);
-
-            const result = await useCase.loginWithEmail("teste@email.com", "Senha@123");
-
-            expect(mockPort.loginWithEmail).toHaveBeenCalledWith("teste@email.com", "Senha@123");
-            expect(result.uid).toBeDefined();
-        });
-
-        it("deve propagar erro em credenciais inválidas", async () => {
-            mockPort.loginWithEmail.mockRejectedValue(new Error("Credenciais inválidas."));
-
-            await expect(useCase.loginWithEmail("errado@email.com", "senha_errada"))
-                .rejects.toThrow("Credenciais inválidas.");
-        });
-    });
-
     describe("updateUser", () => {
         it("deve atualizar dados do usuário", async () => {
-            mockPort.updateUser.mockResolvedValue(true);
+            const updated = makeUserView({ uid: "uid-test-123", nick: "NovoNick" });
+            mockPort.updateUser.mockResolvedValue(updated);
 
             const result = await useCase.updateUser({ uid: "uid-test-123", nick: "NovoNick" });
 
-            expect(result).toBe(true);
+            expect(result.nick).toBe("NovoNick");
         });
     });
 
