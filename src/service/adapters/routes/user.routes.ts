@@ -28,11 +28,11 @@ router.post("/:uid/progress", requireAuth, (req, res) => { controller.saveChapte
 router.put("/", requireAuth, (req, res) => { controller.updateUser(req, res); });
 
 /** Friends */
-router.get("/:uid/friends", requireAuth, (req, res) => { controller.getFriends(req, res); });
-router.get("/:uid/friends/ranking", requireAuth, (req, res) => { controller.getFriendsRanking(req, res); });
-router.post("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.addFriend(req, res); });
-router.put("/:uid/friends/:targetUid/accept", requireAuth, (req, res) => { controller.acceptFriend(req, res); });
-router.delete("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.removeFriend(req, res); });
+// router.get("/:uid/friends", requireAuth, (req, res) => { controller.getFriends(req, res); });
+// router.get("/:uid/friends/ranking", requireAuth, (req, res) => { controller.getFriendsRanking(req, res); });
+// router.post("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.addFriend(req, res); });
+// router.put("/:uid/friends/:targetUid/accept", requireAuth, (req, res) => { controller.acceptFriend(req, res); });
+// router.delete("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.removeFriend(req, res); });
 
 /** Achievements */
 router.post("/:uid/achievements/award", requireAuth, (req, res) => { controller.awardAchievement(req, res); });
