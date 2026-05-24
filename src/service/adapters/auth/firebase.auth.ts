@@ -10,7 +10,7 @@ export class UserAuthService {
 	}
 
 	async verifyIdToken(idToken: string): Promise<{ uid: string; email?: string; name?: string; picture?: string }> {
-		const decoded = await admin.auth().verifyIdToken(idToken);
+		const decoded = await admin.auth().verifyIdToken(idToken, true);
 		return {
 			uid: decoded.uid,
 			email: decoded.email,

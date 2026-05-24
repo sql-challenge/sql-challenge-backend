@@ -40,12 +40,15 @@ export class ConsultaPostgresRepository implements IConsultaPort {
             let resultado = Array.isArray(r.resultado) ? r.resultado : [];
             let colunas = Array.isArray(r.colunas) && r.colunas.length > 0 ? r.colunas as string[] : null;
             if ((resultado.length === 0 || !colunas) && r.query) {
-                try {
-                    const queryResult = await pool.query(r.query as string);
-                    if (resultado.length === 0) resultado = queryResult.rows;
-                    if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
-                } catch {
-                    resultado = [];
+                const normalized = (r.query as string).trim().toUpperCase();
+                if (normalized.startsWith("SELECT") || normalized.startsWith("WITH")) {
+                    try {
+                        const queryResult = await pool.query(r.query as string);
+                        if (resultado.length === 0) resultado = queryResult.rows;
+                        if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
+                    } catch {
+                        resultado = [];
+                    }
                 }
             }
             return new Consulta(
@@ -71,12 +74,15 @@ export class ConsultaPostgresRepository implements IConsultaPort {
         let resultado = Array.isArray(r.resultado) ? r.resultado : [];
         let colunas = Array.isArray(r.colunas) && r.colunas.length > 0 ? r.colunas as string[] : null;
         if ((resultado.length === 0 || !colunas) && r.query) {
-            try {
-                const queryResult = await pool.query(r.query as string);
-                if (resultado.length === 0) resultado = queryResult.rows;
-                if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
-            } catch {
-                resultado = [];
+            const normalized = (r.query as string).trim().toUpperCase();
+            if (normalized.startsWith("SELECT") || normalized.startsWith("WITH")) {
+                try {
+                    const queryResult = await pool.query(r.query as string);
+                    if (resultado.length === 0) resultado = queryResult.rows;
+                    if (!colunas) colunas = queryResult.fields.map((f: { name: string }) => f.name);
+                } catch {
+                    resultado = [];
+                }
             }
         }
         return new Consulta(

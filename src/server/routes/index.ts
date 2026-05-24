@@ -16,7 +16,6 @@ import { requestLogger } from "../../service/adapters/middleware/logging.middlew
 const routes = express();
 routes.disable("x-powered-by");
 
-routes.use(express.json());
 routes.use(requestLogger);
 
 const frontendUrl = process.env.FRONTEND_URL;
@@ -33,8 +32,7 @@ const allowedOrigins = [
 
 routes.use(cors({
 	origin: (origin, callback) => {
-		if (!origin) return callback(null, true);
-		if (origin.endsWith(".vercel.app")) return callback(null, true);
+		if (!origin) return callback(null, false);
 		const allowed = allowedOrigins.some(o => origin.startsWith(o));
 		callback(null, allowed);
 	},
@@ -61,6 +59,16 @@ const authLimiter = rateLimit({
 	message: { error: "Muitas tentativas de autenticação. Tente novamente em instantes." },
 });
 routes.use("/api/user/auth", authLimiter);
+
+const mutationLimiter = rateLimit({
+	windowMs: 60 * 1000,
+	max: 20,
+	standardHeaders: true,
+	legacyHeaders: false,
+	message: { error: "Muitas requisições de escrita. Tente novamente em instantes." },
+	skip: (req) => req.method === "GET",
+});
+routes.use(mutationLimiter);
 
 routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);

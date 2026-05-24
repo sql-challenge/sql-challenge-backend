@@ -33,6 +33,18 @@ export class VisaoPostgresRepository implements IVisaoPort {
 	async executeView(comando: string): Promise<Record<string, unknown>[]> {
 		if (!/^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$/.test(comando))
 			throw new Error("Nome de visão inválido.");
+
+		const idx = comando.indexOf(".");
+		const schema = comando.slice(0, idx);
+		const view = comando.slice(idx + 1);
+
+		const exists = await pool.query(
+			`SELECT 1 FROM pg_views WHERE schemaname = $1 AND viewname = $2`,
+			[schema, view]
+		);
+		if (exists.rows.length === 0)
+			throw new Error(`Visão "${comando}" não encontrada.`);
+
 		const result = await pool.query(`SELECT * FROM ${comando}`);
 		return result.rows;
 	}

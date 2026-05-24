@@ -1,11 +1,11 @@
 import { Router } from "express";
-import * as controller from "../controller/dica.controller";
+import { getAll, getById, getByCapituloId } from "../controller/dica.controller";
 import { requireAuth } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", requireAuth, (req, res) => controller.getAll(req, res));
-router.get("/:id", requireAuth, (req, res) => controller.getById(req, res));
-router.get("/capitulo/:idCapitulo", requireAuth, (req, res) => controller.getByCapituloId(req, res));
+router.get("/", requireAuth, getAll);
+router.get("/:id", requireAuth, getById);
+router.get("/capitulo/:idCapitulo", requireAuth, getByCapituloId);
 
 export default router;

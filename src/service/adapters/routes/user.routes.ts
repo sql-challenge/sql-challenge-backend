@@ -5,42 +5,40 @@ import { requireAuth } from "../middleware/auth.middleware";
 const router = Router();
 
 // ── Public routes (no auth required) ──────────────────────────
-// router.post("/auth/", (req, res) => { controller.loginWithEmail(req, res); });
-router.post("/auth/oauth", (req, res) => { controller.loginWithOAuth(req, res); });
-// router.post("/", (req, res) => { controller.addUser(req, res); }); // disabled — sign-up only via OAuth
+router.post("/auth/oauth", controller.loginWithOAuth);
 
 // ── Protected routes (auth required) ──────────────────────────
 
 /** GET */
-router.get("/top", (req, res) => { controller.getTopByXP(req, res); });
-router.get("/token/valid", requireAuth, (req, res) => { controller.verifyToken(req, res); });
-router.get("/", requireAuth, (req, res) => { controller.getAll(req, res); });
-router.get("/uid/:uid", requireAuth, (req, res) => { controller.getUserByUID(req, res); });
-router.get("/name/:name", requireAuth, (req, res) => { controller.getUsersByName(req, res); });
-router.get("/email/:email", requireAuth, (req, res) => { controller.getUserByEmail(req, res); });
+router.get("/top", controller.getTopByXP);
+router.get("/token/valid", requireAuth, controller.verifyToken);
+router.get("/", requireAuth, controller.getAll);
+router.get("/uid/:uid", requireAuth, controller.getUserByUID);
+router.get("/name/:name", requireAuth, controller.getUsersByName);
+router.get("/email/:email", requireAuth, controller.getUserByEmail);
 
 /** POST */
-router.post("/logout/:uid", requireAuth, (req, res) => { controller.logout(req, res); });
-router.post("/resetPassword", requireAuth, (req, res) => { controller.resetPassword(req, res); });
-router.post("/:uid/progress", requireAuth, (req, res) => { controller.saveChapterProgress(req, res); });
+router.post("/logout/:uid", requireAuth, controller.logout);
+router.post("/resetPassword", requireAuth, controller.resetPassword);
+router.post("/:uid/progress", requireAuth, controller.saveChapterProgress);
 
 /** PUT */
-router.put("/", requireAuth, (req, res) => { controller.updateUser(req, res); });
+router.put("/", requireAuth, controller.updateUser);
 
 /** Friends */
-// router.get("/:uid/friends", requireAuth, (req, res) => { controller.getFriends(req, res); });
-// router.get("/:uid/friends/ranking", requireAuth, (req, res) => { controller.getFriendsRanking(req, res); });
-// router.post("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.addFriend(req, res); });
-// router.put("/:uid/friends/:targetUid/accept", requireAuth, (req, res) => { controller.acceptFriend(req, res); });
-// router.delete("/:uid/friends/:targetUid", requireAuth, (req, res) => { controller.removeFriend(req, res); });
+// router.get("/:uid/friends", requireAuth, controller.getFriends);
+// router.get("/:uid/friends/ranking", requireAuth, controller.getFriendsRanking);
+// router.post("/:uid/friends/:targetUid", requireAuth, controller.addFriend);
+// router.put("/:uid/friends/:targetUid/accept", requireAuth, controller.acceptFriend);
+// router.delete("/:uid/friends/:targetUid", requireAuth, controller.removeFriend);
 
 /** Achievements */
-router.post("/:uid/achievements/award", requireAuth, (req, res) => { controller.awardAchievement(req, res); });
+router.post("/:uid/achievements/award", requireAuth, controller.awardAchievement);
 
 /** Email notifications */
-router.post("/notify/new-challenge", requireAuth, (req, res) => { controller.notifyNewChallenge(req, res); });
+router.post("/notify/new-challenge", requireAuth, controller.notifyNewChallenge);
 
 /** Delete */
-router.delete("/:uid", requireAuth, (req, res) => { controller.deleteUser(req, res); });
+router.delete("/:uid", requireAuth, controller.deleteUser);
 
 export default router;

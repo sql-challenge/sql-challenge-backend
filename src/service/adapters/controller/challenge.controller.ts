@@ -13,6 +13,8 @@ import { VisaoUseCase } from "../../core/useCases/visao.useCase";
 import { VisaoPostgresRepository } from "../repository/postgres/gestao/visao.postgres.repository";
 import { Mystery, MysteryDetail } from "../../core/domain/challenge.entity";
 import { Desafio } from "../../core/domain/desafio.entity";
+import { asyncHandler } from "../middleware/asyncHandler";
+import { NotFoundError } from "../errors/api-errors";
 
 const desafioUseCase  = new DesafioUseCase(new DesafioPostgresRepository());
 const capituloUseCase = new CapituloUseCase(new CapituloPostgresRepository());
@@ -40,111 +42,88 @@ function toMystery(d: Desafio, xpReward = 0): Mystery {
 }
 
 class ChallengeController {
+    getAll = asyncHandler(async (_req: Request, res: Response) => {
+        const desafios = await desafioUseCase.getAll();
+        const data: Mystery[] = desafios.map(d => toMystery(d));
+        res.status(200).json({ data });
+    });
 
-    /** GET /api/challenge — lista todos os desafios */
-    async getAll(req: Request, res: Response) {
-        try {
-            const desafios = await desafioUseCase.getAll();
-            const data: Mystery[] = desafios.map(d => toMystery(d));
-            res.status(200).json({ data });
-        } catch (error: unknown) {
-            console.error(`[challenge.controller] getAll:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-            res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-        }
-    }
+    getById = asyncHandler(async (req: Request, res: Response) => {
+        const id = Number(req.params.id);
 
-    /** GET /api/challenge/:id — retorna MysteryDetail completo com dados do banco */
-    async getById(req: Request, res: Response) {
-        try {
-            const id = Number(req.params.id);
+        const desafio = await desafioUseCase.getById(id);
 
-            const desafio = await desafioUseCase.getById(id);
+        const capitulos = await capituloUseCase.getByDesafioId(desafio.id);
+        if (capitulos.length === 0) throw new NotFoundError("Nenhum capítulo encontrado para este desafio.");
+        const capitulo = capitulos[0];
 
-            // Pega capitulos do desafio e usa o primeiro
-            const capitulos = await capituloUseCase.getByDesafioId(desafio.id);
-            if (capitulos.length === 0) {
-                res.status(404).json({ message: "Nenhum capítulo encontrado para este desafio." });
-                return;
-            }
-            const capitulo = capitulos[0];
+        const [objetivos, dicas, consultaList, visaoList] = await Promise.all([
+            objetivoUseCase.getByCapituloId(capitulo.id),
+            dicaUseCase.getByCapituloId(capitulo.id),
+            consultaUseCase.getByCapituloId(capitulo.id),
+            visaoUseCase.getByCapituloId(capitulo.id),
+        ]);
 
-            // Busca todos os dados do capítulo em paralelo
-            const [objetivos, dicas, consultaList, visaoList] = await Promise.all([
-                objetivoUseCase.getByCapituloId(capitulo.id),
-                dicaUseCase.getByCapituloId(capitulo.id),
-                consultaUseCase.getByCapituloId(capitulo.id),
-                visaoUseCase.getByCapituloId(capitulo.id),
-            ]);
+        if (consultaList.length === 0) throw new NotFoundError("Consulta solução não encontrada para este capítulo.");
+        const consulta = consultaList[0];
 
-            if (consultaList.length === 0) {
-                res.status(404).json({ message: "Consulta solução não encontrada para este capítulo." });
-                return;
-            }
-            const consulta = consultaList[0];
+        const visoes = await Promise.all(
+            visaoList.map(async (v) => ({
+                ...v,
+                dados: await visaoUseCase.executeViewById(v.id),
+            }))
+        );
 
-            // Executa cada visão para obter os dados das tabelas do mini banco
-            const visoes = await Promise.all(
-                visaoList.map(async (v) => ({
-                    ...v,
-                    dados: await visaoUseCase.executeViewById(v.id),
+        const tables = visoes.map(v => {
+            const viewName = v.comando.split(".").pop() ?? v.comando;
+            const columns = v.dados.length > 0
+                ? Object.keys(v.dados[0]).map(key => ({
+                    name: key,
+                    type: "text",
+                    nullable: true,
+                    primaryKey: false,
+                    description: "",
                 }))
-            );
-
-            // Monta database.tables a partir das visões
-            const tables = visoes.map(v => {
-                const viewName = v.comando.split(".").pop() ?? v.comando;
-                const columns = v.dados.length > 0
-                    ? Object.keys(v.dados[0]).map(key => ({
-                        name: key,
-                        type: "text",
-                        nullable: true,
-                        primaryKey: false,
-                        description: "",
-                    }))
-                    : [];
-                return {
-                    name: viewName,
-                    description: v.comando,
-                    columns,
-                    sampleData: v.dados,
-                };
-            });
-
-            const expectedOutput = {
-                columns: Array.isArray(consulta.colunas) ? consulta.colunas : [],
-                rows: Array.isArray(consulta.resultado) ? consulta.resultado : [],
+                : [];
+            return {
+                name: viewName,
+                description: v.comando,
+                columns,
+                sampleData: v.dados,
             };
+        });
 
-            const mystery: MysteryDetail = {
-                ...toMystery(desafio, capitulo.xpRecompensa),
-                storyIntro: capitulo.introHistoria,
-                storyContext: capitulo.contextoHistoria,
-                objectives: objetivos.map(o => o.descricao),
-                hints: dicas.map(d => ({
-                    id: String(d.id),
-                    order: d.ordem,
-                    content: d.conteudo,
-                    xpPenalty: d.penalidadeXp,
-                })),
-                database: {
-                    tables,
-                    relationships: [],
-                },
-                expectedOutput,
-                testCases: [{
-                    id: String(consulta.id),
-                    description: "Resultado esperado para a consulta SQL",
-                    expectedResult: expectedOutput,
-                    weight: 100,
-                }],
-            };
+        const expectedOutput = {
+            columns: Array.isArray(consulta.colunas) ? consulta.colunas : [],
+            rows: Array.isArray(consulta.resultado) ? consulta.resultado : [],
+        };
 
-            res.status(200).json({ data: mystery });
-        } catch (error: unknown) {
-            console.error(`[challenge.controller] getById:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-            res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-        }
-    }
+        const mystery: MysteryDetail = {
+            ...toMystery(desafio, capitulo.xpRecompensa),
+            storyIntro: capitulo.introHistoria,
+            storyContext: capitulo.contextoHistoria,
+            objectives: objetivos.map(o => o.descricao),
+            hints: dicas.map(d => ({
+                id: String(d.id),
+                order: d.ordem,
+                content: d.conteudo,
+                xpPenalty: d.penalidadeXp,
+            })),
+            database: {
+                tables,
+                relationships: [],
+            },
+            expectedOutput,
+            testCases: [{
+                id: String(consulta.id),
+                description: "Resultado esperado para a consulta SQL",
+                expectedResult: expectedOutput,
+                weight: 100,
+            }],
+        };
+
+        res.status(200).json({ data: mystery });
+    });
 }
 
 export default new ChallengeController();

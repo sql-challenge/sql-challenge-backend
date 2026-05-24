@@ -1,52 +1,32 @@
 import { Request, Response } from "express";
 import { ChapterSessionUseCase } from "../../core/useCases/chapter-session.useCase";
 import { ChapterSessionFirebaseRepository } from "../repository/firebase/chapter-session.firebase.repository";
-import { emptySession, SaveSessionDto } from "../../core/domain/chapter-session.entity";
+import { emptySession } from "../../core/domain/chapter-session.entity";
+import { asyncHandler } from "../middleware/asyncHandler";
+import { ValidationError } from "../errors/api-errors";
+import { saveSessionSchema } from "../validation/schemas";
 
 const sessionUseCase = new ChapterSessionUseCase(new ChapterSessionFirebaseRepository());
 
 // GET /api/sessions/:uid/:desafioId/:capituloId
-export const getSession = async (req: Request, res: Response) => {
-  try {
-    const { uid, desafioId, capituloId } = req.params;
-    const capId = Number(capituloId);
+export const getSession = asyncHandler(async (req: Request, res: Response) => {
+  const { uid, desafioId, capituloId } = req.params;
+  const capId = Number(capituloId);
 
-    if (isNaN(capId)) {
-      res.status(400).json({ error: "capituloId deve ser um número." });
-      return;
-    }
+  if (isNaN(capId)) throw new ValidationError("capituloId deve ser um número.");
 
-    const session = await sessionUseCase.getSession(uid, desafioId, capId);
-    res.status(200).json({ data: session ?? emptySession(uid, desafioId, capId) });
-  } catch (err: unknown) {
-    console.error(`[chapter-session.controller] getSession:`, (err as Error).name, (err as Error).message, (err as Error).stack);
-    res.status(500).json({ error: `[API] ${err instanceof Error ? err.message : "Unknown error"}` });
-  }
-};
+  const session = await sessionUseCase.getSession(uid, desafioId, capId);
+  res.status(200).json({ data: session ?? emptySession(uid, desafioId, capId) });
+});
 
 // PATCH /api/sessions/:uid/:desafioId/:capituloId
-export const saveSession = async (req: Request, res: Response) => {
-  try {
-    const { uid, desafioId, capituloId } = req.params;
-    const capId = Number(capituloId);
+export const saveSession = asyncHandler(async (req: Request, res: Response) => {
+  const { uid, desafioId, capituloId } = req.params;
+  const capId = Number(capituloId);
 
-    if (isNaN(capId)) {
-      res.status(400).json({ error: "capituloId deve ser um número." });
-      return;
-    }
+  if (isNaN(capId)) throw new ValidationError("capituloId deve ser um número.");
 
-    const dto: SaveSessionDto = {
-      elapsedSeconds: Number(req.body.elapsedSeconds) || 0,
-      currentObjetivoIndex: Number(req.body.currentObjetivoIndex) ?? 0,
-      completedObjetivos: Array.isArray(req.body.completedObjetivos) ? req.body.completedObjetivos : [],
-      hintsRevealed: Array.isArray(req.body.hintsRevealed) ? req.body.hintsRevealed : [],
-      isClosing: Boolean(req.body.isClosing),
-    };
-
-    const updated = await sessionUseCase.saveSession(uid, desafioId, capId, dto);
-    res.status(200).json({ data: updated });
-  } catch (err: unknown) {
-    console.error(`[chapter-session.controller] saveSession:`, (err as Error).name, (err as Error).message, (err as Error).stack);
-    res.status(500).json({ error: `[API] ${err instanceof Error ? err.message : "Unknown error"}` });
-  }
-};
+  const body = saveSessionSchema.parse(req.body);
+  const updated = await sessionUseCase.saveSession(uid, desafioId, capId, body);
+  res.status(200).json({ data: updated });
+});

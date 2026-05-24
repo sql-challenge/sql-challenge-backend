@@ -4,8 +4,8 @@ import { requireAuth } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", requireAuth, (req, res) => { challengeController.getAll(req, res); });
-router.get("/:id", requireAuth, (req, res) => { challengeController.getById(req, res); });
-router.get("/get-by-id/:id", requireAuth, (req, res) => { challengeController.getById(req, res); });
+router.get("/", requireAuth, challengeController.getAll);
+router.get("/:id", requireAuth, challengeController.getById);
+router.get("/get-by-id/:id", requireAuth, challengeController.getById);
 
 export default router;

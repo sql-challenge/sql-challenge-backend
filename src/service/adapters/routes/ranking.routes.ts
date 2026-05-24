@@ -4,18 +4,18 @@ import { requireAuth } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", requireAuth, (req, res) => { controller.getAll(req, res); });
-router.get("/username/:username", requireAuth, (req, res) => { controller.getRankingByUsername(req, res); });
-router.get("/nick/:nick", requireAuth, (req, res) => { controller.getRankingByNick(req, res); });
-router.get("/position/:position", requireAuth, (req, res) => { controller.getRankingByPosition(req, res); });
+router.get("/", requireAuth, controller.getAll);
+router.get("/username/:username", requireAuth, controller.getRankingByUsername);
+router.get("/nick/:nick", requireAuth, controller.getRankingByNick);
+router.get("/position/:position", requireAuth, controller.getRankingByPosition);
 
-router.post("/", requireAuth, (req, res) => { controller.addRanking(req, res); });
+router.post("/", requireAuth, controller.addRanking);
 
-router.put("/updatePosition/username/:username/:newPosition", requireAuth, (req, res) => { controller.updatePositionByUsername(req, res); });
-router.put("/updatePosition/nick/:nick/:newPosition", requireAuth, (req, res) => { controller.updatePositionByNick(req, res); });
-router.put("/updateImage/username/:username", requireAuth, (req, res) => { controller.updateImageByUsername(req, res); });
-router.put("/updateImage/nick/:nick", requireAuth, (req, res) => { controller.updateImageByNick(req, res); });
+router.put("/updatePosition/username/:username/:newPosition", requireAuth, controller.updatePositionByUsername);
+router.put("/updatePosition/nick/:nick/:newPosition", requireAuth, controller.updatePositionByNick);
+router.put("/updateImage/username/:username", requireAuth, controller.updateImageByUsername);
+router.put("/updateImage/nick/:nick", requireAuth, controller.updateImageByNick);
 
-router.delete("/:username", requireAuth, (req, res) => { controller.deleteRanking(req, res); });
+router.delete("/:username", requireAuth, controller.deleteRanking);
 
 export default router;

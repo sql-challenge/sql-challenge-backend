@@ -1,122 +1,81 @@
 import { Request, Response } from "express";
 import { RankingUseCase } from "../../core/useCases/ranking.useCase";
 import { RankingFirebaseRepository } from "../repository/firebase/ranking.firebase.repository";
+import { asyncHandler } from "../middleware/asyncHandler";
+import { ValidationError } from "../errors/api-errors";
+import { addRankingSchema, updateRankingImageSchema } from "../validation/schemas";
 
 const rankingUseCase = new RankingUseCase(new RankingFirebaseRepository());
 
 // GET
-export const getAll = async (req: Request, res: Response) => {
-	try {
-		const data = await rankingUseCase.getAll();
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] getAll:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const getAll = asyncHandler(async (_req: Request, res: Response) => {
+	const data = await rankingUseCase.getAll();
+	res.status(200).json({ data });
+});
 
-export const getRankingByUsername = async (req: Request, res: Response) => {
-	try {
-		const username = req.params.username;
-		const data = await rankingUseCase.getRankingByUsername(username);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] getRankingByUsername:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const getRankingByUsername = asyncHandler(async (req: Request, res: Response) => {
+	const username = req.params.username;
+	const data = await rankingUseCase.getRankingByUsername(username);
+	res.status(200).json({ data });
+});
 
-export const getRankingByNick = async (req: Request, res: Response) => {
-	try {
-		const nick = req.params.nick;
-		const data = await rankingUseCase.getRankingByNick(nick);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] getRankingByNick:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const getRankingByNick = asyncHandler(async (req: Request, res: Response) => {
+	const nick = req.params.nick;
+	const data = await rankingUseCase.getRankingByNick(nick);
+	res.status(200).json({ data });
+});
 
-export const getRankingByPosition = async (req: Request, res: Response) => {
-	try {
-		const position = Number(req.params.position);
-		const data = await rankingUseCase.getRankingByPosition(position);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] getRankingByPosition:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const getRankingByPosition = asyncHandler(async (req: Request, res: Response) => {
+	const position = Number(req.params.position);
+	if (isNaN(position) || position < 1) throw new ValidationError("position deve ser um número positivo.");
+	const data = await rankingUseCase.getRankingByPosition(position);
+	res.status(200).json({ data });
+});
 
 // POST
-export const addRanking = async (req: Request, res: Response) => {
-	try {
-		const ranking = req.body;
-		const data = await rankingUseCase.addRanking(ranking);
-		res.status(201).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] addRanking:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const addRanking = asyncHandler(async (req: Request, res: Response) => {
+	const body = addRankingSchema.parse(req.body);
+	const data = await rankingUseCase.addRanking({
+		...body,
+		imagePerfil: body.imagePerfil ?? "",
+	});
+	res.status(201).json({ data });
+});
 
 // PUT
-export const updatePositionByUsername = async (req: Request, res: Response) => {
-	try {
-		const username = req.params.username;
-		const newPosition = Number(req.params.newPosition);
-		const data = await rankingUseCase.updatePositionByUsername(username, newPosition);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] updatePositionByUsername:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const updatePositionByUsername = asyncHandler(async (req: Request, res: Response) => {
+	const username = req.params.username;
+	const newPosition = Number(req.params.newPosition);
+	if (isNaN(newPosition) || newPosition < 0) throw new ValidationError("newPosition inválido.");
+	const data = await rankingUseCase.updatePositionByUsername(username, newPosition);
+	res.status(200).json({ data });
+});
 
-export const updatePositionByNick = async (req: Request, res: Response) => {
-	try {
-		const nick = req.params.nick;
-		const newPosition = Number(req.params.newPosition);
-		const data = await rankingUseCase.updatePositionByNick(nick, newPosition);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] updatePositionByNick:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const updatePositionByNick = asyncHandler(async (req: Request, res: Response) => {
+	const nick = req.params.nick;
+	const newPosition = Number(req.params.newPosition);
+	if (isNaN(newPosition) || newPosition < 0) throw new ValidationError("newPosition inválido.");
+	const data = await rankingUseCase.updatePositionByNick(nick, newPosition);
+	res.status(200).json({ data });
+});
 
-export const updateImageByUsername = async (req: Request, res: Response) => {
-	try {
-		const username = req.params.username;
-		const newImage = req.body.newImage;
-		const data = await rankingUseCase.updateImageByUsername(username, newImage);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] updateImageByUsername:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const updateImageByUsername = asyncHandler(async (req: Request, res: Response) => {
+	const username = req.params.username;
+	const { newImage } = updateRankingImageSchema.parse(req.body);
+	const data = await rankingUseCase.updateImageByUsername(username, newImage);
+	res.status(200).json({ data });
+});
 
-export const updateImageByNick = async (req: Request, res: Response) => {
-	try {
-		const nick = req.params.nick;
-		const newImage = req.body.newImage;
-		const data = await rankingUseCase.updateImageByNick(nick, newImage);
-		res.status(200).json({ data });
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] updateImageByNick:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const updateImageByNick = asyncHandler(async (req: Request, res: Response) => {
+	const nick = req.params.nick;
+	const { newImage } = updateRankingImageSchema.parse(req.body);
+	const data = await rankingUseCase.updateImageByNick(nick, newImage);
+	res.status(200).json({ data });
+});
 
 // DELETE
-export const deleteRanking = async (req: Request, res: Response) => {
-	try {
-		const username = req.params.username;
-		await rankingUseCase.deleteRanking(username);
-		res.status(204).send();
-	} catch (error: unknown) {
-		console.error(`[ranking.controller] deleteRanking:`, (error as Error).name, (error as Error).message, (error as Error).stack);
-		res.status(500).json({ error: `[API] ${error instanceof Error ? error.message : "Unknown error"}` });
-	}
-};
+export const deleteRanking = asyncHandler(async (req: Request, res: Response) => {
+	const username = req.params.username;
+	await rankingUseCase.deleteRanking(username);
+	res.status(204).send();
+});
