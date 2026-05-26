@@ -33,6 +33,7 @@ bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_
 npm run dev
 ```
 
+> ⚠️ Atenção: O servidor roda na porta `3002` (não `3000`). A porta `3000` é usada pelo frontend.
 > ⚠️ Se o repositório `sql-challenge-modelagem_de_dados` não estiver clonado, veja [Setup manual do banco](#setup-manual-do-banco-sem-db-init) para criar o schema `magical_world` manualmente.
 
 ---
@@ -129,20 +130,24 @@ measurementId=G-XXXXXXXX
 
 #### Admin SDK (backend — service account)
 
+O backend lê as credenciais Admin diretamente das variáveis de ambiente no `.env`:
+
 ```env
-FIREBASE_ADMIN_PROJECT_ID=seu-projeto
-FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH=./firebase-admin.json
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@seu-projeto.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMII...\n-----END PRIVATE KEY-----\n"
 ```
+
+> A `FIREBASE_PRIVATE_KEY` deve conter `\n` literais (escape sequences) dentro das aspas duplas. O backend faz `privateKey.replace(/\\n/g, "\n")` automaticamente.
 
 1. No Firebase Console, vá em **Configurações do projeto > Contas de serviço > SDK Admin**
 2. Clique em **Gerar nova chave privada**
-3. Salve o arquivo baixado como `firebase-admin.json` na raiz do backend
-4. O servidor reconhecerá automaticamente o arquivo e exibirá no log:
+3. Copie o `client_email` e a `private_key` do JSON baixado para o `.env`
+4. O servidor exibirá no log:
    ```
-   [Firebase Admin] Inicializado com service account: /caminho/para/firebase-admin.json
+   [Firebase Admin] Inicializado com credenciais do .env
    ```
 
-> Sem o arquivo, o servidor inicializa em modo **token-only** (funciona apenas com `idToken` do cliente via REST fallback). Alguns endpoints (como ranking e sessões) podem retornar dados vazios.
+> Sem as credenciais, o Admin SDK inicializa sem service account e endpoints como ranking (que usam `orderBy`/`get()` no Firestore) podem falhar ou retornar dados vazios. Considere também que o backend não implementa fallback REST — usa Admin SDK diretamente.
 
 ### 4. Rodar o servidor
 
@@ -150,7 +155,7 @@ FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH=./firebase-admin.json
 npm run dev
 ```
 
-Acesse `http://localhost:3000/api/health`.
+Acesse `http://localhost:3002/api/health`.
 
 ---
 
@@ -164,7 +169,7 @@ NODE_ENV=development
 DATABASE_URL=postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao?sslmode=disable
 
 # ─── API ──────────────────────────────────────
-PORT=3000
+PORT=3002
 
 # ─── Firebase Client (obrigatório) ────────────
 apiKey=your-api-key
@@ -176,8 +181,10 @@ appId=your-app-id
 measurementId=G-XXXXXXXXXX
 
 # ─── Firebase Admin (opcional, mas recomendado) ─
-FIREBASE_ADMIN_PROJECT_ID=your-project-id
-FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON_PATH=./firebase-admin.json
+# O backend lê FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY diretamente do .env
+# (não usa arquivo JSON separado). A private key deve ter \n literais na string.
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@seu-projeto.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMII...\n-----END PRIVATE KEY-----\n"
 
 # ─── CORS / Frontend ─────────────────────────
 FRONTEND_URL=http://localhost:3000
@@ -198,13 +205,13 @@ SITE_URL=http://localhost:3000
 |--------|-------|-----------|
 | `GET` | `/api/health` | Health check |
 | `GET` | `/api/user` | Lista usuários |
-| `POST` | `/api/user` | Cadastrar usuário |
+| ~~`POST`~~ | ~~`/api/user`~~ | ~~Cadastrar usuário~~ (desabilitado — usar `/api/user/auth/oauth`) |
 | `POST` | `/api/user/auth/oauth` | Login OAuth (Google/GitHub) |
 | `GET` | `/api/user/token/valid` | Valida token JWT |
 | `GET` | `/api/user/top` | Ranking por XP |
 | `GET` | `/api/user/:uid` | Perfil do usuário |
-| `GET` | `/api/user/:uid/friends` | Amigos do usuário |
-| `PUT` | `/api/user/:uid` | Atualizar perfil |
+| `GET` | `/api/user/token/valid` | Valida token JWT e retorna dados do usuário |
+| `PUT` | `/api/user/` | Atualizar perfil |
 | `GET` | `/api/desafios/` | Lista desafios |
 | `GET` | `/api/desafios/:id` | Detalhe do desafio |
 | `GET` | `/api/capitulo/` | Lista capítulos |
@@ -235,19 +242,13 @@ src/
         └── auth/        # Adaptador Firebase Auth
 ```
 
-### Firebase — dois modos de operação
+### Firebase — modo de operação único
 
-O backend usa o Firebase de duas formas, controlado pela flag `hasServiceAccount`:
+O backend usa o **Admin SDK** do Firebase (`firebase-admin`) diretamente, sem fallback REST. As credenciais são lidas do `.env` (`FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY`).
 
-| Modo | Quando ativa | Como acessa Firestore |
-|------|-------------|----------------------|
-| **Admin SDK** | `firebase-admin.json` existe | `admin.firestore()` — acesso total, sem restrições |
-| **Token-only** | `firebase-admin.json` não existe | REST API com `idToken` do cliente — sujeito a Security Rules |
+Se as credenciais não estiverem configuradas, o Admin SDK inicializa sem service account — queries como `orderBy("xp", "desc")` no Firestore podem retornar erro de permissão.
 
-Endpoints que fazem operações no Firestore:
-- **Usuários** (`User` collection) — usa Admin SDK quando disponível, com fallback REST
-- **Sessões** (`User/{uid}/chapter_sessions`) — atualmente usando client SDK (será migrado)
-- **Ranking** (`Ranking` collection) — atualmente usando client SDK (será migrado)
+> ⚠️ Diferente de versões anteriores do código, não existe mais `compatFirestore`/`withFallback`/REST fallback. Todo acesso ao Firestore passa pelo Admin SDK.
 
 ### Banco de dados — dois schemas
 
@@ -360,8 +361,8 @@ Veja [`tests/TESTES.md`](./tests/TESTES.md) para detalhes.
 | `FB_API_KEY` | Firebase API Key |
 | `FB_AUTH_DOMAIN` | Firebase Auth Domain |
 | `FB_PROJECT_ID` | Firebase Project ID |
-| `FIREBASE_ADMIN_PROJECT_ID` | Firebase Admin Project ID |
-| `FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON` | Conteúdo do JSON da service account (base64) |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin Client Email |
+| `FIREBASE_PRIVATE_KEY` | Firebase Admin Private Key (com `\n` literais) |
 
 ### Comandos úteis na VPS
 

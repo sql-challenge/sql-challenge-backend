@@ -267,9 +267,9 @@ Testa a criação correta de cada classe de domínio.
 | `getUserByUID(uid)` | Retorna usuário com UID correspondente |
 | `getUsersByName(name)` | Retorna array filtrado por nome |
 | `getUserByEmail(email)` | Retorna usuário pelo email |
-| `addUser(user)` | Cadastro retorna `IUserView` com `uid` gerado |
-| `loginWithEmail(email, psw)` | Autenticação válida; propaga erro em credenciais inválidas |
-| `updateUser(partial)` | Retorna `true` em atualização bem-sucedida |
+| ~~`addUser(user)`~~ | ~~Cadastro retorna `IUserView` com `uid` gerado~~ (não implementado — usar `loginWithOAuth`) |
+| ~~`loginWithEmail(email, psw)`~~ | ~~Autenticação válida; propaga erro em credenciais inválidas~~ (não implementado — usar `loginWithOAuth`) |
+| `updateUser(partial)` | Retorna `IUserView` completo em atualização bem-sucedida |
 | `deleteUser(uid)` | Executa sem lançar erro |
 | `logout(uid)` | Executa sem lançar erro |
 | `resetPassword(uid, psw)` | Chamado com parâmetros corretos |
