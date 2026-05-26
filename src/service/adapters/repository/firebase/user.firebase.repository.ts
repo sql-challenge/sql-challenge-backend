@@ -43,7 +43,7 @@ export class UserFirebaseRepository implements IUserPort {
 
 	async getUserByUID(uid: string): Promise<IUserView> {
 		const snap = await this.userCollection.doc(uid).get();
-		if (!snap.exists) throw new Error("User not found!");
+		if (!snap.exists) return null as unknown as IUserView;
 		return this.mapDoc(snap.id, snap.data()!);
 	}
 
