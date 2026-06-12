@@ -6,17 +6,23 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
-async function checkDatabaseConnection() {
-  try {
-    await pool.query("SELECT 1");
-    console.log("✅ PostgreSQL conectado com sucesso");
-  } catch (err) {
-    console.error("❌ PostgreSQL não disponível — verifique se o container está rodando e a DATABASE_URL no .env");
-    console.error(`   erro: ${(err as Error).message}`, (err as Error).stack);
+async function waitForDatabase(maxRetries = 3, delay = 2000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await pool.query("SELECT 1");
+      console.log("✅ PostgreSQL conectado com sucesso");
+      return;
+    } catch (err) {
+      console.log(`⏳ Aguardando PostgreSQL (tentativa ${i + 1}/${maxRetries})...`);
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
+  throw new Error("PostgreSQL não ficou pronto após todas as tentativas");
 }
 
-checkDatabaseConnection().then(() => {
+waitForDatabase().then(() => {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
   });

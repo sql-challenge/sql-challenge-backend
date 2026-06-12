@@ -42,6 +42,11 @@ routes.use(cors({
 	maxAge: 3600,
 }));
 
+// Health check (before rate limiting so monitoring is never blocked)
+routes.get("/api/health", (_req, res) => {
+	res.json({ status: "ok" });
+});
+
 // Rate limiting
 const generalLimiter = rateLimit({
 	windowMs: 60 * 1000,
