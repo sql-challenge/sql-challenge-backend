@@ -300,6 +300,46 @@ docker compose down -v
 
 ---
 
+## Kubernetes (K3s)
+
+O backend pode ser implantado em cluster K3s. Manifestos disponíveis em `k8s/` (monorepo):
+
+```bash
+# 1. Build da imagem
+docker build -t sql-challenge-backend:latest --target runner .
+docker save sql-challenge-backend:latest > backend.tar
+scp backend.tar ubuntu@<node>:~/
+ssh ubuntu@<node> 'sudo k3s ctr images import backend.tar'
+
+# 2. Editar secrets com credenciais reais (FIREBASE_PRIVATE_KEY, EMAIL_PASS)
+#    k8s/01-secrets.yaml → aplicar com kubectl apply -f k8s/
+
+# 3. Aplicar manifestos
+kubectl apply -f k8s/
+
+# 4. Inicializar banco (do k3s-cp)
+kubectl cp tests/fixtures/schema.sql sql-challenge/postgres-0:/tmp/
+kubectl cp tests/fixtures/data.sql sql-challenge/postgres-0:/tmp/
+kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/ddl_game.sql" sql-challenge/postgres-0:/tmp/
+kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/dml_game.sql" sql-challenge/postgres-0:/tmp/
+kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/vw_ddl_game.sql" sql-challenge/postgres-0:/tmp/
+kubectl exec -n sql-challenge postgres-0 -- sh -c " \
+  psql -U challenge_user -d db_gestao -f /tmp/schema.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/ddl_game.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/dml_game.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/vw_ddl_game.sql"
+```
+
+**Recursos**:
+- PostgreSQL 16 StatefulSet (5Gi PVC, `pg_isready` probes)
+- Backend Deployment + Service (porta 3000, HTTP probes em `/api/health`)
+- Init container `wait-for-postgres` — aguarda `pg_isready` antes do app iniciar
+- `waitForDatabase()` na aplicação — retry loop com 3 tentativas e crash se falhar
+- Traefik Ingress + cert-manager TLS (`sql-challenge-back.atcfalcons.org`)
+- NodeSelector `k3s-worker` para cargas de trabalho
+
+---
+
 ## Testes
 
 ```bash
