@@ -11,7 +11,7 @@ if (!connectionString) {
 
 export const pool = new Pool({
   connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   options: '-c search_path=public,magical_world',
 })
 

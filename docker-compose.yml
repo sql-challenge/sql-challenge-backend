@@ -32,8 +32,6 @@ services:
     ports:
       - "3002:3000"
     env_file: .env.production
-    environment:
-      NODE_ENV: development
     depends_on:
       db:
         condition: service_healthy
