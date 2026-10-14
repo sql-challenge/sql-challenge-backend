@@ -1,0 +1,27 @@
+# ─── Desenvolvimento local ───────────────────────────────────
+# Banco de dev dedicado: única base da máquina local (porta padrão 5432).
+# Semeie/recrie com: bash scripts/db-dev.sh up | reseed
+#
+# ⚠️  Este arquivo é SÓ para desenvolvimento. No servidor use
+#     docker-compose.yml (produção) / docker-compose.staging.yml.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sql-challenge-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-challenge_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-challenge_pass}
+      POSTGRES_DB:       ${POSTGRES_DB:-db_gestao_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-challenge_user} -d ${POSTGRES_DB:-db_gestao_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata_dev:
