@@ -1,10 +1,19 @@
 import app from "./app";
 import dotenv from "dotenv";
 import { pool } from "../service/db/postgresql/postgresqlConfig";
+import { assertFirebaseDevSafety } from "../service/db/firebase/firebaseAdminConfig";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
+
+// Guard: dev não pode rodar contra o Firebase de produção sem emuladores
+try {
+  assertFirebaseDevSafety();
+} catch (err) {
+  console.error((err as Error).message);
+  process.exit(1);
+}
 
 async function waitForDatabase(maxRetries = 3, delay = 2000) {
   for (let i = 0; i < maxRetries; i++) {
