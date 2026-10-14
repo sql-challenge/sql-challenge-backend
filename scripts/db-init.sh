@@ -3,31 +3,37 @@
 #  db-init.sh — Inicialização completa dos bancos de dados
 # =============================================================================
 #
-#  Gerencia os dois bancos do SQL Challenge:
-#    • db_gestao          → produção  (porta 5432, container sql-challenge-db)
-#    • db_gestao_staging  → staging   (porta 5433, container sql-challenge-db-staging)
+#  Ambientes:
+#    • dev         → db_gestao_dev      (porta 5432, container sql-challenge-db-dev)
+#    • production  → db_gestao          (porta 5432, container sql-challenge-db)         [servidor]
+#    • staging     → db_gestao_staging  (porta 5433, container sql-challenge-db-staging) [servidor]
 #
 #  Uso:
 #    bash scripts/db-init.sh [OPÇÕES]
 #
 #  Opções:
-#    --env production   Inicializa apenas o banco de produção
-#    --env staging      Inicializa apenas o banco de staging/teste
-#    --env all          Inicializa ambos (padrão)
+#    --env dev          Desenvolvimento local (padrão) — delega para scripts/db-dev.sh
+#    --env production   Inicializa apenas o banco de produção  [servidor]
+#    --env staging      Inicializa apenas o banco de staging/teste  [servidor]
+#    --env all          Inicializa produção + staging  [servidor]
 #    --reset            Destrói o volume e recria do zero  ⚠️  DESTRUTIVO
 #    --modelagem DIR    Caminho para o repo sql-challenge-modelagem_de_dados
 #                       (padrão: ../sql-challenge-modelagem_de_dados)
 #
 #  Exemplos:
-#    bash scripts/db-init.sh                          # inicializa ambos
-#    bash scripts/db-init.sh --env production         # só produção
-#    bash scripts/db-init.sh --env staging --reset    # reset do staging
-#    bash scripts/db-init.sh --modelagem /home/admin/sql-challenge-modelagem_de_dados
+#    bash scripts/db-init.sh                          # dev local (db-dev.sh up)
+#    bash scripts/db-init.sh --env production         # produção (não destrutivo)
+#    bash scripts/db-init.sh --env production --reset # recria produção do zero ⚠️
+#    bash scripts/db-init.sh --env staging            # staging (não destrutivo)
 #
 #  Pré-requisitos:
 #    • Docker e Docker Compose instalados
-#    • Arquivo .env.production e/ou .env.staging preenchidos
-#    • Repositório sql-challenge-modelagem_de_dados clonado (para produção)
+#    • dev: repositório modelagem clonado ao lado
+#    • servidor: .env.production e/ou .env.staging preenchidos + modelagem clonado
+#
+#  A semeadura usa o pipeline numerado do modelagem (sql/01..06) e é
+#  não destrutiva (CREATE IF NOT EXISTS) — nada é apagado sem --reset.
+#  Para o dia a dia de desenvolvimento, prefira scripts/db-dev.sh.
 # =============================================================================
 
 set -euo pipefail
@@ -44,7 +50,7 @@ step()  { echo -e "  ${BOLD}▶ $*${RESET}"; }
 sql_ok(){ echo -e "  ${GREEN}  SQL ✓${RESET} $*"; }
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
-MODE="all"
+MODE="dev"
 RESET_FLAG=false
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -63,8 +69,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$MODE" =~ ^(production|staging|all)$ ]] || \
-  err "Valor inválido para --env: $MODE (use production, staging ou all)"
+[[ "$MODE" =~ ^(dev|production|staging|all)$ ]] || \
+  err "Valor inválido para --env: $MODE (use dev, production, staging ou all)"
+
+# ─── Dev: delega para o utilitário de desenvolvimento ────────────────────────
+if [ "$MODE" = "dev" ]; then
+  dev_cmd="up"
+  [ "$RESET_FLAG" = true ] && dev_cmd="reseed"
+  MODELAGEM_DIR="$MODELAGEM_DIR" exec bash "$SCRIPT_DIR/db-dev.sh" "$dev_cmd"
+fi
 
 # ─── Validações iniciais ─────────────────────────────────────────────────────
 cd "$BACKEND_DIR"
@@ -84,11 +97,12 @@ check_modelagem() {
    Ou passe: --modelagem /caminho/para/o/repo"
 
   local required=(
-    "Games/magical world/ddl_game.sql"
-    "Games/magical world/dml_game.sql"
-    "Games/magical world/vw_ddl_game.sql"
-    "PostgreSQL/Script/cadastro_games/dml_magical_world.sql"
-    "PostgreSQL/Script/gestão/dcl_security.sql"
+    "sql/01_gestao_ddl.sql"
+    "sql/02_magical_world_ddl.sql"
+    "sql/03_magical_world_dml.sql"
+    "sql/04_game_views.sql"
+    "sql/05_challenge_content.sql"
+    "sql/06_security_dcl.sql"
   )
   for f in "${required[@]}"; do
     [ -f "$MODELAGEM_DIR/$f" ] || err "Arquivo não encontrado: $MODELAGEM_DIR/$f"
@@ -174,7 +188,7 @@ do_reset() {
   echo -e "\n${RED}${BOLD}⚠️  ATENÇÃO — OPERAÇÃO DESTRUTIVA ⚠️${RESET}"
   echo -e "${RED}Isso vai APAGAR TODOS OS DADOS do banco de $label.${RESET}"
   read -r -p "Digite 'APAGAR' para confirmar: " confirm
-  [ "$confirm" = "APAGAR" ] || { echo "Operação cancelada."; return 1; }
+  [ "$confirm" = "APAGAR" ] || { echo "Operação cancelada — nada foi alterado."; exit 0; }
 
   step "Parando containers e removendo volumes de $label"
   docker compose -f "$compose_file" --env-file "$env_file" down -v 2>/dev/null || true
@@ -217,53 +231,41 @@ init_production() {
   #  ORDEM CORRETA DE SCRIPTS
   # ────────────────────────────────────────────────────────────────────────
 
-  # 1. Schema de gestão: tabelas, triggers e schema magical_world (vazio)
+  # 1. Schema de gestão: tabelas e triggers de auditoria (aditivo, sem DROP)
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$BACKEND_DIR/tests/fixtures/schema.sql" \
-    "[1/7] Schema de gestão (Desafio, Capitulo, Objetivo, Dica, Visao, Consulta, Log + triggers)"
+    "$MODELAGEM_DIR/sql/01_gestao_ddl.sql" \
+    "[1/6] Schema de gestão (Desafio, Capitulo, Objetivo, Dica, Visao, Consulta, Log + triggers)"
 
-  # 2. DDL do mundo mágico: cria todas as tabelas do jogo
+  # 2. DDL do mundo mágico: schema magical_world + tabelas do jogo
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$MODELAGEM_DIR/Games/magical world/ddl_game.sql" \
-    "[2/7] DDL do mundo mágico (Feudo, Pessoa, Artefato, Cidade, Torres, etc.)"
+    "$MODELAGEM_DIR/sql/02_magical_world_ddl.sql" \
+    "[2/6] DDL do mundo mágico (Feudo, Pessoa, Artefato, Cidade, Torres, etc.)"
 
   # 3. DML do mundo mágico: insere dados das entidades do jogo
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$MODELAGEM_DIR/Games/magical world/dml_game.sql" \
+    "$MODELAGEM_DIR/sql/03_magical_world_dml.sql" \
     "[3/6] Dados do mundo mágico (8 feudos, 7 pessoas, artefatos, cidades...)"
 
   # 4. Views do jogo: uma view por objetivo de cada capítulo (5 capítulos)
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$MODELAGEM_DIR/Games/magical world/vw_ddl_game.sql" \
+    "$MODELAGEM_DIR/sql/04_game_views.sql" \
     "[4/6] Views do jogo (regioes_reinos, ataques_raw, posse_artefatos_base, grimorio_final...)"
 
   # 5. Conteúdo de gestão: Desafios, Capítulos, Objetivos, Dicas, Visões, Consultas
   run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games/dml_magical_world.sql" \
+    "$MODELAGEM_DIR/sql/05_challenge_content.sql" \
     "[5/6] Conteúdo do jogo (1 desafio, 5 capítulos, objetivos, dicas, consultas)"
 
-  # 6. Segurança: usuário de aplicação com acesso restrito (para queries dos jogadores)
-  #    Adapta o dcl_security.sql: senha hardcoded → variável de ambiente,
-  #    user_gestao_challenge → users_sql_challenge, db_gestao_challenge → banco atual
+  # 6. Segurança: usuário de aplicação somente-leitura (DCL parametrizado)
   step "[6/6] Configurando usuário de aplicação (users_sql_challenge)"
-  cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \
-    | sed -e "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
-          -e "s/user_gestao_challenge/users_sql_challenge/g" \
-          -e "s/db_gestao_challenge/${db}/g" \
-    | docker compose -f "$compose_file" --env-file "$env_file" \
-        exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1
-  sql_ok "[6/6] Usuário users_sql_challenge criado"
-
-  # Grants adicionais para o schema magical_world
-  run_sql_inline "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-    "GRANT USAGE ON SCHEMA magical_world TO users_sql_challenge;
-     GRANT SELECT ON ALL TABLES IN SCHEMA magical_world TO users_sql_challenge;
-     ALTER DEFAULT PRIVILEGES IN SCHEMA magical_world
-       GRANT SELECT ON TABLES TO users_sql_challenge;
-     GRANT SELECT ON ALL TABLES IN SCHEMA public TO users_sql_challenge;
-     ALTER DEFAULT PRIVILEGES IN SCHEMA public
-       GRANT SELECT ON TABLES TO users_sql_challenge;" \
-    "Grants de SELECT em public e magical_world para users_sql_challenge"
+  docker compose -f "$compose_file" --env-file "$env_file" \
+    exec -T "$service" \
+    psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1 \
+      -v app_user=users_sql_challenge \
+      -v app_password="$POSTGRES_PASSWORD" \
+      -v app_db="$db" \
+    < "$MODELAGEM_DIR/sql/06_security_dcl.sql"
+  sql_ok "[6/6] Usuário users_sql_challenge configurado (grants em public + magical_world)"
 
   # Verificação final
   verify_db "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file"
@@ -339,21 +341,21 @@ init_staging() {
   else
     check_modelagem
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-      "$MODELAGEM_DIR/Games/magical world/ddl_game.sql" \
+      "$MODELAGEM_DIR/sql/02_magical_world_ddl.sql" \
       "[2a/4] DDL mundo mágico"
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-      "$MODELAGEM_DIR/Games/magical world/dml_game.sql" \
-      "[2b/3] Dados mundo mágico"
+      "$MODELAGEM_DIR/sql/03_magical_world_dml.sql" \
+      "[2b/4] Dados mundo mágico"
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-      "$MODELAGEM_DIR/Games/magical world/vw_ddl_game.sql" \
-      "[2c/3] Views do jogo"
+      "$MODELAGEM_DIR/sql/04_game_views.sql" \
+      "[2c/4] Views do jogo"
   fi
 
   # 3. Conteúdo do jogo: Desafios, Capítulos, Objetivos, Dicas, Visões, Consultas
   #    Usa o modelagem como fonte principal; data.sql como fallback (CI sem modelagem)
-  if [ -d "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games" ]; then
+  if [ -f "$MODELAGEM_DIR/sql/05_challenge_content.sql" ]; then
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
-      "$MODELAGEM_DIR/PostgreSQL/Script/cadastro_games/dml_magical_world.sql" \
+      "$MODELAGEM_DIR/sql/05_challenge_content.sql" \
       "[3/4] Conteúdo do jogo (via modelagem)"
   else
     run_sql "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
@@ -363,13 +365,14 @@ init_staging() {
 
   # 4. Usuário de aplicação
   step "[4/4] Configurando usuário de aplicação (users_sql_challenge)"
-  if [ -f "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" ]; then
-    cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \
-      | sed -e "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
-            -e "s/user_gestao_challenge/users_sql_challenge/g" \
-            -e "s/db_gestao_challenge/${db}/g" \
-      | docker compose -f "$compose_file" --env-file "$env_file" \
-          exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1
+  if [ -f "$MODELAGEM_DIR/sql/06_security_dcl.sql" ]; then
+    docker compose -f "$compose_file" --env-file "$env_file" \
+      exec -T "$service" \
+      psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1 \
+        -v app_user=users_sql_challenge \
+        -v app_password="$POSTGRES_PASSWORD" \
+        -v app_db="$db" \
+      < "$MODELAGEM_DIR/sql/06_security_dcl.sql"
   else
     run_sql_inline "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file" \
       "DO \$\$ BEGIN
@@ -445,10 +448,13 @@ fi
 
 echo ""
 echo -e "${BOLD}Comandos úteis:${RESET}"
-echo "  # Conectar ao banco de produção"
+echo "  # Desenvolvimento local (banco de dev)"
+echo "  bash scripts/db-dev.sh up | reseed | psql | status"
+echo ""
+echo "  # Conectar ao banco de produção (servidor)"
 echo "  docker exec -it sql-challenge-db psql -U \$POSTGRES_USER -d db_gestao"
 echo ""
-echo "  # Conectar ao banco de staging"
+echo "  # Conectar ao banco de staging (servidor)"
 echo "  docker exec -it sql-challenge-db-staging psql -U \$POSTGRES_USER -d db_gestao_staging"
 echo ""
 echo "  # Verificar tabelas"
@@ -456,6 +462,7 @@ echo "  docker exec -it sql-challenge-db psql -U \$POSTGRES_USER -d db_gestao -c
 echo "  docker exec -it sql-challenge-db psql -U \$POSTGRES_USER -d db_gestao -c '\\dt magical_world.*'"
 echo ""
 echo "  # Reset completo (⚠️ APAGA TUDO):"
-echo "  bash scripts/db-init.sh --env production --reset"
-echo "  bash scripts/db-init.sh --env staging --reset"
+echo "  bash scripts/db-dev.sh reseed                     # dev local"
+echo "  bash scripts/db-init.sh --env production --reset  # produção (servidor)"
+echo "  bash scripts/db-init.sh --env staging --reset     # staging (servidor)"
 echo ""
