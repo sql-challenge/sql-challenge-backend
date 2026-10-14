@@ -1,11 +1,31 @@
 #!/bin/bash
+# =============================================================================
+#  setup-env.sh — Cria o .env.production no servidor (caminho manual)
+# =============================================================================
+#  Não há segredos neste arquivo. Exporte-os antes de rodar:
+#
+#    export FIREBASE_ADMIN_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n'
+#    export EMAIL_PASS='...'          # opcional
+#    bash setup-env.sh
+#
+#  Dica: guarde os segredos em um arquivo FORA do git e faça:
+#    set -a; source ~/sql-challenge-secrets.env; set +a; bash setup-env.sh
+#
+#  Fluxo normal: o CD (.github/workflows/cd.yml) gera o .env.production
+#  a partir dos GitHub Secrets — este script é o caminho manual/legado.
+# =============================================================================
+set -euo pipefail
 
-ENV_FILE="/opt/apps/sql-challenge/backend/.env.production"
+ENV_FILE="${ENV_FILE:-/opt/apps/sql-challenge/backend/.env.production}"
 
-cat > "$ENV_FILE" << 'EOF'
+: "${FIREBASE_ADMIN_PRIVATE_KEY:?exporte FIREBASE_ADMIN_PRIVATE_KEY antes de rodar (veja o cabeçalho deste script)}"
+
+mkdir -p "$(dirname "$ENV_FILE")"
+
+cat > "$ENV_FILE" <<EOF
 PORT=3000
 NODE_ENV=production
-apiKey=your-firebase-api-key
+apiKey=AIzaSyCjcUNiPRfL20Di5Yd6gRCcVPeOBpnG9IE
 authDomain=sqlmystery.firebaseapp.com
 projectId=sqlmystery
 storageBucket=sqlmystery.firebasestorage.app
@@ -14,19 +34,18 @@ appId=1:813818123752:web:355985fbe43bf1237d005d
 measurementId=G-KD09159NHG
 FIREBASE_ADMIN_PROJECT_ID=sqlmystery
 FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-fbsvc@sqlmystery.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="${FIREBASE_ADMIN_PRIVATE_KEY}"
 FRONTEND_URL=https://apihub-macedo.duckdns.org
 FRONTEND_PORT=3001
 EMAIL_USER=sqlmysterycimatec@gmail.com
-EMAIL_PASS=
+EMAIL_PASS=${EMAIL_PASS:-}
 SITE_URL=https://apihub-macedo.duckdns.org/sql-challenge
 EOF
+chmod 600 "$ENV_FILE"
 
-# Adiciona a chave privada em uma linha só (sem interpretar \n)
-echo 'FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCzcO1rtmRuAmJgTp0TeHxfDy7KRz7stmyE9ap2DM5UbVW/cm6RfC+eDbU5Cc3ock9nLc444OjGgOqGpUlqqrXo7R3ldOKT4AWao8Fwv1RgO+N0JjpH0xgv+TOc4fqaNkWovvdhfL0no25vCKfFM2kQHoU8674sh7c/fa0YOTprweSiOJA+tTkje2Pi2PbhuAGh6xvZsADRS4NK/9xs2xgaKBFb/p5d8zxy6pDlSWmmY+JcmNbGdpmJudSye6CtztY8uAQJogwm9tqt/EsGkqZAY+rYLOz3VDFpzNbg/pmiw7a+eLfNFEsZtCwiiF5HzsT6VyEZRT5876YKMNbnilOFAgMBAAECggEAHFxrphPanTmSv2qFcJOhQqwFZvKqSyMNFVm3wrdE8DqkrCDjwWpZo1dCzpxSV1wj2Si3+KzxlZhAGR5sM2f+Xu2FRWQ7QIiOkjGyLAYNibVFfrDhEsOWRdTTF8duwqtzyJdARb//rJFr7bA2RhiZUTMlt2qCMQsVRztvnY3EAk5L+g1JKENdkFvOj4FCc/fGV9/x63Qgwv/PhG+0mHES/4c8cncCHB73PBlN6hiM4mUHOwagqkZx0uG4La9FFFeVEnLSzw/pM4hMvjPaOslgmyWXMEDKK0IV6/VVJOVNdE3UihV1stUOk2Y2+jdxtqMkgVDT1RVQAn/A0QQgwIJCWQKBgQDYBAsLpZS3/At21MMzn0GlKfdTNRlgxJav3XDbgfNsfusaTsZwZrUGwA7yReLzbG6QSEN5FnC5zxms01P188irl2zKLSqm4vedsK6hu36ya8nwpbnJjksVAoZdlZId0fC3TJRPZ3ekrUsMAaWgp3mO3xGJEtsEyJrVNjJadrrnvQKBgQDUp8kJHEZBEEU9XRPK891CSTKOyEmVn4P1Yso2egd5LHlQAcJYPKbvbWJZ1pUnhJeknMxy08BZbZB9y1wd+v0UdRcyB40FQDQL6ZKUYzDI4dAQKOw95aDBWo88u2aXyj47b36zQziuixYuH/LQKQU/+yWiW6PApQUyL0Ki2ytTaQKBgF1KCbci8EIw0IamRhLyMThyEkTWBrq6y9Txjj7ONWFiwoffA2YhhQaARTQuKGA2MN2Qx8rwfQhRv2Xa8kSi3sP0JmB99xCRrpxkZFamkYXedRy/hafdEuHk8EBUSwEj3JBcuyQ7q/jreiCaSXxDN4UTIxCOmxXKyMtRl5dn9ToFAoGAIQuRqeDC6gllOQvlr3wFve8x9A4boSyQjOk1ExITZzkKAOzFDoEeT8Znqh42P1XTWrki7BULptnnwiR/xAjkmvE3EYcq2s4HSHKbXIOtaQnuExTI4TV1rZYs+/sDDkNXOFUzExg3Dqh+YdyFFuPI9RBJ4NjssVrzW8EMUdJNAUECgYEAkM+Bo1F1SDqUI8oUACyNwIWOrLiGGZFFJgzH8u6O8F9da182Lqd9WqHsxQ1WtjI5h5oys3oNixOUo4lt/BdHqOklmSPmJ9wJkdPpUVijZlTHaWiiu7ah1Hztx7cd7lQJix9IlKkK8QRljJpgKu08G4WP9YylcG4=\n-----END PRIVATE KEY-----\n"' >> "$ENV_FILE"
-
-echo "✓ .env.production criado com sucesso"
+echo "✓ $ENV_FILE criado com sucesso"
 echo "--- Verificando chave ---"
-grep "FIREBASE_ADMIN_PRIVATE_KEY" "$ENV_FILE" | head -c 100
+grep "FIREBASE_ADMIN_PRIVATE_KEY" "$ENV_FILE" | head -c 80
 echo ""
 
 # Sobe os containers
