@@ -45,16 +45,16 @@ sql_ok(){ echo -e "  ${GREEN}  SQL ✓${RESET} $*"; }
 
 # ─── Defaults ────────────────────────────────────────────────────────────────
 MODE="all"
-RESET=false
+RESET_FLAG=false
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-MODELAGEM_DIR="$(cd "$BACKEND_DIR/../sql-challenge-modelagem_de_dados" 2>/dev/null || echo "")"
+MODELAGEM_DIR="$(cd "$BACKEND_DIR/../sql-challenge-modelagem_de_dados" 2>/dev/null && pwd || echo "")"
 
 # ─── Parse de argumentos ─────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case $1 in
     --env)       MODE="$2";       shift 2 ;;
-    --reset)     RESET=true;      shift   ;;
+    --reset)     RESET_FLAG=true; shift   ;;
     --modelagem) MODELAGEM_DIR="$2"; shift 2 ;;
     -h|--help)
       sed -n '3,50p' "$0" | grep -E '^\s+#' | sed 's/^\s*#//'
@@ -198,7 +198,7 @@ init_production() {
   local db="db_gestao"
 
   # ── Reset (se solicitado) ─────────────────────────────────────────────────
-  if [ "$RESET" = true ]; then
+  if [ "$RESET_FLAG" = true ]; then
     do_reset "$compose_file" "$env_file" "produção"
   fi
 
@@ -243,10 +243,13 @@ init_production() {
     "[5/6] Conteúdo do jogo (1 desafio, 5 capítulos, objetivos, dicas, consultas)"
 
   # 6. Segurança: usuário de aplicação com acesso restrito (para queries dos jogadores)
-  #    Adapta o dcl_security.sql substituindo a senha hardcoded pela variável de ambiente
+  #    Adapta o dcl_security.sql: senha hardcoded → variável de ambiente,
+  #    user_gestao_challenge → users_sql_challenge, db_gestao_challenge → banco atual
   step "[6/6] Configurando usuário de aplicação (users_sql_challenge)"
   cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \
-    | sed "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
+    | sed -e "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
+          -e "s/user_gestao_challenge/users_sql_challenge/g" \
+          -e "s/db_gestao_challenge/${db}/g" \
     | docker compose -f "$compose_file" --env-file "$env_file" \
         exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1
   sql_ok "[6/6] Usuário users_sql_challenge criado"
@@ -283,7 +286,7 @@ init_staging() {
   local db="db_gestao_staging"
 
   # ── Reset (se solicitado) ─────────────────────────────────────────────────
-  if [ "$RESET" = true ]; then
+  if [ "$RESET_FLAG" = true ]; then
     do_reset "$compose_file" "$env_file" "staging"
   fi
 
@@ -304,7 +307,7 @@ init_staging() {
     | docker compose -f "$compose_file" --env-file "$env_file" \
         exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -t -A 2>/dev/null || echo "0")
 
-  if [ "$table_count" -gt "0" ] && [ "$RESET" = false ]; then
+  if [ "$table_count" -gt "0" ] && [ "$RESET_FLAG" = false ]; then
     ok "Banco de staging já inicializado ($table_count tabelas encontradas)"
     ok "Use --reset para recriar do zero"
     verify_db "$compose_file" "$service" "$POSTGRES_USER" "$db" "$env_file"
@@ -362,7 +365,9 @@ init_staging() {
   step "[4/4] Configurando usuário de aplicação (users_sql_challenge)"
   if [ -f "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" ]; then
     cat "$MODELAGEM_DIR/PostgreSQL/Script/gestão/dcl_security.sql" \
-      | sed "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
+      | sed -e "s/WITH PASSWORD 'senha123'/WITH PASSWORD '${POSTGRES_PASSWORD}'/" \
+            -e "s/user_gestao_challenge/users_sql_challenge/g" \
+            -e "s/db_gestao_challenge/${db}/g" \
       | docker compose -f "$compose_file" --env-file "$env_file" \
           exec -T "$service" psql -U "$POSTGRES_USER" -d "$db" -v ON_ERROR_STOP=1
   else
@@ -394,7 +399,7 @@ echo -e "${BOLD}║          SQL Challenge — Inicialização de Banco de Dados
 echo -e "${BOLD}╚══════════════════════════════════════════════════════════════╝${RESET}"
 echo ""
 echo -e "  Modo:      ${BOLD}$MODE${RESET}"
-echo -e "  Reset:     ${BOLD}$RESET${RESET}"
+echo -e "  Reset:     ${BOLD}$RESET_FLAG${RESET}"
 echo -e "  Backend:   $BACKEND_DIR"
 [ -n "$MODELAGEM_DIR" ] && echo -e "  Modelagem: $MODELAGEM_DIR"
 echo ""
