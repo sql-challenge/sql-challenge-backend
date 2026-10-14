@@ -1,6 +1,6 @@
 -- ============================================================
 -- CI Test Schema
--- Extracted from ddl_structure.sql — without DROP/CREATE DATABASE.
+-- Extracted from 01_gestao_ddl.sql — without DROP/CREATE DATABASE.
 -- Run against db_gestao_challenge before integration tests.
 -- ============================================================
 

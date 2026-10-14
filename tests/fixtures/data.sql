@@ -2,8 +2,8 @@
 -- CI Test Data + Game Content
 -- Complete dataset: 1 desafio, 5 capítulos, 26 objetivos,
 -- 15 dicas, 23 visões, 26 consultas-solução.
--- Source: sql-challenge-modelagem_de_dados/PostgreSQL/Script/
---         cadastro_games/dml_magical_world.sql
+-- Source: sql-challenge-modelagem_de_dados/sql/05_challenge_content.sql
+-- (snapshot para CI — a fonte de verdade é o repositório modelagem)
 -- ============================================================
 
 TRUNCATE TABLE Log, Dica, Consulta, Objetivo, Visao, Capitulo, Desafio

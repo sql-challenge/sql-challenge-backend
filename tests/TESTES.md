@@ -137,8 +137,8 @@ DB_NAME=db_gestao
 
 O banco deve ter o DDL e DML aplicados:
 ```bash
-psql -U admin -d db_gestao -f sql-challenge-modelagem_de_dados/PostgreSQL/Script/gestão/ddl_structure.sql
-psql -U admin -d db_gestao -f sql-challenge-modelagem_de_dados/PostgreSQL/Script/cadastro_games/dml_magical_world.sql
+psql -U admin -d db_gestao -f sql-challenge-modelagem_de_dados/sql/01_gestao_ddl.sql
+psql -U admin -d db_gestao -f sql-challenge-modelagem_de_dados/sql/05_challenge_content.sql
 ```
 
 ---

@@ -1,7 +1,7 @@
 /**
  * Testes de integração — DesafioPostgresRepository
  *
- * Requerem banco PostgreSQL ativo com dados do DML (dml_magical_world.sql).
+ * Requerem banco PostgreSQL ativo com dados do DML (sql/05_challenge_content.sql do modelagem).
  * Configure as variáveis de ambiente antes de executar:
  *   DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
  *

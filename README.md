@@ -20,21 +20,18 @@ API backend do SQL Challenge: plataforma gamificada de aprendizado de SQL onde u
 # 1. Instalar dependências
 npm install
 
-# 2. Criar .env a partir do exemplo
-cp .env.example .env
+# 2. Criar .env a partir do template de dev
+cp .env.development.example .env
 
-# 3. Subir PostgreSQL
-docker compose up -d db
+# 3. Banco de dev (sobe o PostgreSQL + semeia o pipeline do modelagem)
+bash scripts/db-dev.sh up
 
-# 4. Inicializar schemas e dados do jogo
-bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_de_dados
-
-# 5. Iniciar servidor
+# 4. Iniciar servidor
 npm run dev
 ```
 
 > ⚠️ Atenção: O servidor roda na porta `3002` (não `3000`). A porta `3000` é usada pelo frontend.
-> ⚠️ Se o repositório `sql-challenge-modelagem_de_dados` não estiver clonado, veja [Setup manual do banco](#setup-manual-do-banco-sem-db-init) para criar o schema `magical_world` manualmente.
+> 📖 Guia completo de desenvolvimento (pré-requisitos, banco, testes, troubleshooting): [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ---
 
@@ -44,7 +41,7 @@ npm run dev
 - **npm** ≥ 9
 - **Docker** + **Docker Compose** (para PostgreSQL)
 - **Firebase project** (console.firebase.google.com)
-- **Repositório modelagem** (opcional, para db-init.sh):
+- **Repositório modelagem** clonado ao lado (fonte do pipeline do banco):
   ```bash
   git clone https://github.com/sql-challenge/sql-challenge-modelagem_de_dados.git \
     ../sql-challenge-modelagem_de_dados
@@ -54,63 +51,29 @@ npm run dev
 
 ## Setup Local Passo a Passo
 
+Detalhes e troubleshooting: [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ### 1. Variáveis de ambiente
 
 ```bash
-cp .env.example .env
+cp .env.development.example .env
 ```
 
 Edite `.env` com seus valores. Veja [Variáveis de ambiente](#variáveis-de-ambiente) para detalhes.
 
-### 2. Banco de dados
+### 2. Banco de dados (dev)
 
 ```bash
-# Sobe o container PostgreSQL
-docker compose up -d db
+# Sobe o container PostgreSQL de dev (db_gestao_dev) e semeia o pipeline
+bash scripts/db-dev.sh up
 
-# Verifica se está saudável
-docker exec sql-challenge-db pg_isready -U challenge_user -d db_gestao
+# Recriar do zero (apaga os dados de dev)
+bash scripts/db-dev.sh reseed
 ```
 
-O banco precisa de dois schemas:
+O pipeline numerado do repositório modelagem (`sql/01` → `sql/06`) cria o schema de gestão (`public`) e o mundo mágico (`magical_world`). O contrato está em [`modelagem/DATABASE.md`](../sql-challenge-modelagem_de_dados/DATABASE.md).
 
-**Schema `public`** — tabelas de gestão (Desafio, Capitulo, Objetivo, Dica, Visao, Consulta, Log)
-
-**Schema `magical_world`** — tabelas e views do jogo (Feudo, Pessoa, Cidade, etc.)
-
-#### Via db-init.sh (recomendado)
-
-```bash
-# Com o repositório modelagem clonado:
-bash scripts/db-init.sh --env production --modelagem ../sql-challenge-modelagem_de_dados
-```
-
-#### Setup manual do banco (sem db-init)
-
-```bash
-# Schema de gestão
-docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
-  < tests/fixtures/schema.sql
-
-# Tabelas do mundo mágico
-docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
-  -c "SET search_path TO magical_world;" \
-  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/ddl_game.sql")
-
-# Dados do mundo mágico
-docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
-  -c "SET search_path TO magical_world;" \
-  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/dml_game.sql")
-
-# Views do jogo
-docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
-  -c "SET search_path TO magical_world;" \
-  -f <(cat ../sql-challenge-modelagem_de_dados/"Games/magical world/vw_ddl_game.sql")
-
-# Conteúdo de gestão (desafios, capítulos, objetivos)
-docker exec -i sql-challenge-db psql -U challenge_user -d db_gestao \
-  < tests/fixtures/data.sql
-```
+> Ambientes de servidor (staging/produção) usam `scripts/db-init.sh --env production|staging` — veja DATABASE.md.
 
 ### 3. Firebase
 
@@ -166,7 +129,7 @@ Acesse `http://localhost:3002/api/health`.
 NODE_ENV=development
 
 # ─── Database ─────────────────────────────────
-DATABASE_URL=postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao?sslmode=disable
+DATABASE_URL=postgresql://challenge_user:challenge_pass@localhost:5432/db_gestao_dev?sslmode=disable
 
 # ─── API ──────────────────────────────────────
 PORT=3002
@@ -317,17 +280,18 @@ ssh ubuntu@<node> 'sudo k3s ctr images import backend.tar'
 # 3. Aplicar manifestos
 kubectl apply -f k8s/
 
-# 4. Inicializar banco (do k3s-cp)
-kubectl cp tests/fixtures/schema.sql sql-challenge/postgres-0:/tmp/
-kubectl cp tests/fixtures/data.sql sql-challenge/postgres-0:/tmp/
-kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/ddl_game.sql" sql-challenge/postgres-0:/tmp/
-kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/dml_game.sql" sql-challenge/postgres-0:/tmp/
-kubectl cp "../sql-challenge-modelagem_de_dados/Games/magical world/vw_ddl_game.sql" sql-challenge/postgres-0:/tmp/
+# 4. Inicializar banco (do k3s-cp) — pipeline numerado do modelagem
+kubectl cp ../sql-challenge-modelagem_de_dados/sql/01_gestao_ddl.sql sql-challenge/postgres-0:/tmp/
+kubectl cp ../sql-challenge-modelagem_de_dados/sql/02_magical_world_ddl.sql sql-challenge/postgres-0:/tmp/
+kubectl cp ../sql-challenge-modelagem_de_dados/sql/03_magical_world_dml.sql sql-challenge/postgres-0:/tmp/
+kubectl cp ../sql-challenge-modelagem_de_dados/sql/04_game_views.sql sql-challenge/postgres-0:/tmp/
+kubectl cp ../sql-challenge-modelagem_de_dados/sql/05_challenge_content.sql sql-challenge/postgres-0:/tmp/
 kubectl exec -n sql-challenge postgres-0 -- sh -c " \
-  psql -U challenge_user -d db_gestao -f /tmp/schema.sql && \
-  psql -U challenge_user -d db_gestao -f /tmp/ddl_game.sql && \
-  psql -U challenge_user -d db_gestao -f /tmp/dml_game.sql && \
-  psql -U challenge_user -d db_gestao -f /tmp/vw_ddl_game.sql"
+  psql -U challenge_user -d db_gestao -f /tmp/01_gestao_ddl.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/02_magical_world_ddl.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/03_magical_world_dml.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/04_game_views.sql && \
+  psql -U challenge_user -d db_gestao -f /tmp/05_challenge_content.sql"
 ```
 
 **Recursos**:
