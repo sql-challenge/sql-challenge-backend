@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nodemon",
     "dev:local": "dotenv -e .env.local -- nodemon",
+    "emulators": "bash firebase/emulator/firebase-emulators.sh",
+    "emulators:native": "bash firebase/emulator/firebase-emulators-native.sh",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "build": "tsc",
