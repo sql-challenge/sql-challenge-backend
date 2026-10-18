@@ -1,9 +1,10 @@
-import express from "express";
+import express, { type Request } from "express";
 import userRoutes from '../../service/adapters/routes/user.routes'
 import capituloRoutes from '../../service/adapters/routes/capitulo.routes'
 import cors from "cors";
 import challengeRoutes from "../../service/adapters/routes/challenge.routes";
 import sessionRoutes from "../../service/adapters/routes/chapter-session.routes";
+import eventRoutes from "../../service/adapters/routes/event.routes";
 import rankingRoutes from '../../service/adapters/routes/ranking.routes'
 import desafioRoutes from '../../service/adapters/routes/desafio.routes'
 import objetivoRoutes from '../../service/adapters/routes/objetivo.routes'
@@ -15,6 +16,32 @@ import { requestLogger } from "../../service/adapters/middleware/logging.middlew
 
 const routes = express();
 routes.disable("x-powered-by");
+
+// Atrás de proxy (nginx ingress / nginx do frontend), o IP real do cliente
+// só chega via X-Forwarded-For. Habilitar por env: TRUST_PROXY=true.
+// Sem proxy no meio, NÃO habilitar — XFF controlado pelo cliente seria
+// aceito como req.ip (spoofable).
+if (process.env.TRUST_PROXY === "true") {
+	routes.set("trust proxy", 1);
+}
+
+// ── Rate limiting por aluno ──────────────────────────────────
+// Chaveia por uid (extraído SEM verificação — só para keying de rate limit,
+// nunca para autorização) quando há token; cai para IP caso contrário.
+// Essencial em sala de aula: NAT da escola colapsa todos os alunos no
+// mesmo IP — limitar por IP bloquearia a turma inteira coletivamente.
+function rateLimitKey(req: Request): string {
+	const auth = req.headers.authorization;
+	if (auth?.startsWith("Bearer ")) {
+		try {
+			const payload = JSON.parse(Buffer.from(auth.slice(7).split(".")[1] ?? "", "base64url").toString());
+			if (payload?.sub) return `uid:${payload.sub}`;
+		} catch {
+			// token malformado → keying por IP
+		}
+	}
+	return `ip:${req.ip ?? "unknown"}`;
+}
 
 routes.use(requestLogger);
 
@@ -47,19 +74,22 @@ routes.get("/api/health", (_req, res) => {
 	res.json({ status: "ok" });
 });
 
-// Rate limiting
+// Rate limiting — todos por rateLimitKey (uid quando autenticado, senão IP)
 const generalLimiter = rateLimit({
 	windowMs: 60 * 1000,
-	max: 100,
+	max: 200,
+	keyGenerator: rateLimitKey,
 	standardHeaders: true,
 	legacyHeaders: false,
 	message: { error: "Muitas requisições. Tente novamente em instantes." },
 });
 routes.use(generalLimiter);
 
+// Burst de login no início da aula: turma inteira entra em ~1 min
 const authLimiter = rateLimit({
 	windowMs: 60 * 1000,
-	max: 10,
+	max: 60,
+	keyGenerator: rateLimitKey,
 	standardHeaders: true,
 	legacyHeaders: false,
 	message: { error: "Muitas tentativas de autenticação. Tente novamente em instantes." },
@@ -68,7 +98,8 @@ routes.use("/api/user/auth", authLimiter);
 
 const mutationLimiter = rateLimit({
 	windowMs: 60 * 1000,
-	max: 20,
+	max: 30,
+	keyGenerator: rateLimitKey,
 	standardHeaders: true,
 	legacyHeaders: false,
 	message: { error: "Muitas requisições de escrita. Tente novamente em instantes." },
@@ -79,6 +110,7 @@ routes.use(mutationLimiter);
 routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);
 routes.use("/api/sessions", sessionRoutes);
+routes.use("/api/events", eventRoutes);
 routes.use("/api/capitulo", capituloRoutes);
 routes.use("/api/ranking", rankingRoutes);
 routes.use("/api/desafios", desafioRoutes);

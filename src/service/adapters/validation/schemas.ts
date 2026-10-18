@@ -51,6 +51,58 @@ export const saveSessionSchema = z.object({
 	isClosing: z.boolean(),
 });
 
+// ── Eventos (telemetria) ───────────────────────────────────────
+// Lote de até 25 eventos; payload por tipo é discriminado via `type`.
+// O uid NUNCA vem do body — é extraído do token no controller.
+
+const eventBase = {
+	desafioId: z.string().min(1).max(64),
+	capituloId: z.number().int().min(0),
+	clientTs: z.number().optional(),
+};
+
+export const eventBatchSchema = z.object({
+	events: z
+		.array(
+			z.discriminatedUnion("type", [
+				z.object({ type: z.literal("session_start"), ...eventBase, payload: z.record(z.string(), z.unknown()).optional() }),
+				z.object({ type: z.literal("session_end"), ...eventBase, payload: z.object({ seconds: z.number() }) }),
+				z.object({
+					type: z.literal("query_run"),
+					...eventBase,
+					payload: z.object({
+						sql: z.string().max(200),
+						ok: z.boolean(),
+						durationMs: z.number().optional(),
+						rowCount: z.number().optional(),
+					}),
+				}),
+				z.object({
+					type: z.literal("sql_error"),
+					...eventBase,
+					payload: z.object({ sql: z.string().max(200), message: z.string().max(300) }),
+				}),
+				z.object({ type: z.literal("hint_revealed"), ...eventBase, payload: z.object({ hintId: z.number().int() }) }),
+				z.object({
+					type: z.literal("objetivo_completed"),
+					...eventBase,
+					payload: z.object({ objetivoId: z.number().int(), index: z.number().int().min(0), secondsElapsed: z.number() }),
+				}),
+				z.object({
+					type: z.literal("chapter_victory"),
+					...eventBase,
+					payload: z.object({
+						tier: z.string().max(20),
+						xp: z.number(),
+						hintsUsed: z.number().int(),
+						totalSeconds: z.number(),
+					}),
+				}),
+			])
+		)
+		.max(25),
+});
+
 export const addRankingSchema = z.object({
 	username: z.string().min(1),
 	nick: z.string().min(1),
