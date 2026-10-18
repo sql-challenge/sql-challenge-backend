@@ -1,5 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
+import { ZodError } from "zod";
 import routes from "./routes/index";
 import { setupSwagger } from "./swagger";
 import { AppError } from "../service/adapters/errors/api-errors";
@@ -15,6 +16,16 @@ setupSwagger(app);
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ error: err.message, ...(err.code ? { code: err.code } : {}) });
+    return;
+  }
+
+  // Zod validation → 400 (antes caía em 500)
+  if (err instanceof ZodError) {
+    const first = err.issues[0];
+    res.status(400).json({
+      error: first ? `${first.path.join(".") || "body"}: ${first.message}` : "Dados inválidos.",
+      code: "ZOD_ERROR",
+    });
     return;
   }
 

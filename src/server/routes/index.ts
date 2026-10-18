@@ -41,7 +41,9 @@ function rateLimitKey(req: Request): string {
 			// token malformado → keying por IP
 		}
 	}
-	return `ip:${req.ip ?? "unknown"}`;
+	// IPv6 contém ':' — o express-rate-limit rejeita chaves assim
+	// (ERR_ERL_KEY_GEN_IPV6); sanitiza para keying seguro.
+	return `ip:${(req.ip ?? "unknown").replace(/:/g, "_")}`;
 }
 
 routes.use(requestLogger);
