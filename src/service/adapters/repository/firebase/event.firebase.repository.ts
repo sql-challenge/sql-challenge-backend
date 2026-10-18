@@ -9,7 +9,7 @@ import { IEventPort } from "../../../core/ports/event.port";
  * WriteBatch de até 25 docs — muito abaixo do limite de 500 do Firestore.
  */
 export class EventFirebaseRepository implements IEventPort {
-	async insertMany(uid: string, events: EventInput[]): Promise<void> {
+	async insertMany(uid: string, events: EventInput[], classCode?: string): Promise<void> {
 		if (events.length === 0) return;
 
 		const batch = db.batch();
@@ -23,6 +23,7 @@ export class EventFirebaseRepository implements IEventPort {
 				desafioId: e.desafioId,
 				capituloId: e.capituloId,
 				payload: e.payload ?? {},
+				classCode: classCode ?? null,
 				clientTs: e.clientTs ? new Date(e.clientTs) : null,
 				serverTs: serverTs.toDate(),
 			};

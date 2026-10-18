@@ -14,6 +14,7 @@ export interface EventDocument {
 	desafioId: string;
 	capituloId: number;
 	payload: Record<string, unknown>;
+	classCode: string | null;
 	/** Timestamp do cliente (quando o evento aconteceu na máquina dele). */
 	clientTs: Date | null;
 	/** Timestamp do servidor (chegada/ingestão). */

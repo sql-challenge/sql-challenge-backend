@@ -13,7 +13,7 @@ export const createEvents = asyncHandler(async (req: Request, res: Response) => 
 	if (!uid) throw new UnauthorizedError("Usuário não autenticado.");
 
 	const body = eventBatchSchema.parse(req.body);
-	const received = await eventUseCase.record(uid, body.events);
+	const received = await eventUseCase.record(uid, body.events, body.classCode);
 
 	// 202 Accepted: ingestão assíncrona por natureza
 	res.status(202).json({ data: { received } });

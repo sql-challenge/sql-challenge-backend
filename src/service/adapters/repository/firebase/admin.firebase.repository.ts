@@ -1,13 +1,14 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../../db/firebase/firebaseAdminConfig";
 import { ChapterSession } from "../../../core/domain/chapter-session.entity";
+import { IAdminReader } from "../../../core/useCases/admin.useCase";
 
 /**
  * Read-model do dashboard do professor. Lê direto as subcoleções de
  * sessão de cada usuário — não implementa IChapterSessionPort porque é
  * uma visão agregada, não o fluxo de sessão do jogador.
  */
-export class AdminFirebaseRepository {
+export class AdminFirebaseRepository implements IAdminReader {
 
 	/** Sessões de capítulo de um usuário (do desafio, ou todas se desafioId omitido). */
 	async listChapterSessions(uid: string, desafioId?: string): Promise<ChapterSession[]> {
@@ -37,7 +38,53 @@ export class AdminFirebaseRepository {
 		});
 	}
 
+	/**
+	 * Timeline de eventos de um aluno (coleção top-level `events`).
+	 * where(uid) usa o índice single-field automático; ordenação e filtro
+	 * de desafio em memória — evita exigir índice composto.
+	 */
+	async listStudentEvents(uid: string, opts?: { desafioId?: string; limit?: number }): Promise<StudentEventDoc[]> {
+		const limit = Math.min(Math.max(opts?.limit ?? 100, 1), 200);
+
+		const snap = await db.collection("events")
+			.where("uid", "==", uid)
+			.limit(500)
+			.get();
+
+		let events: StudentEventDoc[] = snap.docs.map((doc) => {
+			const d = doc.data();
+			return {
+				id: doc.id,
+				type: (d.type as string) ?? "",
+				desafioId: (d.desafio_id as string) ?? "",
+				capituloId: (d.capitulo_id as number) ?? 0,
+				classCode: (d.class_code as string | null) ?? null,
+				payload: (d.payload as Record<string, unknown>) ?? {},
+				clientTs: d.client_ts ? (d.client_ts as Timestamp).toDate() : null,
+				serverTs: d.server_ts ? (d.server_ts as Timestamp).toDate() : new Date(0),
+			};
+		});
+
+		if (opts?.desafioId) {
+			events = events.filter((e) => e.desafioId === opts.desafioId);
+		}
+		events.sort((a, b) => b.serverTs.getTime() - a.serverTs.getTime());
+
+		return events.slice(0, limit);
+	}
+
 	private userDoc(uid: string) {
 		return db.collection("User").doc(uid);
 	}
+}
+
+export interface StudentEventDoc {
+	id: string;
+	type: string;
+	desafioId: string;
+	capituloId: number;
+	classCode: string | null;
+	payload: Record<string, unknown>;
+	clientTs: Date | null;
+	serverTs: Date;
 }

@@ -62,6 +62,8 @@ const eventBase = {
 };
 
 export const eventBatchSchema = z.object({
+	/** Código de turma/coorte opcional (carimbado em todos os eventos do lote). */
+	classCode: z.string().min(1).max(32).optional(),
 	events: z
 		.array(
 			z.discriminatedUnion("type", [

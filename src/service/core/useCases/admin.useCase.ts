@@ -1,8 +1,21 @@
 import { IUserPort } from "../ports/user.port";
 import { ChapterSession } from "../domain/chapter-session.entity";
+import { StudentEventDoc } from "../../adapters/repository/firebase/admin.firebase.repository";
 
-export interface IAdminSessionReader {
+export interface IAdminReader {
 	listChapterSessions(uid: string, desafioId?: string): Promise<ChapterSession[]>;
+	listStudentEvents(uid: string, opts?: { desafioId?: string; limit?: number }): Promise<StudentEventDoc[]>;
+}
+
+export interface AdminSessionBrief {
+	capituloId: number;
+	desafioId: string;
+	currentObjetivoIndex: number;
+	completedCount: number;
+	totalSeconds: number;
+	isActive: boolean;
+	firstStartedAt: Date | null;
+	lastActivityAt: Date | null;
 }
 
 export interface AdminStudentOverview {
@@ -22,12 +35,14 @@ export interface AdminStudentOverview {
 	sessionCount: number;
 	firstStartedAt: Date | null;
 	lastActivityAt: Date | null;
+	// Detalhe por capítulo — alimenta a visão "agora / travado em"
+	sessions: AdminSessionBrief[];
 }
 
 export class AdminUseCase {
 	constructor(
 		private userPort: IUserPort,
-		private sessionReader: IAdminSessionReader,
+		private reader: IAdminReader,
 	) {}
 
 	/**
@@ -49,7 +64,7 @@ export class AdminUseCase {
 				const totalHints = progressList.reduce((a, p) => a + (p.totalHints ?? 0), 0);
 				const tempoSegundos = progressList.reduce((a, p) => a + (p.totalSeconds ?? 0), 0);
 
-				const sessions = await this.sessionReader.listChapterSessions(u.uid, desafioId);
+				const sessions = await this.reader.listChapterSessions(u.uid, desafioId);
 				const sessionCount = sessions.reduce((a, s) => a + (s.sessionCount ?? 0), 0);
 				const firstStartedAt = sessions
 					.map((s) => s.firstStartedAt)
@@ -75,8 +90,23 @@ export class AdminUseCase {
 					sessionCount,
 					firstStartedAt,
 					lastActivityAt,
+					sessions: sessions.map((s) => ({
+						capituloId: s.capituloId,
+						desafioId: s.desafioId,
+						currentObjetivoIndex: s.currentObjetivoIndex,
+						completedCount: Array.isArray(s.completedObjetivos) ? s.completedObjetivos.length : 0,
+						totalSeconds: s.totalSeconds,
+						isActive: s.isActive,
+						firstStartedAt: s.firstStartedAt,
+						lastActivityAt: s.lastActivityAt ?? s.lastStartedAt,
+					})),
 				};
 			})
 		);
+	}
+
+	/** Timeline de eventos de um aluno (drill-down no dashboard). */
+	async getStudentEvents(uid: string, opts?: { desafioId?: string; limit?: number }): Promise<StudentEventDoc[]> {
+		return this.reader.listStudentEvents(uid, opts);
 	}
 }
