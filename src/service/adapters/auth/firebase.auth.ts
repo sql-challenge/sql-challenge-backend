@@ -9,13 +9,14 @@ export class UserAuthService {
 		await admin.auth().updateUser(uid, { password: newPassword });
 	}
 
-	async verifyIdToken(idToken: string): Promise<{ uid: string; email?: string; name?: string; picture?: string }> {
+	async verifyIdToken(idToken: string): Promise<{ uid: string; email?: string; name?: string; picture?: string; email_verified?: boolean }> {
 		const decoded = await admin.auth().verifyIdToken(idToken);
 		return {
 			uid: decoded.uid,
 			email: decoded.email,
 			name: decoded.name,
 			picture: decoded.picture,
+			email_verified: decoded.email_verified,
 		};
 	}
 }

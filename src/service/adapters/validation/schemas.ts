@@ -21,18 +21,15 @@ export const saveChapterProgressSchema = z.object({
 	totalHints: z.number().optional(),
 });
 
+// Só campos de perfil auto-editáveis. xp / rankingPosition / challenge_progress /
+// friends / awardedAchievements são calculados pelo servidor (progresso, conquistas)
+// e NUNCA podem ser gravados pelo cliente — evita auto-atribuição de XP.
 export const updateUserSchema = z.object({
 	uid: z.string().min(1).optional(),
 	username: z.string().min(1).optional(),
 	nick: z.string().optional(),
-	email: z.string().email().optional(),
-	xp: z.number().optional(),
 	fotoPerfil: z.string().optional(),
 	imagePerfil: z.string().optional(),
-	rankingPosition: z.number().optional(),
-	challenge_progress: z.array(z.any()).optional(),
-	friends: z.array(z.any()).optional(),
-	awardedAchievements: z.array(z.string()).optional(),
 	emailNotifications: z.boolean().optional(),
 });
 

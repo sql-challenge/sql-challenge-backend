@@ -2,6 +2,7 @@ export class AppError extends Error {
 	constructor(
 		public readonly statusCode: number,
 		message: string,
+		public readonly code?: string,
 	) {
 		super(message);
 		this.name = this.constructor.name;
@@ -29,5 +30,12 @@ export class ForbiddenError extends AppError {
 export class UnauthorizedError extends AppError {
 	constructor(message = "Não autorizado") {
 		super(401, message);
+	}
+}
+
+/** 403 — token válido, mas conta de email/senha ainda não verificada (produção). */
+export class EmailNotVerifiedError extends AppError {
+	constructor(message = "Email não verificado. Confirme seu email para continuar.") {
+		super(403, message, "EMAIL_NOT_VERIFIED");
 	}
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as controller from "../controller/user.controller";
-import { requireAuth } from "../middleware/auth.middleware";
+import { requireAuth, assertSelf } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -13,14 +13,14 @@ router.post("/auth/oauth", controller.loginWithOAuth);
 router.get("/top", controller.getTopByXP);
 router.get("/token/valid", requireAuth, controller.verifyToken);
 router.get("/", requireAuth, controller.getAll);
-router.get("/uid/:uid", requireAuth, controller.getUserByUID);
+router.get("/uid/:uid", requireAuth, assertSelf(), controller.getUserByUID);
 router.get("/name/:name", requireAuth, controller.getUsersByName);
 router.get("/email/:email", requireAuth, controller.getUserByEmail);
 
 /** POST */
-router.post("/logout/:uid", requireAuth, controller.logout);
+router.post("/logout/:uid", requireAuth, assertSelf(), controller.logout);
 router.post("/resetPassword", requireAuth, controller.resetPassword);
-router.post("/:uid/progress", requireAuth, controller.saveChapterProgress);
+router.post("/:uid/progress", requireAuth, assertSelf(), controller.saveChapterProgress);
 
 /** PUT */
 router.put("/", requireAuth, controller.updateUser);
@@ -33,12 +33,12 @@ router.put("/", requireAuth, controller.updateUser);
 // router.delete("/:uid/friends/:targetUid", requireAuth, controller.removeFriend);
 
 /** Achievements */
-router.post("/:uid/achievements/award", requireAuth, controller.awardAchievement);
+router.post("/:uid/achievements/award", requireAuth, assertSelf(), controller.awardAchievement);
 
 /** Email notifications */
 router.post("/notify/new-challenge", requireAuth, controller.notifyNewChallenge);
 
 /** Delete */
-router.delete("/:uid", requireAuth, controller.deleteUser);
+router.delete("/:uid", requireAuth, assertSelf(), controller.deleteUser);
 
 export default router;

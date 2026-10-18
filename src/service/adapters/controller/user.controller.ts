@@ -86,10 +86,12 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
 // PUT
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 	const user = updateUserSchema.parse(req.body);
-	if (user.uid && user.uid !== getAuthUid(req)) {
+	const uid = getAuthUid(req);
+	if (user.uid && user.uid !== uid) {
 		throw new ForbiddenError("Você só pode alterar seu próprio perfil.");
 	}
-	const updatedUser = await userUseCase.updateUser(user as Partial<IUserView>);
+	// uid sempre vem do token — nunca confia no body
+	const updatedUser = await userUseCase.updateUser({ ...user, uid });
 	res.status(200).json({ data: updatedUser });
 });
 
