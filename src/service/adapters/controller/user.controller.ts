@@ -22,13 +22,37 @@ function getAuthUid(req: Request): string {
 	return req.user.uid;
 }
 
+// ── GET ──────────────────────────────────────────────────────
+
+/** Projeção segura do placar: só o que um ranking pode exibir.
+ *  Nunca email / amigos / progresso / conquistas de terceiros. */
+interface RankingEntryView {
+	uid: string;
+	username: string;
+	nick: string;
+	imagePerfil: string | null;
+	rankingPosition: number;
+	xp: number;
+}
+
+function toRankingEntry(u: IUserView): RankingEntryView {
+	return {
+		uid: u.uid,
+		username: u.username,
+		nick: u.nick,
+		imagePerfil: u.imagePerfil ?? null,
+		rankingPosition: u.rankingPosition ?? 0,
+		xp: u.xp ?? 0,
+	};
+}
+
 // GET
 export const getTopByXP = asyncHandler(async (req: Request, res: Response) => {
 	const limit = req.query.limit ? Number(req.query.limit) : 20;
 	if (isNaN(limit) || limit < 1) throw new ValidationError("limit deve ser um número positivo.");
 
 	const data = await userUseCase.getTopByXP(limit);
-	res.status(200).json({ data });
+	res.status(200).json({ data: data.map(toRankingEntry) });
 });
 
 export const getAll = asyncHandler(async (_req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as controller from "../controller/user.controller";
-import { requireAuth, assertSelf } from "../middleware/auth.middleware";
+import { requireAuth, assertSelf, requireAdmin } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -12,10 +12,12 @@ router.post("/auth/oauth", controller.loginWithOAuth);
 /** GET */
 router.get("/top", controller.getTopByXP);
 router.get("/token/valid", requireAuth, controller.verifyToken);
-router.get("/", requireAuth, controller.getAll);
+// Listagem completa, busca por nome e por email expõem dados de TERCEIROS
+// (incl. email) — apenas admin.
+router.get("/", requireAuth, requireAdmin, controller.getAll);
 router.get("/uid/:uid", requireAuth, assertSelf(), controller.getUserByUID);
-router.get("/name/:name", requireAuth, controller.getUsersByName);
-router.get("/email/:email", requireAuth, controller.getUserByEmail);
+router.get("/name/:name", requireAuth, requireAdmin, controller.getUsersByName);
+router.get("/email/:email", requireAuth, requireAdmin, controller.getUserByEmail);
 
 /** POST */
 router.post("/logout/:uid", requireAuth, assertSelf(), controller.logout);
