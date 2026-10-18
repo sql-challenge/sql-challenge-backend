@@ -7,7 +7,7 @@ Guia completo para rodar o backend localmente. Complementa o [README](./README.m
 | Requisito | Observação |
 |-----------|------------|
 | Node.js ≥ 20 · npm ≥ 9 | — |
-| Docker + Docker Compose | PostgreSQL de dev e emuladores Firebase (no macOS, Docker Desktop ou colima) |
+| Docker + Docker Compose | PostgreSQL de dev e emuladores Firebase (Docker Desktop ou colima no macOS; `docker-engine`/Podman no Linux; Docker Desktop + WSL2 no Windows) |
 | Repositório modelagem | Clonado **ao lado** deste: `../sql-challenge-modelagem_de_dados` |
 | Projeto Firebase | **Só para o servidor** — em dev os emuladores locais substituem o Firebase real |
 
@@ -77,13 +77,19 @@ npm run emulators                            # Auth 9099 · Firestore 8080 · UI
 bash firebase/emulator/firebase-emulators.sh --clear   # reseta os dados locais antes de subir
 ```
 
-**Pré-requisito**: Docker rodando (macOS + colima: `colima start`).
+**Pré-requisito**: Docker rodando (macOS: Docker Desktop ou `colima start` · Linux: `sudo systemctl start docker` ou Podman).
 
 ### Alternativa: sem Docker (firebase-tools + Java nativos)
 
 Para quem prefere não usar container. Requer **Java 11+** (o emulador do Firestore roda em Java):
 
 ```bash
+# Linux (Debian/Ubuntu)
+sudo apt install openjdk-21-jre-headless
+
+# Linux (Fedora)
+sudo dnf install java-21-openjdk
+
 # macOS (Homebrew)
 brew install openjdk@21
 export PATH="$(brew --prefix)/opt/openjdk@21/bin:$PATH"   # openjdk é keg-only
@@ -132,7 +138,7 @@ O CI (`.github/workflows/ci.yml`) provisiona um PostgreSQL próprio (`db_gestao_
 | Login/auth falha no app local | Emuladores fora do ar → `npm run emulators` (ou `npm run emulators:native`) |
 | `Cannot find module '.../emulators:start'` no Docker | Você invocou a imagem sem `--entrypoint` — use `npm run emulators` |
 | Emulador Docker sem resposta nas portas | Config de host errada — Docker exige `firebase.docker.json` (já usado pelo script) |
-| Quero o emulador sem Docker | Requer Java 11+: `brew install openjdk@21` e `npm run emulators:native` |
+| Quero o emulador sem Docker | Requer Java 11+ (`apt install openjdk-21-jre-headless` / `dnf install java-21-openjdk` / `brew install openjdk@21`) e `npm run emulators:native` |
 | `port is already allocated` na 5432 | Container antigo de produção local rodando → `bash scripts/db-dev.sh purge-old` |
 | `database "db_gestao_dev" does not exist` | Banco nunca semeado → `bash scripts/db-dev.sh up` |
 | Erros de conexão após trocar de banco | Confira `DATABASE_URL` no `.env` (deve conter `db_gestao_dev`) |
