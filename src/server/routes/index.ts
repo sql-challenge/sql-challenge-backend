@@ -12,7 +12,7 @@ import objetivoRoutes from '../../service/adapters/routes/objetivo.routes'
 import consultaRoutes from '../../service/adapters/routes/consulta.routes'
 import dicaRoutes from '../../service/adapters/routes/dica.routes'
 import visaoRoutes from '../../service/adapters/routes/visao.routes'
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { requestLogger } from "../../service/adapters/middleware/logging.middleware";
 
 const routes = express();
@@ -41,9 +41,9 @@ function rateLimitKey(req: Request): string {
 			// token malformado → keying por IP
 		}
 	}
-	// IPv6 contém ':' — o express-rate-limit rejeita chaves assim
-	// (ERR_ERL_KEY_GEN_IPV6); sanitiza para keying seguro.
-	return `ip:${(req.ip ?? "unknown").replace(/:/g, "_")}`;
+	// IPv6: usa o helper oficial do express-rate-limit (senão valida como
+	// ERR_ERL_KEY_GEN_IPV6 e polui o boot); chaveia por sub-rede /56.
+	return `ip:${ipKeyGenerator(req.ip ?? "unknown")}`;
 }
 
 routes.use(requestLogger);
@@ -99,9 +99,12 @@ const authLimiter = rateLimit({
 });
 routes.use("/api/user/auth", authLimiter);
 
+// Escritas: 60/min absorve rajadas legítimas (vitória de capítulo encadeia
+// PATCH de sessão + POST de progresso + telemetria); abuso continua sendo
+// auditado por flags, não por throttling.
 const mutationLimiter = rateLimit({
 	windowMs: 60 * 1000,
-	max: 30,
+	max: 60,
 	keyGenerator: rateLimitKey,
 	standardHeaders: true,
 	legacyHeaders: false,
