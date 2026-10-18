@@ -19,7 +19,7 @@ Guia completo para rodar o backend localmente. Complementa o [README](./README.m
 | **staging** | `db_gestao_staging` (5433) | projeto `sqlmystery` | servidor | GitHub Actions (`cd.yml`) |
 | **produção** | `db_gestao` (5432) | projeto `sqlmystery` | servidor | GitHub Actions (`cd.yml`) |
 
-> A máquina local roda **apenas dev** — tanto para o banco quanto para o Firebase. O guard em `firebaseAdminConfig.ts` **recusa** iniciar com `NODE_ENV=development` apontando para o projeto de produção sem emuladores. O contrato do banco (ordem do pipeline, DCL, convenções) está em [`modelagem/DATABASE.md`](../sql-challenge-modelagem_de_dados/DATABASE.md).
+> A máquina local roda **apenas dev** — tanto para o banco quanto para o Firebase. O guard em `firebaseAdminConfig.ts` **recusa** iniciar com `NODE_ENV=development` apontando para o projeto de produção sem emuladores. O contrato do banco (ordem do pipeline, DCL, convenções) está no [DATABASE.md do modelagem](https://github.com/sql-challenge/sql-challenge-modelagem_de_dados/blob/merge/facundes-main/DATABASE.md).
 
 ## Primeira vez
 
