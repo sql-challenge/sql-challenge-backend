@@ -43,4 +43,7 @@ export interface IChapterProgressDto {
 	tempoSegundos: number
 	totalQueries?: number
 	totalHints?: number
+	/** XP máximo plausível para o capítulo (base × 1.5 + margem) — calculado
+	 *  no controller a partir do Postgres; alimenta o flag xp_over_max. */
+	maxXpAllowed?: number
 }

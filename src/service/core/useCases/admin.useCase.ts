@@ -1,10 +1,12 @@
 import { IUserPort } from "../ports/user.port";
 import { ChapterSession } from "../domain/chapter-session.entity";
+import { SecurityFlagDoc } from "../domain/security-flag.entity";
 import { StudentEventDoc } from "../../adapters/repository/firebase/admin.firebase.repository";
 
 export interface IAdminReader {
 	listChapterSessions(uid: string, desafioId?: string): Promise<ChapterSession[]>;
 	listStudentEvents(uid: string, opts?: { desafioId?: string; limit?: number }): Promise<StudentEventDoc[]>;
+	listFlags(desafioId?: string): Promise<SecurityFlagDoc[]>;
 }
 
 export interface AdminSessionBrief {
@@ -108,5 +110,10 @@ export class AdminUseCase {
 	/** Timeline de eventos de um aluno (drill-down no dashboard). */
 	async getStudentEvents(uid: string, opts?: { desafioId?: string; limit?: number }): Promise<StudentEventDoc[]> {
 		return this.reader.listStudentEvents(uid, opts);
+	}
+
+	/** Flags de atividade suspeita (auditoria anti-forgery). */
+	async getFlags(desafioId?: string): Promise<SecurityFlagDoc[]> {
+		return this.reader.listFlags(desafioId);
 	}
 }

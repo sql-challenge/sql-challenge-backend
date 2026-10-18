@@ -2,6 +2,8 @@ import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../../db/firebase/firebaseAdminConfig";
 import { ChapterSession, SaveSessionDto } from "../../../core/domain/chapter-session.entity";
 import { IChapterSessionPort } from "../../../core/ports/chapter-session.port";
+import { ISecurityFlagPort } from "../../../core/ports/security-flag.port";
+import { FLAG_TYPE, SecurityFlag } from "../../../core/domain/security-flag.entity";
 
 /**
  * Crédito máximo de tempo "órfão" ao reconciliar um fechamento sujo.
@@ -11,7 +13,19 @@ import { IChapterSessionPort } from "../../../core/ports/chapter-session.port";
  */
 const MAX_ORPHAN_CREDIT_SECONDS = 15 * 60;
 
+/** Tolerância p/ rede/relógio no check tempo-claims vs relógio do servidor. */
+const WALLCLOCK_SLACK_SECONDS = 2;
+
 export class ChapterSessionFirebaseRepository implements IChapterSessionPort {
+
+	private flagPort: ISecurityFlagPort;
+
+	constructor(flagPort?: ISecurityFlagPort) {
+		this.flagPort = flagPort ?? {
+			insertMany: async () => {},
+			listByDesafio: async () => [],
+		};
+	}
 
 	private docRef(uid: string, desafioId: string, capituloId: number) {
 		const sessionId = `${desafioId}_${capituloId}`;
@@ -116,6 +130,28 @@ export class ChapterSessionFirebaseRepository implements IChapterSessionPort {
 		} else {
 			payload.is_active = true;
 			payload.last_started_at = now;
+		}
+
+		// ── Auditoria: tempo claimado vs relógio do servidor ────
+		// O último save do servidor (last_started_at anterior) marca o
+		// início da janela; tempo claimado acima da janela (+ folga) é
+		// inflação forjada. Best-effort, não bloqueia.
+		try {
+			const prevSaveAtMs = prev.last_started_at
+				? (prev.last_started_at as Timestamp).toMillis()
+				: null;
+			if (prevSaveAtMs != null) {
+				const wallclockSec = Math.floor((Date.now() - prevSaveAtMs) / 1000);
+				if (dto.elapsedSeconds > wallclockSec + WALLCLOCK_SLACK_SECONDS) {
+					await this.flagPort.insertMany([{
+						uid, type: FLAG_TYPE.TIME_OVER_WALLCLOCK,
+						detail: `elapsedSeconds=${dto.elapsedSeconds} > janela do servidor ${wallclockSec}s`,
+						desafioId, capituloId, serverTs: new Date(),
+					} as SecurityFlag]);
+				}
+			}
+		} catch (err) {
+			console.error("[SecurityFlag] auditoria de tempo falhou (best-effort):", err);
 		}
 
 		await ref.set(payload, { merge: true });

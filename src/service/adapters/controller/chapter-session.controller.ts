@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { ChapterSessionUseCase } from "../../core/useCases/chapter-session.useCase";
 import { ChapterSessionFirebaseRepository } from "../repository/firebase/chapter-session.firebase.repository";
+import { SecurityFlagFirebaseRepository } from "../repository/firebase/security-flag.firebase.repository";
 import { emptySession } from "../../core/domain/chapter-session.entity";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { ValidationError } from "../errors/api-errors";
 import { saveSessionSchema } from "../validation/schemas";
 
-const sessionUseCase = new ChapterSessionUseCase(new ChapterSessionFirebaseRepository());
+const sessionUseCase = new ChapterSessionUseCase(
+	new ChapterSessionFirebaseRepository(new SecurityFlagFirebaseRepository())
+);
 
 // GET /api/sessions/:uid/:desafioId/:capituloId
 export const getSession = asyncHandler(async (req: Request, res: Response) => {

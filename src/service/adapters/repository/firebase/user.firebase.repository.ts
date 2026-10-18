@@ -2,9 +2,27 @@ import { IUserView, Friend, ChallengeProgress } from "../../../core/domain/user.
 import { IChapterProgressDto, IUserPort } from "../../../core/ports/user.port";
 import { db } from "../../../db/firebase/firebaseAdminConfig";
 import { authUser } from "../../auth/firebase.auth";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { ISecurityFlagPort } from "../../../core/ports/security-flag.port";
+import { FLAG_TYPE, SecurityFlag } from "../../../core/domain/security-flag.entity";
 
 export class UserFirebaseRepository implements IUserPort {
+	private flagPort: ISecurityFlagPort;
+
+	constructor(flagPort?: ISecurityFlagPort) {
+		// Auditoria é opcional na construção — injeção feita nos controllers
+		// que compõem o contexto (baseXp do Postgres etc.). Para não quebrar
+		// chamadas existentes, default é um port no-op.
+		this.flagPort = flagPort ?? {
+			insertMany: async () => {},
+			listByDesafio: async () => [],
+		};
+	}
+
+	private async recordFlags(flags: SecurityFlag[]): Promise<void> {
+		if (flags.length === 0) return;
+		await this.flagPort.insertMany(flags);
+	}
 	private get userCollection() { return db.collection("User"); }
 
 	private toDate(v: unknown): Date {
@@ -218,10 +236,30 @@ export class UserFirebaseRepository implements IUserPort {
 		const awarded: string[] = data.awardedAchievements ?? [];
 		if (awarded.includes(achievementId)) return false;
 
+		// ── Auditoria: rajada de conquistas ─────────────────────
+		// Auto-concessão em massa (cliente calcula conquistas) levanta flag.
+		const now = new Date();
+		const lastAwardAt: Date | null = data.lastAwardAt
+			? this.toDate(data.lastAwardAt)
+			: null;
+		const isBurst = lastAwardAt !== null && (now.getTime() - lastAwardAt.getTime()) < 60_000;
+		const burstCount = isBurst ? Number(data.awardBurstCount ?? 0) + 1 : 1;
+
 		await ref.update({
 			awardedAchievements: FieldValue.arrayUnion(achievementId),
 			xp: FieldValue.increment(xpBonus),
+			lastAwardAt: Timestamp.fromDate(now),
+			awardBurstCount: burstCount,
 		});
+
+		if (isBurst && burstCount >= 3) {
+			await this.recordFlags([{
+				uid, type: FLAG_TYPE.ACHIEVEMENT_BURST,
+				detail: `${burstCount} conquistas concedidas em menos de 60s (última: ${achievementId})`,
+				desafioId: "", capituloId: 0, serverTs: now,
+			}]);
+		}
+
 		return true;
 	}
 
@@ -229,6 +267,8 @@ export class UserFirebaseRepository implements IUserPort {
 		// Transação: leitura e gravação atômicas — duas vitórias concorrentes
 		// (duplo ⌘⏎, retry) nunca mais concedem XP em dobro, pois a segunda
 		// rele o capFinish já avançado e não concede.
+		const auditFlags: SecurityFlag[] = [];
+
 		await db.runTransaction(async (tx) => {
 			const progressRef = this.userCollection
 				.doc(uid)
@@ -243,6 +283,40 @@ export class UserFirebaseRepository implements IUserPort {
 			const prevCapFinish = Number(prev.capFinish ?? 0);
 			const shouldGrantXp = Number(dto.capFinish) > prevCapFinish;
 			const xpToAdd = shouldGrantXp ? Number(dto.xpObtido) : 0;
+
+			// ── Auditoria (determinística) ─────────────────────────
+			// Flags gravados FORA da transação, best-effort.
+			const claimCap = Number(dto.capFinish);
+			const claimXp = Number(dto.xpObtido);
+			if (dto.maxXpAllowed != null && claimXp > dto.maxXpAllowed) {
+				auditFlags.push({
+					uid, type: FLAG_TYPE.XP_OVER_MAX,
+					detail: `xpObtido=${claimXp} > máximo plausível ${dto.maxXpAllowed} (base×1.5)`,
+					desafioId: dto.desafioId, capituloId: claimCap, serverTs: new Date(),
+				});
+			}
+			if (shouldGrantXp) {
+				if (claimCap - prevCapFinish > 1) {
+					auditFlags.push({
+						uid, type: FLAG_TYPE.CHAPTER_JUMP,
+						detail: `capFinish ${prevCapFinish} → ${claimCap} (${claimCap - prevCapFinish} capítulos de uma vez)`,
+						desafioId: dto.desafioId, capituloId: claimCap, serverTs: new Date(),
+					});
+				}
+				if ((dto.totalQueries ?? 0) === 0) {
+					auditFlags.push({
+						uid, type: FLAG_TYPE.ZERO_QUERY_VICTORY,
+						detail: `capFinish avançou para ${claimCap} com 0 queries na sessão`,
+						desafioId: dto.desafioId, capituloId: claimCap, serverTs: new Date(),
+					});
+				}
+			} else if (claimXp > 0) {
+				auditFlags.push({
+					uid, type: FLAG_TYPE.XP_WITHOUT_PROGRESS,
+					detail: `xpObtido=${claimXp} com capFinish ${prevCapFinish} (sem avanço)`,
+					desafioId: dto.desafioId, capituloId: claimCap, serverTs: new Date(),
+				});
+			}
 
 			tx.set(progressRef, {
 				nameChallenge: dto.nameChallenge,
@@ -278,6 +352,9 @@ export class UserFirebaseRepository implements IUserPort {
 				xp: FieldValue.increment(xpToAdd),
 			});
 		});
+
+		// Best-effort, fora da transação: falha aqui não afeta o gameplay
+		await this.recordFlags(auditFlags);
 	}
 
 	async deleteUser(uid: string): Promise<void> {

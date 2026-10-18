@@ -32,3 +32,13 @@ export const getStudentEvents = asyncHandler(async (req: Request, res: Response)
 	const events = await adminUseCase.getStudentEvents(uid, { desafioId, limit });
 	res.status(200).json({ data: { uid, events } });
 });
+
+// GET /api/admin/flags?desafioId=
+// Atividade suspeita detectada server-side (auditoria anti-forgery).
+export const getFlags = asyncHandler(async (req: Request, res: Response) => {
+	const raw = req.query.desafioId;
+	const desafioId = typeof raw === "string" && raw.length > 0 ? raw : undefined;
+
+	const flags = await adminUseCase.getFlags(desafioId);
+	res.status(200).json({ data: { desafioId: desafioId ?? null, flags } });
+});

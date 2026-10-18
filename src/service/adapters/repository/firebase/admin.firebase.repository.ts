@@ -2,6 +2,8 @@ import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../../db/firebase/firebaseAdminConfig";
 import { ChapterSession } from "../../../core/domain/chapter-session.entity";
 import { IAdminReader } from "../../../core/useCases/admin.useCase";
+import { SecurityFlagFirebaseRepository } from "./security-flag.firebase.repository";
+import { SecurityFlagDoc } from "../../../core/domain/security-flag.entity";
 
 /**
  * Read-model do dashboard do professor. Lê direto as subcoleções de
@@ -9,6 +11,13 @@ import { IAdminReader } from "../../../core/useCases/admin.useCase";
  * uma visão agregada, não o fluxo de sessão do jogador.
  */
 export class AdminFirebaseRepository implements IAdminReader {
+
+	private flagRepo = new SecurityFlagFirebaseRepository();
+
+	/** Flags de atividade suspeita (delegação). */
+	async listFlags(desafioId?: string): Promise<SecurityFlagDoc[]> {
+		return this.flagRepo.listByDesafio(desafioId);
+	}
 
 	/** Sessões de capítulo de um usuário (do desafio, ou todas se desafioId omitido). */
 	async listChapterSessions(uid: string, desafioId?: string): Promise<ChapterSession[]> {

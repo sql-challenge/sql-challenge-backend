@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { UserUseCase } from "../../core/useCases/user.useCase";
 import { UserFirebaseRepository } from "../repository/firebase/user.firebase.repository";
+import { SecurityFlagFirebaseRepository } from "../repository/firebase/security-flag.firebase.repository";
+import { CapituloUseCase } from "../../core/useCases/capitulo.useCase";
+import { CapituloPostgresRepository } from "../repository/postgres/gestao/capitulo.postgres.repository";
 import { IUserView } from "../../core/domain/user.entity";
 import { sendEmail } from "../email/email.service";
 import { newChallengeTemplate } from "../email/newChallengeTemplate";
@@ -15,7 +18,9 @@ import {
 	notifyNewChallengeSchema,
 } from "../validation/schemas";
 
-const userUseCase = new UserUseCase(new UserFirebaseRepository());
+const flagPort = new SecurityFlagFirebaseRepository();
+const userUseCase = new UserUseCase(new UserFirebaseRepository(flagPort));
+const capituloUseCase = new CapituloUseCase(new CapituloPostgresRepository());
 
 function getAuthUid(req: Request): string {
 	if (!req.user?.uid) throw new UnauthorizedError("Usuário não autenticado.");
@@ -123,14 +128,31 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 export const saveChapterProgress = asyncHandler(async (req: Request, res: Response) => {
 	const { uid } = req.params;
 	const body = saveChapterProgressSchema.parse(req.body);
+	const capFinish = Number(body.capFinish);
+
+	// Teto plausível de XP do capítulo claimado (base do Postgres × 1.5 + margem)
+	// alimenta o flag xp_over_max no repositório. Best-effort: Postgres fora
+	// → flag desativado, gameplay segue.
+	let maxXpAllowed: number | undefined;
+	try {
+		const capitulos = await capituloUseCase.getAll();
+		const cap = capitulos.find(
+			(c) => String(c.idDesafio) === String(body.desafioId) && c.numero === capFinish
+		);
+		if (cap) maxXpAllowed = Math.round(cap.xpRecompensa * 1.5) + 1;
+	} catch (err) {
+		console.error("[user.controller] baseXp lookup falhou (audit off):", err);
+	}
+
 	await userUseCase.saveChapterProgress(uid, {
 		desafioId: String(body.desafioId),
 		nameChallenge: body.nameChallenge,
-		capFinish: Number(body.capFinish),
+		capFinish,
 		xpObtido: Number(body.xpObtido),
 		tempoSegundos: Number(body.tempoSegundos),
 		totalQueries: body.totalQueries != null ? Number(body.totalQueries) : 0,
 		totalHints: body.totalHints != null ? Number(body.totalHints) : 0,
+		maxXpAllowed,
 	});
 	res.status(200).json({ data: { ok: true } });
 });
