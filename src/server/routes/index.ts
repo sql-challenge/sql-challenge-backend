@@ -5,6 +5,7 @@ import cors from "cors";
 import challengeRoutes from "../../service/adapters/routes/challenge.routes";
 import sessionRoutes from "../../service/adapters/routes/chapter-session.routes";
 import eventRoutes from "../../service/adapters/routes/event.routes";
+import adminRoutes from "../../service/adapters/routes/admin.routes";
 import rankingRoutes from '../../service/adapters/routes/ranking.routes'
 import desafioRoutes from '../../service/adapters/routes/desafio.routes'
 import objetivoRoutes from '../../service/adapters/routes/objetivo.routes'
@@ -111,6 +112,7 @@ routes.use("/api/user", userRoutes);
 routes.use("/api/challenge", challengeRoutes);
 routes.use("/api/sessions", sessionRoutes);
 routes.use("/api/events", eventRoutes);
+routes.use("/api/admin", adminRoutes);
 routes.use("/api/capitulo", capituloRoutes);
 routes.use("/api/ranking", rankingRoutes);
 routes.use("/api/desafios", desafioRoutes);

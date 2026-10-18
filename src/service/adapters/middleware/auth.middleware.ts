@@ -72,3 +72,22 @@ export function assertSelf(paramName = "uid") {
 		next();
 	};
 }
+
+/**
+ * Acesso administrativo por allowlist de emails (ADMIN_EMAILS, separados
+ * por vírgula). Assumir que requireAuth rodou ANTES (req.user já setado).
+ * Ex.: ADMIN_EMAILS="prof@escola.com,coord@escola.com"
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+	const allowlist = (process.env.ADMIN_EMAILS ?? "")
+		.split(",")
+		.map((e) => e.trim().toLowerCase())
+		.filter(Boolean);
+
+	const email = req.user?.email?.toLowerCase() ?? "";
+	if (allowlist.length === 0 || !allowlist.includes(email)) {
+		res.status(403).json({ error: "Acesso restrito a administradores.", code: "NOT_ADMIN" });
+		return;
+	}
+	next();
+}
