@@ -8,6 +8,12 @@ export interface ChapterSession {
   currentObjetivoIndex: number;
   completedObjetivos: number[];
   hintsRevealed: number[];
+  /** Início da primeira sessão deste capítulo (nunca sobrescrito). */
+  firstStartedAt: Date | null;
+  /** Última atividade conhecida (último save / reconciliação). */
+  lastActivityAt: Date | null;
+  /** Quantas "sentadas" (aberturas) este capítulo já teve. */
+  sessionCount: number;
 }
 
 export interface SaveSessionDto {
@@ -29,5 +35,8 @@ export function emptySession(uid: string, desafioId: string, capituloId: number)
     currentObjetivoIndex: 0,
     completedObjetivos: [],
     hintsRevealed: [],
+    firstStartedAt: null,
+    lastActivityAt: null,
+    sessionCount: 0,
   };
 }

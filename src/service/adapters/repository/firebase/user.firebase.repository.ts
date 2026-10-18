@@ -226,51 +226,57 @@ export class UserFirebaseRepository implements IUserPort {
 	}
 
 	async saveChapterProgress(uid: string, dto: IChapterProgressDto): Promise<void> {
-		const progressRef = this.userCollection
-			.doc(uid)
-			.collection("challenge_progress")
-			.doc(dto.desafioId);
+		// Transação: leitura e gravação atômicas — duas vitórias concorrentes
+		// (duplo ⌘⏎, retry) nunca mais concedem XP em dobro, pois a segunda
+		// rele o capFinish já avançado e não concede.
+		await db.runTransaction(async (tx) => {
+			const progressRef = this.userCollection
+				.doc(uid)
+				.collection("challenge_progress")
+				.doc(dto.desafioId);
+			const userRef = this.userCollection.doc(uid);
 
-		const snap = await progressRef.get();
-		const prev = snap.exists ? snap.data()! : {};
-		const prevCapFinish = Number(prev.capFinish ?? 0);
-		const shouldGrantXp = Number(dto.capFinish) > prevCapFinish;
-		const xpToAdd = shouldGrantXp ? Number(dto.xpObtido) : 0;
+			const progressSnap = await tx.get(progressRef);
+			const userSnap = await tx.get(userRef);
 
-		await progressRef.set({
-			nameChallenge: dto.nameChallenge,
-			capFinish: Math.max(dto.capFinish, prevCapFinish),
-			xpObtido: (prev.xpObtido ?? 0) + xpToAdd,
-			totalQueries: (prev.totalQueries ?? 0) + (dto.totalQueries ?? 0),
-			totalHints: (prev.totalHints ?? 0) + (dto.totalHints ?? 0),
-			tempoSegundos: (prev.tempoSegundos ?? 0) + dto.tempoSegundos,
-			updatedAt: new Date(),
-		}, { merge: true });
+			const prev = progressSnap.exists ? progressSnap.data()! : {};
+			const prevCapFinish = Number(prev.capFinish ?? 0);
+			const shouldGrantXp = Number(dto.capFinish) > prevCapFinish;
+			const xpToAdd = shouldGrantXp ? Number(dto.xpObtido) : 0;
 
-		const userRef = this.userCollection.doc(uid);
-		const userSnap = await userRef.get();
-		if (!userSnap.exists) return;
+			tx.set(progressRef, {
+				nameChallenge: dto.nameChallenge,
+				capFinish: Math.max(dto.capFinish, prevCapFinish),
+				xpObtido: (prev.xpObtido ?? 0) + xpToAdd,
+				totalQueries: (prev.totalQueries ?? 0) + (dto.totalQueries ?? 0),
+				totalHints: (prev.totalHints ?? 0) + (dto.totalHints ?? 0),
+				tempoSegundos: (prev.tempoSegundos ?? 0) + dto.tempoSegundos,
+				updatedAt: new Date(),
+			}, { merge: true });
 
-		const userData = userSnap.data()!;
-		const existing: ChallengeProgress[] = userData.challenge_progress ?? [];
-		const idx = existing.findIndex(p => p.nameChallenge === dto.desafioId);
+			if (!userSnap.exists) return;
 
-		const updatedEntry: ChallengeProgress = {
-			nameChallenge: dto.desafioId,
-			capFinish: Math.max(dto.capFinish, idx >= 0 ? (existing[idx].capFinish ?? 0) : 0),
-			xpObtido: (idx >= 0 ? (existing[idx].xpObtido ?? 0) : 0) + xpToAdd,
-			totalQueries: (idx >= 0 ? (existing[idx].totalQueries ?? 0) : 0) + (dto.totalQueries ?? 0),
-			totalHints: (idx >= 0 ? (existing[idx].totalHints ?? 0) : 0) + (dto.totalHints ?? 0),
-			totalSeconds: (idx >= 0 ? (existing[idx].totalSeconds ?? 0) : 0) + dto.tempoSegundos,
-		};
+			const userData = userSnap.data()!;
+			const existing: ChallengeProgress[] = userData.challenge_progress ?? [];
+			const idx = existing.findIndex(p => p.nameChallenge === dto.desafioId);
 
-		const updatedProgress = idx >= 0
-			? existing.map((p, i) => i === idx ? updatedEntry : p)
-			: [...existing, updatedEntry];
+			const updatedEntry: ChallengeProgress = {
+				nameChallenge: dto.desafioId,
+				capFinish: Math.max(dto.capFinish, idx >= 0 ? (existing[idx].capFinish ?? 0) : 0),
+				xpObtido: (idx >= 0 ? (existing[idx].xpObtido ?? 0) : 0) + xpToAdd,
+				totalQueries: (idx >= 0 ? (existing[idx].totalQueries ?? 0) : 0) + (dto.totalQueries ?? 0),
+				totalHints: (idx >= 0 ? (existing[idx].totalHints ?? 0) : 0) + (dto.totalHints ?? 0),
+				totalSeconds: (idx >= 0 ? (existing[idx].totalSeconds ?? 0) : 0) + dto.tempoSegundos,
+			};
 
-		await userRef.update({
-			challenge_progress: updatedProgress,
-			xp: FieldValue.increment(xpToAdd),
+			const updatedProgress = idx >= 0
+				? existing.map((p, i) => i === idx ? updatedEntry : p)
+				: [...existing, updatedEntry];
+
+			tx.update(userRef, {
+				challenge_progress: updatedProgress,
+				xp: FieldValue.increment(xpToAdd),
+			});
 		});
 	}
 
