@@ -11,7 +11,7 @@ const options: swaggerJsdoc.Options = {
             description: "API do jogo de desafios SQL — Mundo Mágico",
         },
         servers: [
-            { url: "https://apihub-macedo.duckdns.org", description: "VPS (produção)" },
+            { url: "https://sql-challenge-back.atcfalcons.org", description: "k3s (produção)" },
             { url: "http://localhost:3000", description: "Local" },
         ],
         tags: [

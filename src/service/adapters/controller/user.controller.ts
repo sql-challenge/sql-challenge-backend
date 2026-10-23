@@ -201,7 +201,7 @@ export const getFriendsRanking = asyncHandler(async (req: Request, res: Response
 export const notifyNewChallenge = asyncHandler(async (req: Request, res: Response) => {
 	const { gameName, totalXP } = notifyNewChallengeSchema.parse(req.body);
 
-	const siteUrl = process.env.SITE_URL ?? "https://apihub-macedo.duckdns.org/sql-challenge";
+	const siteUrl = process.env.SITE_URL ?? "https://sql-challenge.atcfalcons.org/sql-challenge";
 	const allUsers = await userUseCase.getAll();
 	const targets = allUsers.filter((u: any) => u.emailNotifications === true && u.email);
 

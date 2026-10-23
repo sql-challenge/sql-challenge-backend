@@ -56,7 +56,7 @@ const validatedFrontendUrl = frontendUrl && frontendUrl !== "undefined"
 const allowedOrigins = [
 	"http://localhost:3000",
 	"http://localhost:3001",
-	"https://apihub-macedo.duckdns.org",
+	"https://sql-challenge.atcfalcons.org",
 	validatedFrontendUrl,
 ].filter((o): o is string => !!o);
 
